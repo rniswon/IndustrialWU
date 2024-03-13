@@ -4,10 +4,13 @@
 # Contact: cchamberlin@usgs.gov (Cathy Chamberlin)
 ### ### ### ### ### ### ###
 
-# Options
+# Options ----
+
+## Should intermediate csv files be written for each state?
+## Note that until further notice, this MUST be set as TRUE
 outputcsv <- TRUE # c(TRUE, FALSE)
 
-# Setup
+# Setup ----
 
 optloadinstall <- function(x) {
   if(x %in% utils::installed.packages()) {
@@ -22,7 +25,11 @@ packages <-  c("stringr", "purrr", "readxl")
 lapply(X = packages, FUN = optloadinstall)
 source(file.path("utility_functions", "CheckNewSTfiles.R"))
 
-# Set file paths
+# Set file paths ----
+
+## Prompts for the filepath to the state_data folder on the command line. Paths can be copied and pasted in.
+## The filepath for the formatted state data is derived from the filepath for the unformatted state data if possible
+## If that doesn't work, another prompt should appear for the directory of the formatted state data
 
 unformattedstatedata_fp <- readline("Enter filepath to the folder `state_data`:") 
 unformattedstatedata <- do.call(file.path, as.list(unlist(str_split(gsub('"', '', unformattedstatedata_fp), "\\\\|/"))))
@@ -39,21 +46,37 @@ processingscripts_dir <- file.path(".", "StateWUFormatingScripts")
 
 statescripts <- list.files(processingscripts_dir, full.names = TRUE)
 
-# Check for updates
+# Check for updates ----
+
+## This checks Lisa and Carol's NonSWUDS_Data_Input_Tracking.xlsx
+## If any changes are noted in the tracking file, the user will be prompted if they wish to continue or not.
+## The thought was that if a state I'm not working on has changed, I can continue.
+## If a state I am working on has changed, I may want to edit that state's script before compiling all the states.
+## To check for updates, a local csv file is written to the project location.
+## This csv isn't tracked with git, so everyone working on the code should get updates relative to when they have last run the script locally.
 
 local_tracker <- checkSTupdates(path_to_remote_tracker = file.path(unformattedstatedata, "NonSWUDS_Data_Input_Tracking.xlsx"),
                path_to_local_tracker = "nonSWUDStracker_local.csv")
 
-# Source scripts
+# Source scripts ----
+
+## Sources all state scripts. Each state script currently should write a file "XX_formatted.csv" to the `formattedstatedata` directory
+## We can change it so the csv files don't have to be written, this is just a first cut
 map(statescripts, ~source(.x, local = TRUE))
 
-# Compile all states
+# Compile all states ----
+
+## Currently reads all files "XX_formatted.csv" from `formattedstatedata` and unites them
+## This can be updated whenever to not rely on the written csv files
+## The format of the XX_formatted.csv files will need to be identical
+## Until we choose a format, this script will break here.
 statefiles <- list.files(formattedstatedata, 
                          pattern = "[[:upper:]]{2}_formatted.csv", 
                          full.names = TRUE)
 allstates <- map_dfr(statefiles, ~read.csv(.x))
 write.csv(allstates, file.path(formattedstatedata, "AllStates_formatted.csv"))
 
-# Write new local nonSWUDStracker
+# Write new local nonSWUDStracker ----
 
+## If the compilation successfully runs, a new local version of the tracking file is generated
 write.csv(local_tracker, file = "nonSWUDStracker_local.csv", row.names = FALSE)
