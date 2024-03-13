@@ -6,15 +6,19 @@
 
 loadSTdata <- function(stDatadir) {
   require(furrr)
+  require(stringr)
+  require(archive)
+  require(readxl)
+  require(purrr)
   plan(multisession)
   
   stDatafp <- list.files(stDatadir, full.names = TRUE)
   
   fps <- stDatafp
-  filenames <- lapply(fps, str_extract, pattern = "(?<=/[[:alpha:]]{2}/).*")
+  filenames <- lapply(fps, stringr::str_extract, pattern = "(?<=/[[:alpha:]]{2}/).*")
   if(any(grepl(".zip", fps))) {
     tmp <- tempfile()
-    map(fps[grepl(".zip", fps)], ~archive_extract(.x, dir = tmp))
+    purrr::map(fps[grepl(".zip", fps)], ~archive::archive_extract(.x, dir = tmp))
     zipfls <- list.files(tmp, recursive = TRUE, full.names = TRUE)
     flnms <- unlist(str_extract(zipfls, "(?<=/).*"))
     
@@ -24,7 +28,7 @@ loadSTdata <- function(stDatadir) {
   
   names(fps) <- filenames
   
-  dat <- future_map(fps, ~{
+  dat <- furrr::future_map(fps, ~{
     fp <- .x
     data <- if(grepl("\\~\\$", fp)) {
       sheets <- fp
@@ -34,8 +38,8 @@ loadSTdata <- function(stDatadir) {
       sheets <- fp
       read.csv(fp, fill = TRUE, header = FALSE)
     } else if(grepl(".xlsx|.xls", fp)) {
-      sheets <- excel_sheets(fp)
-      map(sheets, ~suppressMessages(read_excel(fp, sheet = .x)))
+      sheets <- readxl::excel_sheets(fp)
+      map(sheets, ~suppressMessages(readxl::read_excel(fp, sheet = .x)))
     } else{
       sheets <- fp
       list("Other database type (e.g. Word or Access)")

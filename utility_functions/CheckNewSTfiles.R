@@ -14,7 +14,7 @@ checkSTupdates <- function(path_to_remote_tracker, path_to_local_tracker) {
   # browser()
   require(readxl)
   
-  remote_tracker <- as.data.frame(read_excel(path_to_remote_tracker))
+  remote_tracker <- as.data.frame(readxl::read_excel(path_to_remote_tracker))
   
   if(!file.exists(path_to_local_tracker)) {
     local_tracker <- remote_tracker
