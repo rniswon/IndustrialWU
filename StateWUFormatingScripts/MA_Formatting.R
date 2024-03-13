@@ -7,10 +7,11 @@
 # Setup ----
 
 packages <- c("purrr", "dplyr", "stringr", "readxl", "archive", "furrr", "tidyr")
-lapply(packages, library, character.only = TRUE)
+lapply(packages, optloadinstall)
+source(file.path(".", "utility_functions", "loadSTdata.R"))
 
 state_nms <- state.abb
-plan(multisession, workers = 4)
+plan(multisession)
 
 # Load data ----
 
@@ -21,51 +22,10 @@ names(statedirs) <- str_extract(statedirs, ".{2}$")
 
 all_files <- map(statedirs, ~list.files(.x, full.names = TRUE))
 
-all_data <- future_map(
-  all_files, ~{
-    # browser()
-    fps <- .x
-    filenames <- lapply(fps, str_extract, pattern = "(?<=/[[:alpha:]]{2}/).*")
-    if(any(grepl(".zip", fps))) {
-      tmp <- tempfile()
-      map(fps[grepl(".zip", fps)], ~archive_extract(.x, dir = tmp))
-      zipfls <- list.files(tmp, recursive = TRUE, full.names = TRUE)
-      flnms <- unlist(str_extract(zipfls, "(?<=/).*"))
-      
-      filenames <- c(filenames[-grep(".zip", fps)], flnms)
-      fps <- c(fps[-grep(".zip", fps)], zipfls)
-      }
-      
-    dat <- map(fps, ~{
-      fp <- .x
-      data <- if(grepl("\\~\\$", fp)) {
-        sheets <- fp
-        list("Temporary and/or corrupted file")
-      } else if(
-        grepl(".csv|.txt", fp)) {
-        sheets <- fp
-        read.csv(fp, fill = TRUE, header = FALSE)
-        } else if(grepl(".xlsx|.xls", fp)) {
-          sheets <- excel_sheets(fp)
-          map(sheets, ~suppressMessages(read_excel(fp, sheet = .x)))
-        } else{
-          sheets <- fp
-          list("Other database type (e.g. Word or Access)")
-        }
-      names(data) <- sheets
-      data
-    })
-    names(dat) <- filenames
-    dat
-  },
-  .progress = TRUE
-  )
+MAdat <- loadSTdata(statedirs[["MA"]])
 
-
-# Format state by state ----
-cleandata <- list()
-## MA ----
-locations <- with(all_data$MA, {
+# Format the Data ----
+locations <- with(MAdat, {
   full_join(
     `1. Facility Name and Address.xlsx`$Sheet1 %>% rename(FacilityName = Facility, WaterUse = `Water Use`), 
     `4. Indust_Comm Sources Address With Lat Long.xlsx`$Sources_Indust_Comm_With_Lat_Lo,
@@ -79,7 +39,7 @@ locations <- with(all_data$MA, {
          CATEGORY = case_when(CATEGORY == "COMM" ~ "COM", CATEGORY == "INDUST" ~ "IND")) 
 
 annualvalues <- map_dfr(
-  all_data$MA$`2. Water Usage by Facility_2000-2018.xlsx`,
+  MAdat$`2. Water Usage by Facility_2000-2018.xlsx`,
   ~{.x %>% fill(Use, .direction = "down") %>% filter(!is.na(YEAR))}
   ) %>%
   rename(CATEGORY = Use, SITE_NAME = `Facility Name`, 
@@ -94,7 +54,7 @@ annualvalues <- map_dfr(
    unique()
 
 monthlybysource2018 <- map_dfr(
-  all_data$MA$`3.2 Water Withrawal by Sources_2018.xlsx`,
+  MAdat$`3.2 Water Withrawal by Sources_2018.xlsx`,
   ~{
     x <- .x
     
@@ -119,7 +79,7 @@ monthlybysource2018 <- map_dfr(
 )
 
 monthlybysource2017 <- map_dfr(
-  all_data$MA$`3.1 Water Withdrawal by Sources_2017.xlsx`,
+  MAdat$`3.1 Water Withdrawal by Sources_2017.xlsx`,
   ~{
     x <- .x
     if(any(grepl("Monthly Totals", x))) {
@@ -173,10 +133,6 @@ MA_dat_all <- merge(
 
 
 MA_dat_all %>% group_by(PERMIT_NUM, REG_NUM, YEAR, TOWN) %>% summarize(n = n()) %>% filter(n > 1)
-## NH ----
-## MD ----
-## OH ----
-## OK ----
 
 # Join data ----
 if(outputcsv) {write.csv(

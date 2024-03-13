@@ -62,7 +62,7 @@ local_tracker <- checkSTupdates(path_to_remote_tracker = file.path(unformattedst
 
 ## Sources all state scripts. Each state script currently should write a file "XX_formatted.csv" to the `formattedstatedata` directory
 ## We can change it so the csv files don't have to be written, this is just a first cut
-map(statescripts, ~source(.x, local = TRUE))
+map(statescripts, ~{message(paste("Sourcing", .x)); source(.x, local = TRUE)})
 
 # Compile all states ----
 
