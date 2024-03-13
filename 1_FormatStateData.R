@@ -21,7 +21,7 @@ optloadinstall <- function(x) {
   }
 }
 
-packages <-  c("stringr", "purrr", "readxl")
+packages <-  c("stringr", "purrr", "readxl", "svDialogs")
 lapply(X = packages, FUN = optloadinstall)
 source(file.path("utility_functions", "CheckNewSTfiles.R"))
 
@@ -30,16 +30,22 @@ source(file.path("utility_functions", "CheckNewSTfiles.R"))
 ## Prompts for the filepath to the state_data folder on the command line. Paths can be copied and pasted in.
 ## The filepath for the formatted state data is derived from the filepath for the unformatted state data if possible
 ## If that doesn't work, another prompt should appear for the directory of the formatted state data
+path_to_remote_tracker <- svDialogs::dlg_open(
+      title = "Please select the file `NonSWUDS_Data_Input_Tracking.xlsx` from the folder `state_data`:"
+    )$res
 
-unformattedstatedata_fp <- readline("Enter filepath to the folder `state_data`:") 
-unformattedstatedata <- do.call(file.path, as.list(unlist(str_split(gsub('"', '', unformattedstatedata_fp), "\\\\|/"))))
+
+unformattedstatedata <- dirname(path_to_remote_tracker)
 
 formattedstatedata <- file.path(gsub("GAP.*$", "", unformattedstatedata), 
                                 "Industrial model", "INWU_task_folders", "Data_processing",
                                 "FormattedStateData")
 if(!dir.exists(formattedstatedata)) {
-  formattedstatedata_fp <- readline("Enter filepath to the folder `FormattedStateData`:") 
-  formattedstatedata <- do.call(file.path, as.list(unlist(str_split(formattedstatedata_fp, "\\\\|/"))))
+  formattedstatedata <- dirname(
+    svDialogs::dlg_open(
+      title = "Please select the file `AllStates_formatted.csv` from the folder `FormattedStateData`:"
+    )$res
+  )
 }
 
 processingscripts_dir <- file.path(".", "StateWUFormatingScripts")
@@ -55,14 +61,16 @@ statescripts <- list.files(processingscripts_dir, full.names = TRUE)
 ## To check for updates, a local csv file is written to the project location.
 ## This csv isn't tracked with git, so everyone working on the code should get updates relative to when they have last run the script locally.
 
-local_tracker <- checkSTupdates(path_to_remote_tracker = file.path(unformattedstatedata, "NonSWUDS_Data_Input_Tracking.xlsx"),
+local_tracker <- checkSTupdates(
+  path_to_remote_tracker = file.path(unformattedstatedata, 
+                                     "NonSWUDS_Data_Input_Tracking.xlsx"),
                path_to_local_tracker = "nonSWUDStracker_local.csv")
 
 # Source scripts ----
 
 ## Sources all state scripts. Each state script currently should write a file "XX_formatted.csv" to the `formattedstatedata` directory
 ## We can change it so the csv files don't have to be written, this is just a first cut
-map(statescripts, ~source(.x, local = TRUE))
+purrr::map(statescripts, ~{message(paste("Sourcing", .x)); source(.x, local = TRUE)})
 
 # Compile all states ----
 
@@ -73,7 +81,7 @@ map(statescripts, ~source(.x, local = TRUE))
 statefiles <- list.files(formattedstatedata, 
                          pattern = "[[:upper:]]{2}_formatted.csv", 
                          full.names = TRUE)
-allstates <- map_dfr(statefiles, ~read.csv(.x))
+allstates <-purrr::map_dfr(statefiles, ~read.csv(.x))
 write.csv(allstates, file.path(formattedstatedata, "AllStates_formatted.csv"))
 
 # Write new local nonSWUDStracker ----
