@@ -4,14 +4,6 @@
 # Contact: cchamberlin@usgs.gov (Cathy Chamberlin)
 ### ### ### ### ### ### ###
 
-# Options ----
-export <- TRUE
-
-# Filepaths ----
-
-shortAD <- FRED_API_key <- readline("Enter your short Active Directory name:")
-statedata_fp <- paste0("C:/Users/", shortAD, "/DOI/GS-W-WaterUse - Documents/GAP/industrial/state_data")
-
 # Setup ----
 
 packages <- c("purrr", "dplyr", "stringr", "readxl", "archive", "furrr", "tidyr")
@@ -22,8 +14,8 @@ plan(multisession, workers = 4)
 
 # Load data ----
 
-statedirs <- list.dirs(statedata_fp, full.names = TRUE)[
-  list.dirs(statedata_fp, full.names = FALSE) %in% state_nms
+statedirs <- list.dirs(unformattedstatedata, full.names = TRUE)[
+  list.dirs(unformattedstatedata, full.names = FALSE) %in% state_nms
   ]
 names(statedirs) <- str_extract(statedirs, ".{2}$")
 
@@ -187,4 +179,6 @@ MA_dat_all %>% group_by(PERMIT_NUM, REG_NUM, YEAR, TOWN) %>% summarize(n = n()) 
 ## OK ----
 
 # Join data ----
-if(export) {dat_all_joined <- do.call("bind_rows", cleandata)}
+if(outputcsv) {write.csv(
+  MA_dat_all, file = file.path(formattedstatedata, "MA_formatted.csv"), row.names = FALSE
+)}
