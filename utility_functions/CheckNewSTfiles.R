@@ -11,6 +11,11 @@
 
 checkSTupdates <- function(path_to_remote_tracker, path_to_local_tracker) {
   
+  exit <- function() {
+    # https://stackoverflow.com/questions/17837289/break-exit-script
+    .Internal(.invokeRestart(list(NULL, NULL), NULL))
+  }
+  continue<-TRUE
   # browser()
   require(readxl)
   
@@ -30,13 +35,18 @@ checkSTupdates <- function(path_to_remote_tracker, path_to_local_tracker) {
     print(remote_tracker)
     message("Local nonSWUDS tracker:")
     print(local_tracker)
-    continue <- readline("Do you wish to proceed with the compilation? You will not receive this warning again. (Y/N)")
-    
-    if(continue == "N") {stop("State Data compilation halted")} else if(continue == "Y") {} else {
-      stop("Unexpected entry")
+
+    msgText <- cat("Do you wish to proceed with the compilation? You will not receive this warning again.\n \n")
+    continue <-menu(choices=c("Yes","No"),title=msgText)
+    continue <- ifelse(continue == 1, TRUE, FALSE)
+    if (!continue){
+      return(list(continue = continue))
+      exit()
     }
+    
   } else if(identical(remote_tracker, local_tracker)) {message("No updates to NonSWUDS data since scripts were last run")}
   
   local_tracker <- remote_tracker
+  local_tracker<-list(local_tracker = remote_tracker, continue=continue)
   return(local_tracker)
 }
