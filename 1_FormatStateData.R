@@ -8,8 +8,9 @@
 
 ## Should intermediate csv files be written for each state?
 ## Note that until further notice, this MUST be set as TRUE
-outputcsv <- TRUE # c(TRUE, FALSE)
 
+outputcsv <- TRUE # c(TRUE, FALSE)
+compileStateData<-function(outputcsv){
 # Setup ----
 
 optloadinstall <- function(x) {
@@ -65,7 +66,10 @@ local_tracker <- checkSTupdates(
   path_to_remote_tracker = file.path(unformattedstatedata, 
                                      "NonSWUDS_Data_Input_Tracking.xlsx"),
                path_to_local_tracker = "nonSWUDStracker_local.csv")
-
+list2env(local_tracker,envir = parent.frame())
+if (!continue){
+  stop("Compilation Terminated",call.=F)
+}else{
 # Source scripts ----
 
 ## Sources all state scripts. Each state script currently should write a file "XX_formatted.csv" to the `formattedstatedata` directory
@@ -88,3 +92,7 @@ write.csv(allstates, file.path(formattedstatedata, "AllStates_formatted.csv"))
 
 ## If the compilation successfully runs, a new local version of the tracking file is generated
 write.csv(local_tracker, file = "nonSWUDStracker_local.csv", row.names = FALSE)
+}
+}#end func
+
+compileStateData(outputcsv)
