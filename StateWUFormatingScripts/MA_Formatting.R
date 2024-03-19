@@ -8,7 +8,7 @@
 
 packages <- c("purrr", "dplyr", "stringr", "readxl", "archive", "furrr", 
               "tidyr", "future")
-lapply(packages, optloadinstall)
+suppressPackageStartupMessages(suppressWarnings(invisible(lapply(packages, optloadinstall))))
 source(file.path(".", "utility_functions", "loadSTdata.R"))
 
 state_nms <- state.abb
@@ -63,7 +63,7 @@ formatMAdata <- function(x) {
   if(any(grepl("Monthly Totals", x))) {
     partA <- as.data.frame(t(x[c(1:8, 27:35),])[-1,]) %>% dplyr::filter(!is.na(V1))
     row.names(partA) <- NULL
-    names(partA) <- x$`Facility Withdrawal Report`[c(1:8, 27:35)]
+    names(partA) <- unlist(x$`Facility Withdrawal Report`[c(1:8, 27:35)], use.names = FALSE)
     
     colx <- grep("Period", x)
     rowx <- grep("Period", unlist(x[colx]))
@@ -77,7 +77,7 @@ formatMAdata <- function(x) {
         dplyr::filter(!is.na(SourceName))
       row.names(partB_names_df) <- NULL
       partB_raw <- x[c((rowx):(rowx + 13)), c(colx:(coly - 1))] 
-      names(partB_raw) <- c(partB_raw[1,])
+      names(partB_raw) <- unlist(partB_raw[1,], use.names = FALSE)
       
       partB <- partB_raw %>% 
         suppressWarnings(dplyr::mutate(across(.cols = -Period, ~as.numeric(.)))) %>%

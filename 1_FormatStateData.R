@@ -23,7 +23,7 @@ compileStateData<-function(outputcsv){
 }
 
 packages <-  c("stringr", "purrr", "readxl", "svDialogs")
-lapply(X = packages, FUN = optloadinstall)
+suppressPackageStartupMessages(suppressWarnings(invisible(lapply(packages, optloadinstall))))
 source(file.path("utility_functions", "CheckNewSTfiles.R"))
 
 # Set file paths ----

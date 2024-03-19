@@ -6,9 +6,11 @@
 
 # Setup ----
 
+
 packages <- c("purrr", "dplyr", "stringr", "readxl", "archive", "furrr", 
               "tidyr", "future")
-lapply(packages, optloadinstall)
+suppressPackageStartupMessages(suppressWarnings(invisible(lapply(packages, optloadinstall))))
+
 source(file.path(".", "utility_functions", "loadSTdata.R"))
 
 state_nms <- state.abb
@@ -40,7 +42,7 @@ ALdat_sites <- bind_rows(ALdat$`USGS Lovelace NP Data Request_20200812_Final.xls
 ALdat_NAICS <- ALdat$`USGS Lovelace NP Data Request_20200812_Final.xlsx`$`NAICS LIST` %>%
   rename(PERMIT_NUM = `Certificate Number`, SITE_NAME = OwnerName)
 
-ALdat_NPDES <- ALdat$AL_NPDES.xlsx$AL_NPDES[-c(1:3),]; names(ALdat_NPDES) <- ALdat$AL_NPDES.xlsx$AL_NPDES[3,]
+ALdat_NPDES <- ALdat$AL_NPDES.xlsx$AL_NPDES[-c(1:3),]; names(ALdat_NPDES) <- unlist(ALdat$AL_NPDES.xlsx$AL_NPDES[3,], use.names = FALSE)
 
 ALdat_contacts <- ALdat$AL_IN_WU.xlsx$AL_hoovers_2010 %>%
   mutate(across(contains("County"), ~str_to_upper(gsub(" County", "", .)))) %>%
@@ -66,3 +68,6 @@ AL_dat_all <- merge(ALdat_wd, ALdat_sites, all = TRUE,
 if(outputcsv) {write.csv(
   AL_dat_all, file = file.path(formattedstatedata, "AL_formatted.csv"), row.names = FALSE
 )}
+
+# Messages ----
+message("\nNote for future reference that 2015 NPDES data and 2010 Hoover data are also available for Alabama.")

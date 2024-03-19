@@ -5,11 +5,10 @@
 #' @return `dat` a list containing the data that is available, and an inventory of other files that were not loaded
 
 loadSTdata <- function(stDatadir) {
-  require(furrr)
-  require(stringr)
-  require(archive)
-  require(readxl)
-  require(purrr)
+  reqpackages <- c("furrr", "stringr", "archive", "readxl", "purrr")
+  supreq <- function(x) {suppressWarnings(require(x, character.only = TRUE))}
+  
+  lapply(reqpackages, supreq)
   plan(multisession)
   
   stDatafp <- list.files(stDatadir, full.names = TRUE)
@@ -39,7 +38,7 @@ loadSTdata <- function(stDatadir) {
       read.csv(fp, fill = TRUE, header = FALSE)
     } else if(grepl(".xlsx|.xls", fp)) {
       sheets <- readxl::excel_sheets(fp)
-      map(sheets, ~suppressMessages(readxl::read_excel(fp, sheet = .x)))
+      map(sheets, ~suppressWarnings(suppressMessages(readxl::read_excel(fp, sheet = .x))))
     } else{
       sheets <- fp
       list("Other database type (e.g. Word or Access)")
