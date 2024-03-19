@@ -59,7 +59,7 @@ annualvalues <- purrr::map_dfr(
 
 
 formatMAdata <- function(x) {
-# browser()
+
   if(any(grepl("Monthly Totals", x))) {
     partA <- as.data.frame(t(x[c(1:8, 27:35),])[-1,]) %>% dplyr::filter(!is.na(V1))
     row.names(partA) <- NULL
@@ -155,7 +155,8 @@ MA_dat_all <- merge(
     TRUE ~ "DROP"
   )) %>% 
   dplyr::filter(SourceID != "DROP", SourceName != "DROP") %>%
-  dplyr::select(-c(SourceID_MONREP, SourceID_LOC, SourceName_MONREP, SourceName_LOC)) 
+  dplyr::select(-c(SourceID_MONREP, SourceID_LOC, SourceName_MONREP, SourceName_LOC)) %>%
+  dplyr::mutate(STATE = "MA")
 
 
 # MA_dat_all %>% dplyr::group_by(PERMIT_NUM, REG_NUM, YEAR, SourceID) %>% 
