@@ -13,7 +13,7 @@ outputcsv <- TRUE # c(TRUE, FALSE)
 compileStateData<-function(outputcsv){
 # Setup ----
 
-optloadinstall <- function(x) {
+  optloadinstall <- function(x) {
   if(x %in% utils::installed.packages()) {
     library(x, character.only = TRUE)
   } else {
@@ -85,13 +85,13 @@ purrr::map(statescripts, ~{message(paste("Sourcing", .x)); source(.x, local = TR
 statefiles <- list.files(formattedstatedata, 
                          pattern = "[[:upper:]]{2}_formatted.csv", 
                          full.names = TRUE)
-allstates <-purrr::map_dfr(statefiles, ~read.csv(.x))
+allstates <-purrr::map_dfr(statefiles, ~read.csv(.x, colClasses = "character"))
 write.csv(allstates, file.path(formattedstatedata, "AllStates_formatted.csv"))
 
 # Write new local nonSWUDStracker ----
 
 ## If the compilation successfully runs, a new local version of the tracking file is generated
-write.csv(local_tracker, file = "nonSWUDStracker_local.csv", row.names = FALSE)
+write.csv(local_tracker$local_tracker, file = "nonSWUDStracker_local.csv", row.names = FALSE)
 }
 }#end func
 

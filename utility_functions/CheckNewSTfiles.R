@@ -16,17 +16,18 @@ checkSTupdates <- function(path_to_remote_tracker, path_to_local_tracker) {
     .Internal(.invokeRestart(list(NULL, NULL), NULL))
   }
   continue<-TRUE
-  # browser()
+  
   require(readxl)
   
-  remote_tracker <- as.data.frame(readxl::read_excel(path_to_remote_tracker))
+  remote_tracker <- as.data.frame(readxl::read_excel(path_to_remote_tracker)) %>%
+    dplyr::mutate(Date_file_added = as.character(Date_file_added))
   
   if(!file.exists(path_to_local_tracker)) {
     local_tracker <- remote_tracker
     write.csv(local_tracker, file = path_to_local_tracker, row.names = FALSE)
   }
   
-  local_tracker <- as.data.frame(read.csv(path_to_local_tracker))
+  local_tracker <- as.data.frame(read.csv(path_to_local_tracker, colClasses = "character"))
   
   if(!identical(remote_tracker, local_tracker)) {
     message("Warning: NonSWUDS data may have been updated since scripts were last run")
