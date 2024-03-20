@@ -12,7 +12,7 @@
 outputcsv <- TRUE # c(TRUE, FALSE)
 compileStateData<-function(outputcsv){
 # Setup ----
-
+# browser()
   optloadinstall <- function(x) {
   if(x %in% utils::installed.packages()) {
     library(x, character.only = TRUE)
@@ -86,7 +86,7 @@ statefiles <- list.files(formattedstatedata,
                          pattern = "[[:upper:]]{2}_formatted.csv", 
                          full.names = TRUE)
 allstates <-purrr::map_dfr(statefiles, ~read.csv(.x, colClasses = "character"))
-write.csv(allstates, file.path(formattedstatedata, "AllStates_formatted.csv"))
+write.csv(allstates, file.path(formattedstatedata, "AllStates_formatted.csv"), row.names = FALSE)
 
 # Write new local nonSWUDStracker ----
 
