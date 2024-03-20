@@ -7,7 +7,7 @@
 # Setup ----
 
 packages <- c("purrr", "dplyr", "stringr", "readxl", "archive", "furrr", 
-              "tidyr", "future")
+              "tidyr", "future", "lubridate")
 suppressPackageStartupMessages(suppressWarnings(invisible(lapply(packages, optloadinstall))))
 source(file.path(".", "utility_functions", "loadSTdata.R"))
 
@@ -59,17 +59,31 @@ annualvalues <- purrr::map_dfr(
 
 
 formatMAdata <- function(x) {
-
   if(any(grepl("Monthly Totals", x))) {
-    partA <- as.data.frame(t(x[c(1:8, 27:35),])[-1,]) %>% dplyr::filter(!is.na(V1))
-    row.names(partA) <- NULL
-    names(partA) <- unlist(x$`Facility Withdrawal Report`[c(1:8, 27:35)], use.names = FALSE)
+    partA_raw <- as.data.frame(t(x[c(1:8, 27:35),])[-1,]) %>% dplyr::filter(!is.na(V1))
+    row.names(partA_raw) <- NULL
+    names(partA_raw) <- unlist(x$`Facility Withdrawal Report`[c(1:8, 27:35)], use.names = FALSE)
+    
+    partA <- partA_raw %>%
+      dplyr::select(CATEGORY = `Water Use`, SITE_NAME = `Facility Name`, 
+                    ANNUAL_WD_MGD = AverageDailyWithdrawalVolume, 
+                    PERMIT_NUM = `Permit Number`, REG_NUM = `Registration Number`,
+                    Town_SOURCE = Town, BASIN = Basin, YEAR = `Reporting Year`) %>%
+      dplyr::mutate(
+        CATEGORY = dplyr::case_when(CATEGORY == "COMM" ~ "COM", CATEGORY == "INDUST" ~ "IND"),
+        ANNUAL_WD_MGD = round(as.numeric(ANNUAL_WD_MGD), 2), 
+        Town_SOURCE = stringr::str_to_upper(Town_SOURCE),
+        YEAR = as.numeric(YEAR),
+        SITE_NAME = gsub("[[:punct:]]", "", gsub("-.*$", "", SITE_NAME))
+      )
     
     colx <- grep("Period", x)
     rowx <- grep("Period", unlist(x[colx]))
     
     coly <- grep("Monthly Totals", x)
     rowy <- grep("Monthly Totals", unlist(x[coly]))
+    
+    y <- partA$YEAR
     
     if(rowx == rowy) {
       partB_names <- x[c((rowx-1):rowx), c(colx:(coly - 1))] 
@@ -78,13 +92,16 @@ formatMAdata <- function(x) {
       row.names(partB_names_df) <- NULL
       partB_raw <- x[c((rowx):(rowx + 13)), c(colx:(coly - 1))] 
       names(partB_raw) <- unlist(partB_raw[1,], use.names = FALSE)
-      
+
       partB <- partB_raw %>% 
-        suppressWarnings(dplyr::mutate(across(.cols = -Period, ~as.numeric(.)))) %>%
-        dplyr::filter(Period != "Period") %>%
+        dplyr::filter(!Period %in% c("Period", "Total")) %>%
+        dplyr::mutate(., across(.cols = -Period, ~as.numeric(.))) %>%
         tidyr::pivot_longer(-Period, names_to = "SourceID") %>%
+        dplyr::mutate(ndays = lubridate::days_in_month(lubridate::ym(paste0(y, Period)))) %>%
+        mutate(value_mgd = value / ndays,
+               Period = str_sub(Period, 1, 3)) %>%
         tidyr::pivot_wider(id_cols = "SourceID", names_from = "Period", 
-                    values_from = "value", names_glue = "{Period}_mg") %>%
+                    values_from = "value_mgd", names_glue = "{Period}_mgd") %>%
         dplyr::full_join(., partB_names_df, by = "SourceID")
       
     } else if(rowx != rowy) {stop("Unexpected Formatting")}
@@ -112,20 +129,8 @@ monthlybysource2017 <- purrr::map_dfr(
 )
 
 monthlybysource <- dplyr::bind_rows(monthlybysource2017, monthlybysource2018) %>%
-  dplyr::mutate(across(c(`Registration Number`, `Permit Number`), 
-                ~dplyr::case_when(. == "N/A" ~ NA_character_, TRUE ~ .))) %>%
-  dplyr::rename(CATEGORY = `Water Use`, SITE_NAME = `Facility Name`, 
-         ANNUAL_WD_MGD = AverageDailyWithdrawalVolume, 
-         PERMIT_NUM = `Permit Number`, REG_NUM = `Registration Number`,
-         Town_SOURCE = Town, BASIN = Basin, YEAR = `Reporting Year`) %>%
-  dplyr::mutate(
-    CATEGORY = dplyr::case_when(CATEGORY == "COMM" ~ "COM", CATEGORY == "INDUST" ~ "IND"),
-    ANNUAL_WD_MGD = round(as.numeric(ANNUAL_WD_MGD), 2), 
-    Town_SOURCE = stringr::str_to_upper(Town_SOURCE),
-    YEAR = as.numeric(YEAR),
-    SITE_NAME = gsub("[[:punct:]]", "", gsub("-.*$", "", SITE_NAME))
-  )
-
+  dplyr::mutate(across(c(REG_NUM, PERMIT_NUM), 
+                ~dplyr::case_when(. == "N/A" ~ NA_character_, TRUE ~ .))) 
 MA_dat_all <- merge(
   annualvalues, monthlybysource, 
       by = c("REG_NUM", "PERMIT_NUM", "Town_SOURCE", "YEAR", "SITE_NAME"), 
@@ -156,7 +161,12 @@ MA_dat_all <- merge(
   )) %>% 
   dplyr::filter(SourceID != "DROP", SourceName != "DROP") %>%
   dplyr::select(-c(SourceID_MONREP, SourceID_LOC, SourceName_MONREP, SourceName_LOC)) %>%
-  dplyr::mutate(STATE = "MA")
+  dplyr::mutate(STATE = "MA",
+                ANNUAL_WD_MGD = case_when(
+                  !is.na(ANNUAL_WD_MGD_MONREP) ~ ANNUAL_WD_MGD_MONREP,
+                  is.na(ANNUAL_WD_MGD_MONREP) ~ ANNUAL_WD_MGD_ANNREP
+                    )) %>%
+  dplyr::select(-ANNUAL_WD_MGD_MONREP, -ANNUAL_WD_MGD_ANNREP)
 
 
 # MA_dat_all %>% dplyr::group_by(PERMIT_NUM, REG_NUM, YEAR, SourceID) %>% 

@@ -61,7 +61,8 @@ AL_dat_all <- merge(ALdat_wd, ALdat_sites, all = TRUE,
                     by = c("SourceType", "HUC11", "BASIN", "SITE_NAME", "PERMIT_NUM", 
                            "Certificate Category", "SourceID", "County")) %>%
   left_join(., ALdat_NAICS, by = c("PERMIT_NUM", "SITE_NAME")) %>%
-  mutate(STATE = "AL")
+  mutate(STATE = "AL") %>% rename(ANNUAL_WD_MGD = `Avg Daily (mgd)`) %>%
+  select(-`Max Daily (mgd)`, -`Certificate Category`)
 
 # Write data ----
 
