@@ -42,13 +42,13 @@ VT_dat_all <- VTdat$`2008_2019_ Vermont_Yearly_Large_GW_Withdrawal.xlsx`$`GW Wit
     Address_SOURCE = str_extract(Address, "(\\s|\\w)+"),
     Town_SOURCE = str_extract(Address, "(?<=, )\\w+"),
     STATE = "VT", CATEGORY = `USGS Water Use Code`, CATEGORY2 = Use,
-    Year = parse_number(name),
+    YEAR = parse_number(name),
     value_gal = parse_number(value, na = c("n/a", "not reported yet", "closed")),
-    ndays = ifelse(leap_year(ym(paste(Year, "01"))), 366, 365),
+    ndays = ifelse(leap_year(ym(paste(YEAR, "01"))), 366, 365),
     ANNUAL_WD_MGD = value_gal / (1000000 * ndays)
   ) %>%
   select(PERMIT_NUM, SITE_NAME, Address_SOURCE, Town_SOURCE, STATE, CATEGORY,
-         CATEGORY2, Year, ANNUAL_WD_MGD)
+         CATEGORY2, YEAR, ANNUAL_WD_MGD)
 
 #Write data ----
   
