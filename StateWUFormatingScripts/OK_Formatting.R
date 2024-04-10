@@ -27,7 +27,7 @@ all_files <- purrr::map(statedirs, ~list.files(.x, full.names = TRUE))
 
 OKdat <- loadSTdata(statedirs[["OK"]])
 
-OK_sf <- st_read(file.path(names(OKdat$GIS), "Permitted_GW_Wells.shp"), quiet = TRUE)
+OK_sf <- st_read(file.path(names(OKdat$Permitted_GW_Wells.shp)), quiet = TRUE)
 
 ## Format the data ----
 

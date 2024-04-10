@@ -12,10 +12,14 @@ loadSTdata <- function(stDatadir) {
   lapply(reqpackages, supreq)
   plan(multisession)
   
-  stDatafp <- list.files(stDatadir, full.names = TRUE)
+  stDatafp <- list.files(stDatadir, full.names = TRUE, recursive = TRUE)
+  
+  #test if directory
+  findDirs<-sapply(stDatafp,dir.exists)
+  stDatafp<-stDatafp[!findDirs]
   
   fps <- stDatafp
-  filenames <- lapply(fps, stringr::str_extract, pattern = "(?<=/[[:alpha:]]{2}/).*")
+  filenames<-lapply(fps,basename)
   if(any(grepl(".zip|.7z", fps))) {
     tmp <- tempfile()
     purrr::map(fps[grepl(".zip|.7z", fps)], ~archive::archive_extract(.x, dir = tmp))
@@ -25,8 +29,9 @@ loadSTdata <- function(stDatadir) {
     filenames <- c(filenames[-grep(".zip|.7z", fps)], flnms)
     fps <- c(fps[-grep(".zip|.7z", fps)], zipfls)
   }
-  
+
   names(fps) <- filenames
+
   
   dat <- furrr::future_map(fps, ~{
     fp <- .x
