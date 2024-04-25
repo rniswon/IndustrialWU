@@ -26,6 +26,9 @@ all_files <- purrr::map(statedirs, ~list.files(.x, full.names = TRUE))
 MAdat <- loadSTdata(statedirs[["MA"]])
 
 # Format the Data ----
+
+## The original sheet 4. Indust_Comm Sources Address With Lat Long.xlsx`$Sources_Indust_Comm_With_Lat_Lo has river "SourceName"s listed as SourceType "GROUND". 
+## Not sure what to do with this.
 locations <- with(MAdat, {
   dplyr::full_join(
     `1. Facility Name and Address.xlsx`$Sheet1 %>% 
@@ -36,26 +39,31 @@ locations <- with(MAdat, {
     )
 }) %>%
   dplyr::rename(SITE_NAME = FacilityName, BASIN = `Major Basin`, CATEGORY = WaterUse) %>%
-  dplyr::mutate(SITE_NAME = gsub("[[:punct:]]", "", gsub("-.*$", "", SITE_NAME)),
+  dplyr::mutate(FacilityName = gsub("[[:punct:]]", "", gsub("-.*$", "", SITE_NAME)),
          BASIN = gsub("^.*-", "", BASIN), 
-         CATEGORY = dplyr::case_when(CATEGORY == "COMM" ~ "COM", CATEGORY == "INDUST" ~ "IND"),
+         CATEGORY = dplyr::case_when(CATEGORY == "COMM" ~ "CO", CATEGORY == "INDUST" ~ "IN"),
          Town_SOURCE = stringr::str_to_upper(Town_SOURCE), 
-         Address_SOURCE = stringr::str_to_upper(Address_SOURCE)) 
+         Address_SOURCE = stringr::str_to_upper(Address_SOURCE),
+         SourceType = case_when(SourceType == "GROUND" ~ "GW", SourceType == "SURFACE" ~ "SW")) %>%
+  select(SourceType, Category = CATEGORY, FacilityName, FacilityNumber = FacilityID, SourceName, SourceNumber = SourceID,
+         BasinName1 = BASIN, Address1 = Address_OFFICE, Address2 = Address_SOURCE,
+         City1 = Town_OFFICE, City2 = Town_SOURCE, Lat = Latitude, Lon = Longitude)
 
 annualvalues <- purrr::map_dfr(
   MAdat$`2. Water Usage by Facility_2000-2018.xlsx`,
   ~{.x %>% tidyr::fill(Use, .direction = "down") %>% dplyr::filter(!is.na(YEAR))}
   ) %>%
-  dplyr::rename(CATEGORY = Use, SITE_NAME = `Facility Name`, 
+  dplyr::rename(Category = Use, FacilityName = `Facility Name`, 
          ANNUAL_WD_MGD = `Annual Withdrawal Rate (MGD:Millions of Gallons per Day)`,
-         BASIN = Basin, Town_SOURCE = TOWN) %>%
-  dplyr::mutate(CATEGORY = dplyr::case_when(
-    CATEGORY == "Commercial" ~ "COM",
-    CATEGORY == "INDUSTRIAL" ~ "IND"
-  ),
+         BasinName1 = Basin, City2 = TOWN) %>%
+  dplyr::mutate(Category = dplyr::case_when(Category == "Commercial" ~ "CO", 
+                                            Category == "Industrial" ~ "IN"),
   ANNUAL_WD_MGD = round(ANNUAL_WD_MGD, 2),
-  SITE_NAME = gsub("[[:punct:]]", "", gsub("-.*$", "", SITE_NAME))) %>%
-   unique()
+  FacilityName = gsub("[[:punct:]]", "", gsub("-.*$", "", FacilityName))) %>%
+   unique() %>%
+  select(Category, FacilityName, FacilityNumber1 = PERMIT_NUM, 
+         FacilityNumber2 = REG_NUM, City2, BasinName1, Year= YEAR, 
+         Annual_mgd_reported = ANNUAL_WD_MGD)
 
 
 formatMAdata <- function(x) {
@@ -130,27 +138,42 @@ monthlybysource2017 <- purrr::map_dfr(
 
 monthlybysource <- dplyr::bind_rows(monthlybysource2017, monthlybysource2018) %>%
   dplyr::mutate(across(c(REG_NUM, PERMIT_NUM), 
-                ~dplyr::case_when(. == "N/A" ~ NA_character_, TRUE ~ .))) 
+                ~dplyr::case_when(. == "N/A" ~ NA_character_, TRUE ~ .)),
+                Category = case_when(
+                  CATEGORY == "IND" ~ "IN", CATEGORY == "COM" ~ "CO"
+                )) %>%
+  select(Category, FacilityName = SITE_NAME, Annual_mgd_reported = ANNUAL_WD_MGD,
+         FacilityNumber1 = PERMIT_NUM, FacilityNumber2 = REG_NUM, City2 = Town_SOURCE,
+         BasinName1 = BASIN, Year = YEAR, SourceName, SourceNumber = SourceID, contains("_mgd"))
+
+convert2decimal <- function(x) {
+  degrees <- as.numeric(str_sub(x, 1, 2))
+  minutes <- as.numeric(str_sub(x, 3, 4))
+  seconds <- as.numeric(str_sub(x, 5, 6))
+  
+  degrees + (minutes + (seconds / 60)) / 60
+}
+
 MA_dat_all <- merge(
   annualvalues, monthlybysource, 
-      by = c("REG_NUM", "PERMIT_NUM", "Town_SOURCE", "YEAR", "SITE_NAME"), 
+      by = c("FacilityName", "FacilityNumber1", "FacilityNumber2", "City2", "Year"), 
   all = TRUE, suffixes = c("_ANNREP", "_MONREP")) %>%
-  dplyr::mutate(CATEGORY = 
-           dplyr::case_when(!is.na(CATEGORY_ANNREP) ~ CATEGORY_ANNREP, 
-                     TRUE ~ CATEGORY_MONREP),
-         BASIN = 
-           dplyr::case_when(!is.na(BASIN_ANNREP) ~ BASIN_ANNREP, 
-                     TRUE ~ BASIN_MONREP)) %>%
-  dplyr::select(-c(CATEGORY_ANNREP, CATEGORY_MONREP, BASIN_ANNREP, 
-                   BASIN_MONREP)) %>%
-  dplyr::group_by(PERMIT_NUM, REG_NUM, Town_SOURCE) %>%
-  tidyr::fill(c(CATEGORY, BASIN), .direction = "downup") %>%
-  merge(., locations, by = c("SITE_NAME", "BASIN", "CATEGORY", "Town_SOURCE"), 
+  dplyr::mutate(Category = 
+           dplyr::case_when(!is.na(Category_ANNREP) ~ Category_ANNREP, 
+                     TRUE ~ Category_MONREP),
+         BasinName1 = 
+           dplyr::case_when(!is.na(BasinName1_ANNREP) ~ BasinName1_ANNREP, 
+                     TRUE ~ BasinName1_MONREP)) %>%
+  dplyr::select(-c(Category_ANNREP, Category_MONREP, BasinName1_ANNREP, 
+                   BasinName1_MONREP)) %>%
+  dplyr::group_by(FacilityNumber1, FacilityNumber2, City2) %>%
+  tidyr::fill(c(Category, BasinName1), .direction = "downup") %>%
+  merge(., locations, by = c("FacilityName", "BasinName1", "Category", "City2"), 
         all = TRUE, suffix = c("_MONREP", "_LOC")) %>%
-  dplyr::mutate(SourceID = dplyr::case_when(
-    SourceID_MONREP == SourceID_LOC ~ SourceID_MONREP,
-    is.na(SourceID_MONREP) ~ SourceID_LOC,
-    is.na(SourceID_LOC) ~ SourceID_MONREP,
+  dplyr::mutate(SourceNumber = dplyr::case_when(
+    SourceNumber_MONREP == SourceNumber_LOC ~ SourceNumber_MONREP,
+    is.na(SourceNumber_MONREP) ~ SourceNumber_LOC,
+    is.na(SourceNumber_LOC) ~ SourceNumber_MONREP,
     TRUE ~ "DROP"
   ),
   SourceName = dplyr::case_when(
@@ -159,14 +182,32 @@ MA_dat_all <- merge(
     is.na(SourceName_LOC) ~ SourceName_MONREP,
     TRUE ~ "DROP"
   )) %>% 
-  dplyr::filter(SourceID != "DROP", SourceName != "DROP") %>%
-  dplyr::select(-c(SourceID_MONREP, SourceID_LOC, SourceName_MONREP, SourceName_LOC)) %>%
-  dplyr::mutate(STATE = "MA",
-                ANNUAL_WD_MGD = case_when(
-                  !is.na(ANNUAL_WD_MGD_MONREP) ~ ANNUAL_WD_MGD_MONREP,
-                  is.na(ANNUAL_WD_MGD_MONREP) ~ ANNUAL_WD_MGD_ANNREP
+  dplyr::filter(SourceNumber != "DROP", SourceName != "DROP") %>%
+  dplyr::select(-c(SourceNumber_MONREP, SourceNumber_LOC, SourceName_MONREP, SourceName_LOC)) %>%
+  dplyr::mutate(Annual_mgd_reported = case_when(
+                  !is.na(Annual_mgd_reported_MONREP) ~ Annual_mgd_reported_MONREP,
+                  is.na(Annual_mgd_reported_MONREP) ~ Annual_mgd_reported_ANNREP
                     )) %>%
-  dplyr::select(-ANNUAL_WD_MGD_MONREP, -ANNUAL_WD_MGD_ANNREP)
+  dplyr::select(-Annual_mgd_reported_MONREP, -Annual_mgd_reported_ANNREP) %>%
+  mutate(State1 = "MA", State2 = "MA", ValueType = "WD", Saline = NA,
+         Lat = convert2decimal(gsub("^0", "", Lat)), 
+         Lon = -convert2decimal(gsub("^0", "", Lon)), DataProtected = FALSE,
+         Annual_mgd_calculated = case_when(
+           leap_year(as.numeric(Year)) ~ (31 * (Jan_mgd + Mar_mgd + May_mgd + Jul_mgd + Aug_mgd + Oct_mgd + Dec_mgd) +
+                                            30 * (Apr_mgd + Jun_mgd + Sep_mgd + Nov_mgd) +
+                                            29 * Feb_mgd) / 366,
+           !leap_year(as.numeric(Year)) ~ (31 * (Jan_mgd + Mar_mgd + May_mgd + Jul_mgd + Aug_mgd + Oct_mgd + Dec_mgd) +
+                                             30 * (Apr_mgd + Jun_mgd + Sep_mgd + Nov_mgd) +
+                                             28 * Feb_mgd) / 365
+         ),
+         Address1 = case_when(!is.na(Address1) ~ Address1,
+                              is.na(Address1) ~ Address2),
+         City1 = case_when(!is.na(City1) ~ City1,
+                           is.na(City1) ~ City2)) %>% 
+  select(ValueType, SourceType, Category, Saline, FacilityName, FacilityNumber,
+         FacilityNumber1, FacilityNumber2, SourceName, SourceNumber,
+         BasinName1, Address1, City1, State1, Address2, City2, State2, Lat, Lon,
+         Year, contains("_mgd"), DataProtected) 
 
 
 # MA_dat_all %>% dplyr::group_by(PERMIT_NUM, REG_NUM, YEAR, SourceID) %>% 
@@ -176,3 +217,6 @@ MA_dat_all <- merge(
 if(outputcsv) {write.csv(
   MA_dat_all, file = file.path(formattedstatedata, "MA_formatted.csv"), row.names = FALSE
 )}
+
+# Messages ----
+message("\nProvided lat/lon data for MA includes errors.")
