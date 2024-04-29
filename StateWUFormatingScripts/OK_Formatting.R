@@ -31,48 +31,101 @@ OK_sf <- st_read(file.path(names(OKdat$Permitted_GW_Wells.shp)), quiet = TRUE)
 
 ## Format the data ----
 
+Categories <- c("Irrigation", "Public Supply", "Industrial", "Power", "Mining", 
+                "Commercial", "Recreation Fish & Wildlife", "Agriculture", "Other Total")
+
 OK_dat_annual <- OKdat$`Industrial Permit Water Use 2000 to 2019.xlsx`$`Ind. Water Use (a-f per year)` %>%
-  select(SourceType = `Water Type`, SITE_NAME = `Permit Holder`, PERMIT_NUM = `OWRB#`,
-         County, YEAR = Year, ANNUAL_WD_acfty = Industrial) %>%
-  mutate(ndays = ifelse(leap_year(ym(paste0(YEAR, "01"))), 366, 365),
-         ANNUAL_WD_MGD = (ANNUAL_WD_acfty * 325851) / (1000000 * ndays),
-         keep = (max(ANNUAL_WD_MGD) > 0), .by = c(SourceType, SITE_NAME, PERMIT_NUM, County),
-         County = str_to_upper(County),
-         STATE = "OK",
-         PERMIT_NUM = as.character(PERMIT_NUM)) %>%
-  filter(keep) %>%
-  select(-ANNUAL_WD_acfty, -ndays, -keep)
+  mutate(ndays = ifelse(leap_year(ym(paste0(Year, "01"))), 366, 365),
+         across(all_of(Categories),
+                ~(. * 325851) / (1000000 * ndays))) %>%
+  pivot_longer(all_of(Categories)) %>%
+  mutate(ValueType = "WD",
+         SourceType = `Water Type`,
+         Category = case_match(
+           name, "Agriculture" ~ "AG", "Commercial" ~ "CO", "Industrial" ~ "IN",
+           "Irrigation" ~ "IR", "Mining" ~ "MI", "Other Total" ~ NA_character_,
+           "Power" ~ "TE", "Public Supply" ~ "PS", "Recreation Fish & Wildlife" ~ NA_character_
+         ),
+         FacilityName = `Permit Holder`,
+         FacilityNumber = as.character(`OWRB#`),
+         County2 = County,
+         Annual_mgd_reported = value,
+         ) %>% 
+  mutate(keep = (max(Annual_mgd_reported) > 0), 
+         .by = c(ValueType, SourceType, Category, FacilityName, FacilityNumber, County2)) %>%
+  filter(keep == TRUE) %>%
+  select(ValueType, SourceType, Category, FacilityName, FacilityNumber, County2,
+         Year, Annual_mgd_reported) 
 
 OK_permitholders <- OKdat$`Industrial Permit Water Use 2000 to 2019.xlsx`$permit_data %>%
-  select(PERMIT_NUM = `Water Right`, SITE_NAME = Entity, SourceType = `Water Type`,
-         County = COUNTY, SourceID = Source, CATEGORY = Purpose, Address_OFFICE = address_1,
-         Town_OFFICE = adress_2, Zip_OFFICE = adress_2, SIC.CODE = SIC) %>%
-  mutate(County = str_to_upper(County),
-         State_OFFICE = str_extract(Town_OFFICE, "[[:upper:]]{2}"),
-         Town_OFFICE = str_extract(Town_OFFICE, "(\\w|\\s)+"),
-         Zip_OFFICE = readr::parse_number(Zip_OFFICE),
-         PERMIT_NUM = as.character(PERMIT_NUM),
-         SITE_NAME = gsub(",", " ", SITE_NAME))
+  mutate(FacilityNumber = `Water Right`, 
+         FacilityName = Entity, 
+         SourceType = `Water Type`,
+         Address1 = address_1,
+         City1 = str_extract(adress_2, "(\\w|\\s)+"),
+         State1 = str_extract(adress_2, "[[:upper:]]{2}"),
+         Zip1 = readr::parse_number(adress_2),
+         State2 = "OK",
+         County2 = COUNTY,
+         SourceName = Source) %>%
+  select(SourceType, FacilityName, FacilityNumber, SourceName, SIC, 
+         Address1, City1, Zip1, State1, County2, State2)
+
 
 OK_HUCS <- bind_rows(OKdat$`2015 INDUSTRIAL WATER USE FINAL.xlsx`$IND_SW_HUC,
                      OKdat$`2015 INDUSTRIAL WATER USE FINAL.xlsx`$IND_GW_HUC) %>%
-  select(REG_NUM = ID, PERMIT_NUM = PERMIT_NUMBER, Category = PURPOSE, 
-         ALIAS = Permit_Holder, SourceType = Water_Type, County = County,
-         HUC8 = `HUC Code`, SourceName = AQUIFER_CODE, BASIN = BASIN_CODE) %>%
-  mutate(County = str_to_upper(County),
-         PERMIT_NUM = as.character(PERMIT_NUM)) %>%
-  filter(!is.na(PERMIT_NUM))
+  mutate(FacilityNumber1 = ID, FacilityNumber = as.character(PERMIT_NUMBER), 
+         FacilityName = Permit_Holder, SourceType = Water_Type,
+         County2 = case_when(!is.na(County) ~ County, is.na(County) ~ County...4),
+         HUC8 = as.character(`HUC Code`),
+         AquiferName1 = AQUIFER_CODE, AquiferName2 = AQUIFER_CODE_2,
+         AquiferName3 = AQUIFER_CODE_3) %>%
+  select(SourceType, FacilityName, FacilityNumber, FacilityNumber1,
+         HUC8, AquiferName1, AquiferName2, AquiferName3, County2) %>%
+  filter(!is.na(FacilityName))
 
 OK_spatial <- st_drop_geometry(OK_sf) %>%
-  select(PERMIT_NUM, Latitude = LATITUDE, Longitude = LONGITUDE, ALIAS2 = ENTITY_NAM,
-         County = COUNTY, SourceType = WATER) %>%
-  mutate(County = str_to_upper(County), 
-         SourceType = gsub("Groundwater", "GW", SourceType))
+  unique() %>%
+  mutate(SourceType = case_match(WATER, "Groundwater" ~ "GW"),
+         FacilityName = ENTITY_NAM, FacilityNumber = as.character(PERMIT_NUM),
+         Lat = LATITUDE,
+         Lon = LONGITUDE, County2 = COUNTY, BasinName1 = STREAM_SYS,
+         SourceNumber = RECORD_ID) %>%
+  select(SourceType, FacilityName, FacilityNumber, SourceNumber, BasinName1,
+         County2, Lat, Lon) %>%
+  unique() %>%
+  mutate(nsources = n(), .by = c(SourceType, FacilityName, 
+                                 FacilityNumber, BasinName1, County2)) %>%
+  ungroup()
 
-OK_dat_all <- OK_dat_annual %>%
-  left_join(., OK_permitholders, by = c("PERMIT_NUM", "County", "SourceType", "SITE_NAME")) %>%
-  left_join(OK_HUCS, by = c("PERMIT_NUM", "SourceType", "County")) %>%
-  left_join(., OK_spatial, by = c("PERMIT_NUM", "SourceType", "County"), relationship = "many-to-many")
+OK_dat_all <- mutate(OK_dat_annual, FacilityName = gsub(",", " ", FacilityName)) %>%
+  left_join(mutate(OK_permitholders, FacilityName = gsub(",", " ", FacilityName)),
+            by = c("SourceType", "FacilityName", "FacilityNumber", "County2")) %>%
+  left_join(OK_HUCS, by = c("SourceType", "FacilityNumber", "County2")) %>%
+  rename(FacilityName = FacilityName.x, FacilityName1 = FacilityName.y) %>%
+  left_join(mutate(OK_spatial, FacilityName = gsub(",", " ", FacilityName)), by = c("SourceType", "FacilityNumber", "County2"), 
+            relationship = "many-to-many") %>%
+  mutate(tmp = pmap(list(FacilityName.x, FacilityName.y, FacilityName1),
+                    ~discard(unique(c(..1, ..2, ..3)), is.na)),
+         FacilityName = map_chr(tmp, ~.x[1]),
+         FacilityName1 = map_chr(tmp, ~.x[2]),
+         FacilityName2 = map_chr(tmp, ~.x[3])) %>%
+  select(ValueType, SourceType, Category, FacilityName, FacilityName1, 
+         FacilityName2, FacilityNumber, FacilityNumber1, SourceName, SourceNumber,
+         SIC, HUC8, AquiferName1, AquiferName2, AquiferName3, BasinName1,
+         Address1, City1, Zip1, State1, County2, State2, Lat, Lon, Year, Annual_mgd_reported,
+         nsources) %>%
+  filter(Annual_mgd_reported > 0 | !is.na(Category)) %>%
+  group_by(ValueType, SourceType, Category, FacilityName, FacilityName1, 
+           FacilityName2, FacilityNumber, FacilityNumber1, 
+           SIC, HUC8, AquiferName1, AquiferName2, AquiferName3, BasinName1,
+           Address1, City1, Zip1, State1, County2, State2, Year, Annual_mgd_reported,
+           nsources) %>%
+  mutate(i = 1, cumsum = cumsum(i),
+         Annual_mgd_reported = case_when(cumsum == 1 ~ Annual_mgd_reported,
+                                         cumsum > 1 ~ 0)) %>%
+  ungroup() %>%
+  select(-nsources, -i, -cumsum)
 
 # Write data ----
 
@@ -81,5 +134,5 @@ if(outputcsv) {write.csv(
 )}
 
 # Messages ----
-message("\nNote for future reference that 2010 Hoover data, and spatial data including polygons of water use areas are also available for Oklahoma.")
-message("\nOklahoma lat/lon points are the first entry in the spatial data. For some sites, up to 151 lat/lon points are given for wells.")
+message("\nNote for future reference that 2010 Hoover data, and spatial data\n including polygons of water use areas are also available for Oklahoma.")
+message("\nFor facilities in OK with numerous lat/lon points & SourceNumbers,\n all withdrawal is associated with the first point.\n The remaining lat/lon points have 0 withdrawal assigned to them.\n This distribution preserves the facility total when the distribution\n between sources is unknown.")

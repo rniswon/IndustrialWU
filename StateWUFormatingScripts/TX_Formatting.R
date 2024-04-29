@@ -30,50 +30,66 @@ TXdat <- loadSTdata(statedirs[["TX"]])
 ## Format the data ----
 
 TX_WUdat <- TXdat$TX_IN_WU.xlsx$Texas_IndustrialWithdrawals_200 %>%
-  select(SourceType = `Water Type`, SITE_NAME = `Survey Name`,
-         PERMIT_NUM = `TWDB Survey No`, TCEQWellId, `Purchased / Self-Supplied`, 
-         WellName, `Seller Name`, County = `County Source`, YEAR = Year,
-         any_of(month.abb), `Total Intake Gallons`, contains("DD"),
-         NAICS.CODE = NAICS, CATEGORY = UseType, `Facility Address`, `Brackish / Saline`) %>%
-  mutate(SourceID = case_when(`Purchased / Self-Supplied` == "Pur" ~ "Purchase",
-                              `Purchased / Self-Supplied` %in% c("SS", "Ss") ~ TCEQWellId),
-         SourceName = case_when(`Purchased / Self-Supplied` == "Pur" ~ `Seller Name`,
-                                `Purchased / Self-Supplied` %in% c("SS", "Ss") ~ WellName),
-         STATE = "TX",
-         Address_SOURCE = str_extract(string = `Facility Address`, pattern = ".*(?=,.*,.*$)"),
-         Town_SOURCE = str_extract(string = `Facility Address`, pattern = "(?<=,).*(?=,.*$)"),
-         Zip_SOURCE = str_extract(string = `Facility Address`, pattern = "[[:digit:]]{5}$"),
-         suppressWarnings(across(contains("itude"), ~readr::parse_number(.))),
+  mutate(ValueType = case_match(`Purchased / Self-Supplied`, "Pur" ~ "TR",
+                                c("SS", "Ss") ~ "WD"),
+         SourceType = case_when(
+           `Purchased / Self-Supplied` == "Pur" ~ "PS",
+           `Water Type` == "Groundwater" ~ "GW",
+           `Water Type` == "Surface Water" ~ "SW"
+         ),
+         Category = case_match(UseType, "IND" ~ "IN", "MFG" ~ "MF",
+                               "MIN" ~ "MI", "PWR" ~ "TE"),
+         Saline = case_match(`Brackish / Saline`, "N" ~ FALSE, "Y" ~ TRUE),
+         FacilityName = `Survey Name`, FacilityNumber = `TWDB Survey No`,
+         SourceName = case_when(
+           ValueType == "TR" ~ "Seller Name",
+           ValueType == "WD" & SourceType == "GW" ~ WellName
+         ),
+         SourceNumber = TCEQWellId,
+         Description = NAICSName,
+         Address1 = str_extract(`Facility Address`, ".*(?=,.*, )"),
+         City1 = str_extract(`Facility Address`, "(?<=, ).*(?=,)"),
+         State1 = str_extract(`Facility Address`, "(?<=, )[[:upper:]]{2}"),
+         Zip1 = str_extract(`Facility Address`, "(?<=, [[:upper:]]{2} )[[:digit:]]{5}"),
+         County2 = `County Source`,
+         State2 = "TX",
          across(contains("itude"), ~ifelse(. == 0, NA_real_, .)),
-         Latitude = ifelse(!is.na(`Well Latitude DD`), `Well Latitude DD`, `Ind Facility Latitude DD`),
-         Longitude = ifelse(!is.na(`Well Longitude DD`), `Well Longitude DD`, 
+         across(contains("itude"), ~ifelse(. == 0, NA_real_, .)),
+         Lat = ifelse(!is.na(`Well Latitude DD`), `Well Latitude DD`, `Ind Facility Latitude DD`),
+         Lon = ifelse(!is.na(`Well Longitude DD`), `Well Longitude DD`, 
                             `Ind Facility Longitude DD`),
-         Saline = ifelse(`Brackish / Saline` == "Y", TRUE, FALSE)) %>%
+  ) %>%
   pivot_longer(cols = c(any_of(month.abb), `Total Intake Gallons`)) %>%
   mutate(date = suppressWarnings(as.Date(ifelse(name == "Total Intake Gallons", 
-                                        ym(paste(YEAR, "01")),
-                                        ym(paste(YEAR, name))))),
+                                                ym(paste(Year, "01")),
+                                                ym(paste(Year, name))))),
          ndays = ifelse(name == "Total Intake Gallons", 
                         ifelse(leap_year(date), 366, 365),
                         days_in_month(date)),
          wd_mgd = value / (1000000 * ndays),
          time_name = ifelse(name == "Total Intake Gallons",
-                            "ANNUAL_WD_MGD",
-                            paste0(name, "_mgd")),
-         Self_Supply = case_when(`Purchased / Self-Supplied` == "Pur" ~ FALSE, 
-                              `Purchased / Self-Supplied` %in% c("SS", "Ss") ~ TRUE)) %>%
+                            "Annual_mgd_reported",
+                            paste0(name, "_mgd"))) %>%
   pivot_wider(
-    id_cols = c(SourceType, SITE_NAME, PERMIT_NUM, SourceID, SourceName, County, YEAR,
-                Latitude, Longitude, NAICS.CODE, STATE, CATEGORY,
-                Address_SOURCE, Town_SOURCE, Zip_SOURCE, Saline),
-    names_from = time_name, values_from = wd_mgd, values_fn = sum
-  )
+    id_cols = c(ValueType, SourceType, Category, Saline, FacilityName, FacilityNumber,
+                SourceNumber, NAICS, Description, Address1, City1, State1, Zip1, 
+                County2, State2, Lat, Lon, Year), 
+    names_from = time_name, values_from = wd_mgd, values_fn = sum) %>%
+  mutate(Annual_mgd_calculated = case_when(
+    leap_year(as.numeric(Year)) ~ (31 * (Jan_mgd + Mar_mgd + May_mgd + Jul_mgd + Aug_mgd + Oct_mgd + Dec_mgd) +
+                                     30 * (Apr_mgd + Jun_mgd + Sep_mgd + Nov_mgd) +
+                                     29 * Feb_mgd) / 366,
+    !leap_year(as.numeric(Year)) ~ (31 * (Jan_mgd + Mar_mgd + May_mgd + Jul_mgd + Aug_mgd + Oct_mgd + Dec_mgd) +
+                                      30 * (Apr_mgd + Jun_mgd + Sep_mgd + Nov_mgd) +
+                                      28 * Feb_mgd) / 365
+  ))
+
 
 TX_SIC <- TXdat$TX_IN_WU.xlsx$`SIC-NAICS_lookup` %>%
-  select(NAICS.CODE = NAICS, SIC.CODE = SIC) %>%
-  summarize(SIC.CODE = paste0(SIC.CODE, collapse = ", "), .by = NAICS.CODE)
+  select(NAICS, SIC = SIC) %>%
+  summarize(SIC = paste0(SIC, collapse = ", "), .by = NAICS)
 
-TX_dat_all <- left_join(TX_WUdat, TX_SIC, by = "NAICS.CODE")
+TX_dat_all <- left_join(TX_WUdat, TX_SIC, by = "NAICS")
 
 # Write data ----
 
@@ -82,5 +98,5 @@ if(outputcsv) {write.csv(
 )}
 
 # Messages ----
-message("\nFor Texas data, where multiple records exist for one facility, permit number, and source, in the same year, and where no data are available to distiguish the entries, entries have been summarized by summing withdrawal values.")
-message("\nNote for future reference that 2020 NPDES data and 2010 Hoover data are also available for Texas.")
+message("\nFor Texas data, where multiple records exist for one facility,\n permit number, and source, in the same year, and where no data\n are available to distinguish the entries, entries have been\n summarized by summing withdrawal values.")
+message("\nNote for future reference that 2020 NPDES data and 2010 Hoover data\n are also available for Texas.")
