@@ -38,17 +38,27 @@ VT_dat_all <- VTdat$`2008_2019_ Vermont_Yearly_Large_GW_Withdrawal.xlsx`$`GW Wit
   filter(!is.na(Latitude)) %>%
   pivot_longer(cols = contains("Gallons per Year")) %>%
   mutate(
-    PERMIT_NUM = VTWSID, SITE_NAME = `System Name`,
-    Address_SOURCE = str_extract(Address, "(\\s|\\w)+"),
-    Town_SOURCE = str_extract(Address, "(?<=, )\\w+"),
-    STATE = "VT", CATEGORY = `USGS Water Use Code`, CATEGORY2 = Use,
+    FacilityNumber = VTWSID,
+    FacilityName = `System Name`,
+    Address1 = str_extract(Address, "(\\s|\\w)+"),
+    City1 = str_extract(Address, "(?<=, )\\w+"),
+    State1 = str_extract(Address, "[[:upper:]]{2}"),
+    Zip1 = str_extract(Address, "(?<=[[:upper:]]{2} )[[:digit:]]{5}"),
+    Category = case_match(`USGS Water Use Code`,
+                          "Aquaculture" ~ "AQ",
+                          "Industrial" ~ "IN",
+                          "Irrigation" ~ "IR",
+                          "Mining" ~ "MI",
+                          "Thermoelectric" ~ "TE"
+    ), 
+    Description = Use,
     Year = parse_number(name),
     value_gal = parse_number(value, na = c("n/a", "not reported yet", "closed")),
     ndays = ifelse(leap_year(ym(paste(Year, "01"))), 366, 365),
-    ANNUAL_WD_MGD = value_gal / (1000000 * ndays)
+    Annual_mgd_reported = value_gal / (1000000 * ndays)
   ) %>%
-  select(PERMIT_NUM, SITE_NAME, Address_SOURCE, Town_SOURCE, STATE, CATEGORY,
-         CATEGORY2, Year, ANNUAL_WD_MGD)
+  select(Lat = Latitude, Lon = Longitude, FacilityNumber, FacilityName, Address1, 
+         City1, State1, Zip1, Category, Description, Year, Annual_mgd_reported)
 
 #Write data ----
   

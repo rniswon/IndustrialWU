@@ -6,7 +6,6 @@
 
 # Setup ----
 
-
 packages <- c("purrr", "dplyr", "stringr", "readxl", "archive", "furrr", 
               "tidyr", "future")
 suppressPackageStartupMessages(suppressWarnings(invisible(lapply(packages, optloadinstall))))
@@ -30,41 +29,79 @@ MNdat <- loadSTdata(statedirs[["MN"]])
 ## Format the data ----
 
 MN_dat_annual <- MNdat$MN_IN_WU.xlsx$`MPARS_Index_Permits-IN` %>%
-  rename(SourceType = resource_category, BASIN = watershed_name, 
-         SITE_NAME = landowner, PERMIT_NUM = permit_number, County = county_name, 
-         CATEGORY2 = use_category, DESCRIPTION = use_type, REG_NUM = legal_description
-         ) %>%
-  mutate(County = str_to_upper(County),
-         SourceID = resource_type, 
-         SourceName = case_when(is.na(aquifer) ~ resource_name, !is.na(aquifer) ~ aquifer),
-         STATE = "MN") %>%
-  pivot_longer(cols = contains("use_"), names_to = "YEAR", values_to = "AnnualUse") %>%
+  pivot_longer(cols = which(grepl("use_[[:digit:]]", names(.))), names_to = "Year", 
+               values_to = "AnnualUse") %>%
   mutate(
-    YEAR = as.numeric(gsub("use_|_mg", "", YEAR)),
-    ndays = ifelse(lubridate::leap_year(lubridate::ym(paste0(YEAR, "01"))), 366, 365),
-    ANNUAL_WD_MGD = AnnualUse / ndays
-    ) %>%
-  select(SourceType, BASIN, SITE_NAME, PERMIT_NUM, County, CATEGORY2, DESCRIPTION, REG_NUM,
-         SourceID, SourceName, STATE, YEAR, ANNUAL_WD_MGD)
+    Year = as.numeric(gsub("use_|_mg", "", Year)),
+    ndays = ifelse(lubridate::leap_year(lubridate::ym(paste0(Year, "01"))), 366, 365),
+    Annual_mgd_reported = AnnualUse / ndays,
+    ValueType = "WD",
+    SourceType = case_match(resource_category,
+                            "Groundwater" ~ "GW",
+                            "Surface Water" ~ "SW"
+    ),
+    Category = case_match(use_category,
+                          c("Agricultural Irrigation", "Non-Crop Irrigation") ~ "IR",
+                          c("Heating/Cooling", "Special Categories", "Water Level Maintenance") ~ NA_character_,
+                          "Industrial Processing" ~ "IN",
+                          "Power Generation" ~ "TE",
+                          "Water Supply" ~ "PS"
+    ),
+    Saline = NA,
+    SourceNumber = case_when(!is.na(well_number) ~ as.character(well_number),
+                             is.na(well_number) ~ resource_number),
+    AquiferName1 = case_when(SourceType == "GW" ~ resource_name,
+                             SourceType == "SW" ~ NA_character_),
+    BasinName1 = case_when(SourceType == "GW" ~ NA_character_,
+                           SourceType == "SW" ~ resource_name),
+    State1 = "MN", DataProtected = TRUE
+  ) %>%
+  select(ValueType, SourceType, Category, Saline, 
+         FacilityName = landowner, FacilityName1 = project_name,
+         FacilityName2 = agent, FacilityNumber = permit_number, 
+         FacilityNumber2 = legal_description,
+         SourceName = installation_name, SourceNumber, Description = use_type,
+         AquiferName1, AquiferName2 = aquifer,
+         BasinName1, BasinName2 = watershed_name, County1 = county_name,
+         State1, Year, Annual_mgd_reported) 
+
 
 MN_dat_NAICS <- MNdat$MN_IN_WU.xlsx$`MN IN SIC Task` %>%
-  select(PERMIT_NUM = permit_number, FacilityID = project_name, SITE_NAME = landowner, ALIAS = agent,
-         County = county_name, DESCRIPTION = use_type, CATEGORY2 = use_category,
-         CATEGORY = nat_water_use_cd, NAICS.CODE = naics_cd, SIC.CODE = sic_cd,
-         Latitude = Lat, Longitude = Long) %>%
-  mutate(County = str_to_upper(County))
+  mutate(Category = case_match(use_category,
+                               c("Agricultural Irrigation", "Non-Crop Irrigation") ~ "IR",
+                               c("Heating/Cooling", "Special Categories", "Water Level Maintenance") ~ NA_character_,
+                               "Industrial Processing" ~ "IN",
+                               "Power Generation" ~ "TE",
+                               "Water Supply" ~ "PS"
+  ),
+  Description = paste(use_type, sic_ds, naics_ds, sep = ", ")
+  ) %>%
+  select(FacilityNumber = permit_number, FacilityName1 = project_name, 
+         FacilityName = landowner, FacilityName2 = agent,
+         County1 = county_name,
+         Description, Category,
+         CATEGORY = nat_water_use_cd, NAICS = naics_cd, SIC = sic_cd,
+         Lat = Lat, Lon = Long)
 
 MN_dat_all <- merge(MN_dat_annual, MN_dat_NAICS, all = TRUE,
-                    by = c("PERMIT_NUM", "County", "CATEGORY2", "DESCRIPTION",
-                           "SITE_NAME")) %>%
-  filter(!CATEGORY2 %in% c("Agricultural Irrigation", "Non-Crop Irrigation",
-                           "Water Supply")) %>%
-  group_by(PERMIT_NUM, County, CATEGORY2, DESCRIPTION, SITE_NAME, SourceType, 
-           BASIN, REG_NUM, SourceID, SourceName, STATE) %>%
-  mutate(keep = all(!is.na(ANNUAL_WD_MGD))) %>%
+                    by = c("FacilityName", "FacilityName1", "FacilityName2", 
+                           "FacilityNumber", "County1"), 
+                    suffix = c("_annual", "_naics")) %>%
+  mutate(Category = case_when(
+    !is.na(CATEGORY) ~ CATEGORY,
+    !is.na(Category_annual) ~ Category_annual,
+    !is.na(Category_naics) ~ Category_naics,
+    is.na(CATEGORY) & is.na(Category_annual) & is.na(Category_naics) ~ NA_character_
+  ),
+  Description = paste(Description_annual, Description_naics, sep = "; ")) %>%
+  select(-CATEGORY, -Category_annual, -Category_naics, -Description_annual,
+         -Description_naics) %>%
+  group_by(FacilityName, FacilityName1, FacilityName2,
+           FacilityNumber, County1) %>%
+  mutate(keep = any(!is.na(Annual_mgd_reported))) %>%
   filter(keep) %>%
   select(-keep) %>%
-  ungroup()
+  ungroup() 
 
 # Write data ----
 

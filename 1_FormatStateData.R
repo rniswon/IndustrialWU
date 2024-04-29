@@ -22,7 +22,9 @@ compileStateData<-function(outputcsv){
   }
 }
 
-packages <-  c("stringr", "purrr", "readxl", "svDialogs")
+packages <-  c("stringr", "purrr", "readxl", "svDialogs", "dplyr", "archive",
+               "furrr", "tidyr", "future", "readr", "lubridate", "tigris",
+               "zipcodeR", "data.table", "sf")
 suppressPackageStartupMessages(suppressWarnings(invisible(lapply(packages, optloadinstall))))
 source(file.path("utility_functions", "CheckNewSTfiles.R"))
 

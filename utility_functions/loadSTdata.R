@@ -5,13 +5,14 @@
 #' @return `dat` a list containing the data that is available, and an inventory of other files that were not loaded
 
 loadSTdata <- function(stDatadir) {
+  # browser()
   reqpackages <- c("furrr", "stringr", "archive", "readxl", "purrr")
   supreq <- function(x) {suppressWarnings(require(x, character.only = TRUE))}
   
   lapply(reqpackages, supreq)
   plan(multisession)
   
-  stDatafp <- list.files(stDatadir, full.names = TRUE)
+  stDatafp <- list.files(stDatadir, full.names = TRUE, recursive = TRUE)
   
   #test if directory
   findDirs<-sapply(stDatafp,dir.exists)
@@ -19,15 +20,14 @@ loadSTdata <- function(stDatadir) {
   
   fps <- stDatafp
   filenames<-lapply(fps,basename)
-  
-  if(any(grepl(".zip", fps))) {
+  if(any(grepl(".zip|.7z", fps))) {
     tmp <- tempfile()
-    purrr::map(fps[grepl(".zip", fps)], ~archive::archive_extract(.x, dir = tmp))
+    purrr::map(fps[grepl(".zip|.7z", fps)], ~archive::archive_extract(.x, dir = tmp))
     zipfls <- list.files(tmp, recursive = TRUE, full.names = TRUE)
     flnms <- unlist(str_extract(zipfls, "(?<=/).*"))
     
-    filenames <- c(filenames[-grep(".zip", fps)], flnms)
-    fps <- c(fps[-grep(".zip", fps)], zipfls)
+    filenames <- c(filenames[-grep(".zip|.7z", fps)], flnms)
+    fps <- c(fps[-grep(".zip|.7z", fps)], zipfls)
   }
 
   names(fps) <- filenames
