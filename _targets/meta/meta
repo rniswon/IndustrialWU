@@ -1,0 +1,15 @@
+name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
+blank|stem|e2249f10768071ba|245c2e38508a3dcf|52b2393108c175b6|-1858050785||t19881.8886565366s|f1fe1fec5e4632c7|12447|rds|local|vector|||0||
+checkSTupdates|function|11bbab065e6b7b6b|||||||||||||||
+data|stem|6c3735ea88ec1344|57e4d4c8e18ff7f3|76252ebd9db757ad|33550471||t19881.8670843515s|b5e78c792c5342b6|11938|rds|local|vector|||28.33||
+datafp|stem|9a05319360b70f40|06c524624e1dbfdd|2c530c1562a7fbd1|11349336|C:/Users/cchamber/DOI/GS-W-WaterUse - Documents/GAP/industrial/state_data|t19881.6669293797s|739e0715fb533191|8192|file|local|vector|||0||
+filleddirectory|stem|49232c01849a155e|e005ba95080f6a5b|2c530c1562a7fbd1|-546554718|DataDirectories.csv|t19881.8939328208s|c1f5dd0dcb110529|129753|file|local|vector|||3.7||
+generate_blankcsv|function|e2aaba8a27c4ea8e|||||||||||||||
+get_all_dat|function|57babfa42db46ed5|||||||||||||||
+get_filledcsv|function|d6aed0eec2cf472d|||||||||||||||
+getdatafp|function|6834e305add1a308|||||||||||||||
+listdatadirs|function|adde543e21b95f61|||||||||||||||
+listSTdata|function|fdcb5a5ffac1440f|||||||||||||||
+localtracker|stem|85f0a3f830f03541|fb67076dbaa641dd|44942bb998a19209|-42300712||t19881.8563295332s|bb7bee2f7172f3d6|1642|rds|local|vector|||0.06||
+merge_data|function|56a54d3371716b50|||||||||||||||
+mergeddata|stem|a0e884585e18ee94|96bb88e26f8cfb56|dfdad93808df1918|1825416019||t19881.8941982147s|e255484007059372|43|rds|local|vector|||0.04||
