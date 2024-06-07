@@ -191,7 +191,7 @@ MA_dat_all <- merge(
   dplyr::select(-Annual_mgd_reported_MONREP, -Annual_mgd_reported_ANNREP) %>%
   mutate(State1 = "MA", State2 = "MA", ValueType = "WD", Saline = NA,
          Lat = convert2decimal(gsub("^0", "", Lat)), 
-         Lon = -convert2decimal(gsub("^0", "", Lon)), DataProtected = FALSE,
+         Lon = -convert2decimal(gsub("^0", "", Lon)), DataProtected = NA,
          Annual_mgd_calculated = case_when(
            leap_year(as.numeric(Year)) ~ (31 * (Jan_mgd + Mar_mgd + May_mgd + Jul_mgd + Aug_mgd + Oct_mgd + Dec_mgd) +
                                             30 * (Apr_mgd + Jun_mgd + Sep_mgd + Nov_mgd) +

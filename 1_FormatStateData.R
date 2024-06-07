@@ -12,7 +12,7 @@
 outputcsv <- TRUE # c(TRUE, FALSE)
 compileStateData<-function(outputcsv){
 # Setup ----
-# browser()
+browser()
   optloadinstall <- function(x) {
   if(x %in% utils::installed.packages()) {
     library(x, character.only = TRUE)

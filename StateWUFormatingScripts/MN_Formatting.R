@@ -54,7 +54,7 @@ MN_dat_annual <- MNdat$MN_IN_WU.xlsx$`MPARS_Index_Permits-IN` %>%
                              SourceType == "SW" ~ NA_character_),
     BasinName1 = case_when(SourceType == "GW" ~ NA_character_,
                            SourceType == "SW" ~ resource_name),
-    State1 = "MN", DataProtected = TRUE
+    State1 = "MN", DataProtected = NA
   ) %>%
   select(ValueType, SourceType, Category, Saline, 
          FacilityName = landowner, FacilityName1 = project_name,
