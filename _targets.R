@@ -52,9 +52,13 @@ tar_source()
 
 # Replace the target list below with your own:
 list(
-  tar_target(name = datafp, command = "C:/Users/cchamber/DOI/GS-W-WaterUse - Documents/GAP/industrial/state_data", format = "file"),
-  tar_target(name = data, command = get_all_dat(datafp)),
-  tar_target(name = blank, command = generate_blankcsv(data)),
-  tar_target(filleddirectory, "DataDirectories.csv", format = "file"),
-  tar_target(mergeddata, merge_data(blank, filleddirectory))
+  tar_target(datafp, "C:/Users/cchamber/DOI/GS-W-WaterUse - Documents/GAP/industrial/state_data", format = "file"),
+  tar_target(existingDataDictionary, "DataCrosswalks/DataDirectories.csv", format = "file"),
+  tar_target(existingHeaderCrosswalk, "DataCrosswalks/HeaderCrosswalk.csv", format = "file"),
+  tar_target(dat, command = get_all_dat(datafp)),
+  tar_target(blankDataDictionary, command = generate_blankcsv(dat)),
+  tar_target(updatedDataDictionary, command = merge_data(blank = blankDataDictionary, filled = existingDataDictionary)),
+  tar_target(blankHeaderCrosswalk, command = generate_blankHeaderCrosswalkcsv(updatedDataDictionary)),
+  tar_target(updatedHeaderCrosswalk, command = merge_data(blank = blankHeaderCrosswalk, filled = existingHeaderCrosswalk)),
+  tar_target(renamed_rawdat, command = readandrename_columns(datafp, updatedHeaderCrosswalk))
 )

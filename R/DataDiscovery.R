@@ -73,3 +73,20 @@ get_all_dat <- function(fp) {
   availdat <- listdatadirs(fp)
   unlist(map(availdat, ~listSTdata(.x)))
 }
+
+read_in_datafile <- function(datafp, fp) {
+    data <- if(grepl("\\~\\$", fp)) {
+      list("Temporary and/or corrupted file")
+    } else if(
+      grepl(".csv|.txt", fp)) {
+      read.csv(fp, fill = TRUE, header = FALSE)
+    } else if(grepl(".xlsx|.xls", fp)) {
+      workbook_fp <- str_extract(fp, ".*(?=\\$)")
+      sheetnm <- str_extract(fp, "(?<=\\$).*")
+      suppressWarnings(suppressMessages(
+        readxl::read_excel(file.path(datafp, workbook_fp), sheet = sheetnm)))
+    } else{
+      list("Other database type (e.g. Word or Access)")
+    }
+    data
+}
