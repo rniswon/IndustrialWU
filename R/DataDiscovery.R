@@ -85,8 +85,13 @@ read_in_datafile <- function(datafp, fp) {
       sheetnm <- str_extract(fp, "(?<=\\$).*")
       suppressWarnings(suppressMessages(
         readxl::read_excel(file.path(datafp, workbook_fp), sheet = sheetnm)))
-    } else{
-      list("Other database type (e.g. Word or Access)")
+    } else if(grepl(".docx", fp)) {
+      dat <- officer::read_docx(file.path(datafp, fp))
+      txt <- officer::docx_summary(dat)$text
+      data.frame(text = txt)
+      } else {
+      browser()
+      list("Other database type (e.g. Shapefile or Access)")
     }
     data
 }

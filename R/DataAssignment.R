@@ -39,7 +39,7 @@ generate_blankHeaderCrosswalkcsv <- function(filledassignment) {
            County2 = NA, State2 = NA, Zip2 = NA, Lat = NA, Lon = NA, Datum = NA, 
            Projection = NA, Year = NA, Jan = NA, Feb = NA, Mar = NA, Apr = NA,
            May = NA, Jun = NA, Jul = NA, Aug = NA, Sep = NA, Oct = NA, Nov = NA,
-           Dec = NA, Units_monthly = NA, Method_monthy = NA, Annual_reported = NA,
+           Dec = NA, Units_monthly = NA, Method_monthly = NA, Annual_reported = NA,
            Units_annual_reported = NA, Method_annual_reported = NA, DataProtected = NA)
   
   return(blanksiteDescripts)
@@ -72,13 +72,102 @@ readandrename_columns <- function(datafp, HeaderCrosswalk) {
     dat_raw <- read_in_datafile(datafp, .x)
     headercrosswalk <- headers_classified %>%
       slice(i) %>% select(where(~{. != ""})) %>% 
-      pivot_longer(cols = -c(State, file), names_to = "NewName", 
+      {if(length(names(.)) > 2) {
+        pivot_longer(., cols = -c(State, file), names_to = "NewName", 
                    values_to = "OldName")
-    map2_dfc(headercrosswalk$NewName, headercrosswalk$OldName, ~{
-      tibble(!!.x := dat_raw[[.y]])
-    })
+      } else {.}}
+    
+    if(any(c("NewName", "OldName") %in% names(headercrosswalk))) {
+      tmp <- map2_dfc(headercrosswalk$NewName, headercrosswalk$OldName, ~{
+        x <- .x
+        y <- unlist(str_split(.y, ", "))
+        map_dfc(y, ~{
+          tibble(!!x := dat_raw[[.x]])
+        })
+      })
+    } else {tmp <- data.frame()}
+tmp
   })
   names(dat) <- headers_classified$file
+  
+  return(dat)
 }
 
+reformat_data <- function(x, headers, hardcodedparams) {
+    x_munged <- x %>% formatsitedata(., headers, hardcodedparams) %>% 
+    formatlocationdata(., headers, hardcodedparams) %>%
+    formatmonthlydata(., headers, hardcodedparams) %>% 
+    formatannualdata(., headers, hardcodedparams) %>% 
+    formatmetadata(., headers, hardcodedparams) %>%
+    map(., ~unique(.x))
+  
+  x_munged_indices_bysize <- unlist(map(x_munged, ~length(.x))) %>% sort(decreasing = TRUE)
+  
+  x_merge_ready <- x_munged[names(x_munged_indices_bysize)] %>% keep(~{nrow(.) > 0})
+  x_merged <- reduce(x_merge_ready, merge_andreplaceNA, .dir = "forward") 
+  
+  ordered <- names(headers)
+  
+  x_ordered <- x_merged %>% select(any_of(ordered))
+  
+  return(x_ordered)
+}
 
+merge_andreplaceNA <- function(x, y) {
+  
+  x_complete <- x %>% select(where(~!any(is.na(.))))
+  y_complete <- y %>% select(where(~!any(is.na(.))))
+  
+  merge_vars <- names(x_complete)[names(x_complete) %in% names(y_complete)]
+  
+  merge <- rquery::natural_join(x, y, by = merge_vars, jointype = "FULL")
+  
+  return(merge)
+}
+
+add_state <- function(renamed_rawdat) {
+  imap(renamed_rawdat, ~{
+    state <- str_extract(.y, "(?<=^/)[[:alpha:]]{2}")
+    .x %>% mutate(State = state)
+  })
+}
+
+concat_columns <- function(data, Column) {
+  tmp <- data %>%
+    rowwise() %>%
+    select(contains(Column)) %>% mutate(tmp = paste(na.omit(c_across(contains(Column))), collapse = ", ")) %>%
+    pull(tmp)
+  tmp2 <- data %>%
+    select(-contains(Column)) %>% mutate(!!Column := tmp)
+  return(tmp2)
+}
+
+handle_readmes <- function(data, fp, header, hardcodes) {
+  info <- unlist(data[[header]])
+  permit_options <- "application|permitted|permited|authorized"
+  report_options <- "reported|submitted"
+  alloptions <- paste(permit_options, report_options, sep = "|")
+  found_methods <- unique(
+    gsub(report_options, "reported", 
+         gsub(permit_options, "permitted", 
+              na.omit(unlist(str_extract_all(info, alloptions))))))
+  if(length(found_methods) == 1) {
+    tmp <- data %>%
+      mutate(!!header := found_methods)
+  } else {
+    hardparams <- read.csv(hardcodes, colClasses = "character")
+    
+    if(header %in% hardparams$Header) {
+      found_methods_manual <- hardparams %>% filter(Header == header) %>% pull(Value)
+    } else {
+      found_methods_manual <- svDialogs::dlg_input(message = paste("Enter suspected", header, "value based on", fp, ". Suggested options are", paste(found_methods, collapse = ", ")))$res
+      hardparams_update <- hardparams %>% add_row(file = fp, Header = header, Value = found_methods_manual)
+      
+      write.csv(hardparams_update, file = hardcodes, row.names = FALSE)
+    }
+    tmp <- data %>% 
+      mutate(!!header := found_methods_manual)
+  }
+  
+  return(tmp)
+}

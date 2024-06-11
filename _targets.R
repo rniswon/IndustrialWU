@@ -11,7 +11,7 @@ library(targets)
 tar_option_set(
   packages = c("tibble", "stringr", "purrr", "readxl", "svDialogs", "dplyr", "archive",
                "furrr", "tidyr", "future", "readr", "lubridate", "tigris",
-               "zipcodeR", "data.table", "sf"), # Packages that your targets need for their tasks.
+               "zipcodeR", "data.table", "sf", "rquery"), # Packages that your targets need for their tasks.
   format = "rds" # Optionally set the default storage format. qs is fast.
   #
   # Pipelines that take a long time to run may benefit from
@@ -55,10 +55,12 @@ list(
   tar_target(datafp, "C:/Users/cchamber/DOI/GS-W-WaterUse - Documents/GAP/industrial/state_data", format = "file"),
   tar_target(existingDataDictionary, "DataCrosswalks/DataDirectories.csv", format = "file"),
   tar_target(existingHeaderCrosswalk, "DataCrosswalks/HeaderCrosswalk.csv", format = "file"),
+  tar_target(existingHardCodes, "DataCrosswalks/HardcodedManualAttributes.csv", format = "file"),
   tar_target(dat, command = get_all_dat(datafp)),
   tar_target(blankDataDictionary, command = generate_blankcsv(dat)),
   tar_target(updatedDataDictionary, command = merge_data(blank = blankDataDictionary, filled = existingDataDictionary)),
   tar_target(blankHeaderCrosswalk, command = generate_blankHeaderCrosswalkcsv(updatedDataDictionary)),
   tar_target(updatedHeaderCrosswalk, command = merge_data(blank = blankHeaderCrosswalk, filled = existingHeaderCrosswalk)),
-  tar_target(renamed_rawdat, command = readandrename_columns(datafp, updatedHeaderCrosswalk))
+  tar_target(renamed_rawdat, command = readandrename_columns(datafp, updatedHeaderCrosswalk)),
+  tar_target(reformatted_data, command = reformat_data(renamed_rawdat, updatedHeaderCrosswalk, existingHardCodes))
 )
