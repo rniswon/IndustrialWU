@@ -1,0 +1,3 @@
+﻿file,long_wide,cols,names_tofrom,names_pattern,values_tofrom
+/AZ/2000-2018_Industrial Data_Redacted.xlsx$Non-Turf Facilities,long,"contains(c(""-USE/PURPOSE-"", ""--""))","SourceType, Description","sep: ""-USE/PURPOSE-|--""",Annual_reported
+/AZ/2000-2018_Industrial Data_Redacted.xlsx$industrial_facilities,long,"contains(c(""-USE/PURPOSE-"", ""--""))","SourceType, Description","sep: ""-USE/PURPOSE-|--""",Annual_reported

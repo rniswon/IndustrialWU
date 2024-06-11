@@ -62,7 +62,8 @@ merge_data <- function(blank, filled) {
 }
 
 
-readandrename_columns <- function(datafp, HeaderCrosswalk) {
+readandrename_columns <- function(datafp, HeaderCrosswalk, pivots) {
+  
   filledheader <- HeaderCrosswalk
   
   headers_classified <- filledheader %>% na.omit()
@@ -77,12 +78,31 @@ readandrename_columns <- function(datafp, HeaderCrosswalk) {
                    values_to = "OldName")
       } else {.}}
     
+    if("~PIVOT~" %in% headercrosswalk$OldName) {
+      pivot_instr <- read.csv(pivots) %>% filter(file %in% headercrosswalk$file)
+      
+      code <- with(pivot_instr, paste0('pivot_', long_wide, 'er(., ',
+                                       'cols = ', cols, ', ',
+                                       'names_to = c(', paste0(
+                                         '"', paste0(str_trim(unlist(str_split(names_tofrom, ","))), collapse = '", "'), '"'
+                                         ), '), ',
+                                       ifelse(grepl("sep:", names_pattern), 
+                                              paste0('names_sep = ', gsub("sep:", "", names_pattern))), ", ",
+                                       'values_to = "', values_tofrom, '") %>% ',
+                                       'filter(!is.na(', values_tofrom, '))'))
+      
+      dat_rare <- dat_raw %>% {eval(parse(text = code))}
+      headercrosswalk <- headercrosswalk %>% mutate(OldName = case_when(OldName == "~PIVOT~" ~ NewName,
+                                                                        TRUE ~ OldName))
+    } else {dat_rare <- dat_raw}
+    
+    
     if(any(c("NewName", "OldName") %in% names(headercrosswalk))) {
       tmp <- map2_dfc(headercrosswalk$NewName, headercrosswalk$OldName, ~{
         x <- .x
         y <- unlist(str_split(.y, ", "))
         map_dfc(y, ~{
-          tibble(!!x := dat_raw[[.x]])
+          tibble(!!x := dat_rare[[.x]])
         })
       })
     } else {tmp <- data.frame()}

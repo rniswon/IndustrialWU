@@ -56,11 +56,12 @@ list(
   tar_target(existingDataDictionary, "DataCrosswalks/DataDirectories.csv", format = "file"),
   tar_target(existingHeaderCrosswalk, "DataCrosswalks/HeaderCrosswalk.csv", format = "file"),
   tar_target(existingHardCodes, "DataCrosswalks/HardcodedManualAttributes.csv", format = "file"),
+  tar_target(existingpivots, "DataCrosswalks/DataPivots.csv", format = "file"),
   tar_target(dat, command = get_all_dat(datafp)),
   tar_target(blankDataDictionary, command = generate_blankcsv(dat)),
   tar_target(updatedDataDictionary, command = merge_data(blank = blankDataDictionary, filled = existingDataDictionary)),
   tar_target(blankHeaderCrosswalk, command = generate_blankHeaderCrosswalkcsv(updatedDataDictionary)),
   tar_target(updatedHeaderCrosswalk, command = merge_data(blank = blankHeaderCrosswalk, filled = existingHeaderCrosswalk)),
-  tar_target(renamed_rawdat, command = readandrename_columns(datafp, updatedHeaderCrosswalk)),
+  tar_target(renamed_rawdat, command = readandrename_columns(datafp, updatedHeaderCrosswalk, existingpivots)),
   tar_target(reformatted_data, command = reformat_data(renamed_rawdat, updatedHeaderCrosswalk, existingHardCodes))
 )

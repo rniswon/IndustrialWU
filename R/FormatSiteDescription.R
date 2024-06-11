@@ -42,12 +42,19 @@ standard_Category <- function(data) {
   tmp
 }
 
+standard_FacilityNumber <- function(data) {
+  if("FacilityNumber" %in% names(data)) {
+    tmp <- data %>% mutate(FacilityNumber = as.character(FacilityNumber))
+  } else (tmp <- data)
+}
+
 formatsitedata <- function(renamed_rawdat, HeaderCrosswalk, hardcodedparams) {
 
   site_formatted <- renamed_rawdat %>% 
     map(., ~standard_ValueType(.x)) %>%
     map(., ~standard_SourceType(.x)) %>%
     map(., ~standard_Category(.x)) %>%
+    map(., ~standard_FacilityNumber(.x)) %>%
     map(., ~standard_SIC(.x)) %>%
     add_state()
   
