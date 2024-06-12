@@ -37,7 +37,19 @@ standard_SIC <- function(data){
 standard_Category <- function(data) {
   if("Category" %in% names(data)) {
     tmp <- data %>%
-      mutate(Category = case_match(Category, c("INDUSTRIAL") ~ "IN"))
+      mutate(Category = case_match(Category,
+                                   c("AG", "FACILITY CATTLE FEEDLOT", "FACILITY DAIRY") ~ "AG",
+                                   c("AQ") ~ "AQ",
+                                   c("CO", "COM", "Commercial") ~ "CO",
+                                   c("INDUSTRIAL", "IN", "IND", "FACILITY INDUSTRIAL USE", "Industrial") ~ "IN",
+                                   c("IR") ~ "IR",
+                                   c("MF") ~ "MF",
+                                   c("MI", "FACILITY METAL MINING", "FACILITY SAND AND GRAVEL", "Mining") ~ "MI",
+                                   c("PS", "WS", "Water Supply") ~ "PS",
+                                   c("TE", "FACILITY POWER GENERATION") ~ "TE",
+                                   c("RM", "Remediation") ~ "RM",
+                                   c("PT", "OTH", "Total") ~ NA_character_
+                                   ))
   } else (tmp <- data)
   tmp
 }

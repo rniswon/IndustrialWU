@@ -201,33 +201,66 @@ concat_columns <- function(data, Column) {
 
 handle_readmes <- function(data, fp, header, hardcodes) {
   info <- unlist(data[[header]])
-  permit_options <- "application|permitted|permited|authorized"
-  report_options <- "reported|submitted"
-  alloptions <- paste(permit_options, report_options, sep = "|")
-  found_methods <- unique(
-    gsub(report_options, "reported", 
-         gsub(permit_options, "permitted", 
-              na.omit(unlist(str_extract_all(info, alloptions))))))
-  if(length(found_methods) == 1) {
-    tmp <- data %>%
-      mutate(!!header := found_methods)
-  } else {
-    hardparams <- read.csv(hardcodes, colClasses = "character")
+  tmp <- handle_oddformats(data, fp, header, hardcodes, info)
+}
+
+handle_headers <- function(data, fp, header, headercrosswalk, hardcodedparams) {
+  oldheader <- headercrosswalk %>% filter(file == fp) %>% pull(header)
+  tmp <- handle_oddformats(data, fp, header, hardcodedparams, oldheader)
+}
+
+handle_oddformats <- function(data, fp, header, hardcodes, info) {
+  datatype <- ifelse(grepl("Units", header), "Units", 
+                     ifelse(grepl("Method", header), "Methods", 
+                            ifelse(grepl("DataProtected", header), "Protection", "TBD")))
+  
+  if(datatype == "Units") {
+    mgd_grex <- paste(mgd_options(), collapse = "|")
+    found_units <- unique(gsub(mgd_grex, "mgd", na.omit(unlist(str_extract_all(info, mgd_grex)))))
     
-    if(header %in% hardparams$Header) {
-      found_methods_manual <- hardparams %>% filter(Header == header) %>% pull(Value)
-    } else {
-      found_methods_manual <- svDialogs::dlg_input(message = paste("Enter suspected", header, "value based on", fp, ". Suggested options are", paste(found_methods, collapse = ", ")))$res
-      hardparams_update <- hardparams %>% add_row(file = fp, Header = header, Value = found_methods_manual)
-      
-      write.csv(hardparams_update, file = hardcodes, row.names = FALSE)
-    }
-    tmp <- data %>% 
-      mutate(!!header := found_methods_manual)
+    if(length(found_units) == 1) {
+      tmp <- data %>% mutate(!!header := found_units)
+    } else {tmp <- manual_update(data, fp, header, hardcodes)}
+    
+  } else if(datatype == "Methods") {
+    
+    permit_options <- "application|permitted|permited|authorized"
+    report_options <- "reported|submitted"
+    alloptions <- paste(permit_options, report_options, sep = "|")
+    found_methods <- unique(
+      gsub(report_options, "reported",
+           gsub(permit_options, "permitted",
+                na.omit(unlist(str_extract_all(info, alloptions))))))
+    if(length(found_methods) == 1) {
+      tmp <- data %>% mutate(!!header := found_methods)
+    } else {tmp <- manual_update(data, fp, header, hardcodes)}
+  } else if(datatype == "Protection") {
+    true_options <- "No further distribution|expressed written approval"
+    found_protectionstatus <- unique(gsub(true_options, "TRUE", na.omit(unlist(str_extract_all(info, true_options)))))
+    if(length(found_protectionstatus) == 1) {
+      tmp <- data %>% mutate(!!header := found_protectionstatus)
+    } else {tmp <- manual_update(data, fp, header, hardcodes)}
+  } else {}
+  return(tmp)
+}
+
+manual_update <- function(data, fp, header, hardcodedparams) {
+  hardparams <- read.csv(hardcodedparams, colClasses = "character")
+  
+  if(header %in% hardparams$Header) {
+    found_param_manual <- hardparams %>% filter(Header == header) %>% pull(Value)
+  } else {
+    found_param_manual <- svDialogs::dlg_input(message = paste("Enter suspected", header, "value based on", fp, ". Suggested options are", paste(found_methods, collapse = ", ")))$res
+    hardparams_update <- hardcodedparams %>% add_row(file = fp, Header = header, Value = found_param_manual)
+    
+    write.csv(hardparams_update, file = hardcodedparams, row.names = FALSE)
   }
+  tmp <- data %>% mutate(!!header := found_param_manual)
   
   return(tmp)
 }
 
-
-mgd_options <- function() {"mgd|MGD|Mgald|Mgd|million gallons per day"}
+mgd_options <- function() {c("mgd", "MGD", "Mgald", "Mgd", "million gallons per day", "Mgal/d")}
+Estimated_methods <- function() {c("CTDEEP_2021_Est", "CTDEEP_Estimated", "Estimated")}
+Reported_methods <- function() {c("CTDEEP_Reported", "PA 02-102", "Reported")}
+Unknown_methods <- function() {c("Unknown")}

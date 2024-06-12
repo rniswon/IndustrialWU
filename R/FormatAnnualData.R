@@ -1,17 +1,15 @@
 standard_Units_annual <- function(data, filename, headers, hardcoded){
   if("Units_annual_reported" %in% names(data)) {
     if(detect_readme(filename)) {
-     stop("Have not developed this case yet")
-      # tmp <- data 
+     tmp <- handle_readmes(data, filename, "Units_annual_reported", hardcoded)
     } else if(!is.character(data$Units_annual_reported)) {
-      mgd_options <- mgd_options()
-      orig_header <- headers %>% filter(file == filename) %>% pull(Units_annual_reported)
-      found_units <- unique(gsub(mgd_options, "mgd", na.omit(unlist(str_extract_all(orig_header, mgd_options)))))
-      if(!is.null(found_units)) {
-        tmp <- data %>%
-          mutate(Units_annual_reported = found_units)
+      tmp <- handle_headers(data, filename, "Units_annual_reported", headers, hardcoded)
+    } else if(is.character(data$Units_annual_reported)) {
+      tmp <- data %>%
+        mutate(Units_annual_reported = case_match(Units_annual_reported,
+                                          mgd_options() ~ "mgd",
+                                          .default = Units_annual_reported))
       }
-    } else if(is.character(data$Units_annual_reported)) {tmp <- data}
   }  else {tmp <- data}
   tmp
 }
@@ -22,9 +20,10 @@ standard_Method_annual <- function(data, filename, headers, hardcoded){
       tmp <- handle_readmes(data, filename, "Method_annual_reported", hardcoded)
     } else {
       tmp <- data %>% 
-        mutate(Method_annual = case_match(Method_annual,
-                                           c("CTDEEP_2021_Est", "CTDEEP_Estimated", "Estimated") ~ "Estimated",
-                                           c("CTDEEP_Reported", "PA 02-102", "Reported") ~ "Reported"))
+        mutate(Method_annual_reported = case_match(Method_annual_reported,
+                                          Estimated_methods() ~ "Estimated",
+                                          Reported_methods() ~ "Reported",
+                                          Unknown_methods() ~ NA_character_))
     }
   } else (tmp <- data)
   tmp

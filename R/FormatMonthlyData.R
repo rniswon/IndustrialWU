@@ -2,12 +2,15 @@ standard_Units_monthly <- function(data, filename, headers, hardcoded){
   if("Units_monthly" %in% names(data)) {
     
     if(detect_readme(filename)) {
-      info <- unlist(data$Units_monthly)
-      mgd_options <- mgd_options()
-      found_units <- unique(gsub(mgd_options, "mgd", na.omit(unlist(str_extract_all(info, mgd_options)))))
+      tmp <- handle_readmes(data, filename, "Units_monthly", hardcoded)
+    } else if(!is.character(data$Units_monthly)) {
+      tmp <- handle_headers(data, filename, "Units_monthly", headers, hardcoded)
+    } else if(is.character(data$Units_monthly)) {
       tmp <- data %>%
-        mutate(Units_monthly = found_units)
-    } else if(is.character(data$Units_monthly)) {tmp <- data}
+        mutate(Units_monthly = case_match(Units_monthly,
+                                          mgd_options() ~ "mgd",
+                                          .default = Units_monthly))
+      }
   } else (tmp <- data)
   tmp
 }
@@ -19,8 +22,10 @@ standard_Methods_monthly <- function(data, filename, headers, hardcoded){
     } else {
       tmp <- data %>% 
         mutate(Method_monthly = case_match(Method_monthly,
-                                           c("CTDEEP_2021_Est", "CTDEEP_Estimated", "Estimated") ~ "Estimated",
-                                           c("CTDEEP_Reported", "PA 02-102", "Reported") ~ "Reported"))
+                                           Estimated_methods() ~ "Estimated",
+                                           Reported_methods() ~ "Reported",
+                                           Unknown_methods() ~ NA_character_,
+                                           .default = Method_monthly))
     }
   } else (tmp <- data)
   tmp

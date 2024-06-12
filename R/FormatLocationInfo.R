@@ -22,6 +22,12 @@ standard_HUC12 <- function(data){
   tmp
 }
 
+standard_Datum <- function(data) {
+  if("Datum" %in% names(data)) {
+    tmp <- data
+  } else (tmp <- data)
+  tmp
+}
 
 
 formatlocationdata <- function(renamed_rawdat, HeaderCrosswalk, hardcodedparams) {
@@ -29,6 +35,7 @@ formatlocationdata <- function(renamed_rawdat, HeaderCrosswalk, hardcodedparams)
     map(., ~standard_HUC8(.x)) %>%
     map(., ~standard_HUC10(.x)) %>%
     map(., ~standard_HUC12(.x)) %>%
+    map(., ~standard_Datum(.x)) %>%
     add_state()
   
   return(location_formatted)
