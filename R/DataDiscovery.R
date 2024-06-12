@@ -95,3 +95,8 @@ read_in_datafile <- function(datafp, fp) {
     }
     data
 }
+
+detect_readme <- function(filename) {
+  grepl("ReadMe|readme|Read_Me|read_me", filename)
+}
+

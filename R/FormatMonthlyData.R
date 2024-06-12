@@ -1,9 +1,9 @@
 standard_Units_monthly <- function(data, filename, headers, hardcoded){
   if("Units_monthly" %in% names(data)) {
     
-    if(grepl("ReadMe", filename)) {
+    if(detect_readme(filename)) {
       info <- unlist(data$Units_monthly)
-      mgd_options <- "mgd|MGD|Mgald|Mgd|million gallons per day"
+      mgd_options <- mgd_options()
       found_units <- unique(gsub(mgd_options, "mgd", na.omit(unlist(str_extract_all(info, mgd_options)))))
       tmp <- data %>%
         mutate(Units_monthly = found_units)
@@ -14,9 +14,13 @@ standard_Units_monthly <- function(data, filename, headers, hardcoded){
 
 standard_Methods_monthly <- function(data, filename, headers, hardcoded){
   if("Method_monthly" %in% names(data)) {
-    
-    if(grepl("ReadMe", filename)) {
+    if(detect_readme(filename)) {
       tmp <- handle_readmes(data, filename, "Method_monthly", hardcoded)
+    } else {
+      tmp <- data %>% 
+        mutate(Method_monthly = case_match(Method_monthly,
+                                           c("CTDEEP_2021_Est", "CTDEEP_Estimated", "Estimated") ~ "Estimated",
+                                           c("CTDEEP_Reported", "PA 02-102", "Reported") ~ "Reported"))
     }
   } else (tmp <- data)
   tmp

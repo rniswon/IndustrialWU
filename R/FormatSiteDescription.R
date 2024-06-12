@@ -15,7 +15,7 @@ standard_SourceType <- function(data) {
   if("SourceType" %in% names(data)) {
     tmp <- data %>%
       mutate(SourceType = case_match(SourceType,
-                                    c("SW") ~ "SW",
+                                    c("SW", "SW-SALINE") ~ "SW",
                                     c("GW") ~ "GW",
                                     c("TW") ~ "PS",
                                     c("DC", "FW") ~ NA_character_))
@@ -48,12 +48,23 @@ standard_FacilityNumber <- function(data) {
   } else (tmp <- data)
 }
 
+standard_Saline <- function(data) {
+  if("Saline" %in% names(data)) {
+    tmp <- data %>%
+      mutate(Saline = case_match(Saline,
+                                     c("SW-SALINE") ~ TRUE,
+                                 .default = FALSE))
+  } else (tmp <- data)
+  tmp
+}
+
 formatsitedata <- function(renamed_rawdat, HeaderCrosswalk, hardcodedparams) {
 
   site_formatted <- renamed_rawdat %>% 
     map(., ~standard_ValueType(.x)) %>%
     map(., ~standard_SourceType(.x)) %>%
     map(., ~standard_Category(.x)) %>%
+    map(., ~standard_Saline(.x)) %>%
     map(., ~standard_FacilityNumber(.x)) %>%
     map(., ~standard_SIC(.x)) %>%
     add_state()

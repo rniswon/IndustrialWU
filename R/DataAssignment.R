@@ -69,6 +69,7 @@ readandrename_columns <- function(datafp, HeaderCrosswalk, pivots) {
   headers_classified <- filledheader %>% na.omit()
   
   dat <- imap(headers_classified$file, ~{
+    
     i <- .y
     dat_raw <- read_in_datafile(datafp, .x)
     headercrosswalk <- headers_classified %>%
@@ -81,19 +82,55 @@ readandrename_columns <- function(datafp, HeaderCrosswalk, pivots) {
     if("~PIVOT~" %in% headercrosswalk$OldName) {
       pivot_instr <- read.csv(pivots) %>% filter(file %in% headercrosswalk$file)
       
-      code <- with(pivot_instr, paste0('pivot_', long_wide, 'er(., ',
-                                       'cols = ', cols, ', ',
-                                       'names_to = c(', paste0(
-                                         '"', paste0(str_trim(unlist(str_split(names_tofrom, ","))), collapse = '", "'), '"'
-                                         ), '), ',
-                                       ifelse(grepl("sep:", names_pattern), 
-                                              paste0('names_sep = ', gsub("sep:", "", names_pattern))), ", ",
-                                       'values_to = "', values_tofrom, '") %>% ',
-                                       'filter(!is.na(', values_tofrom, '))'))
+      if(nrow(pivot_instr) > 0) {
+        
+        
+        mutatecode <- with(pivot_instr,
+                           paste0(
+                             ifelse(grepl("=", names_tofrom), paste0('mutate(., ', names_tofrom, ')'), "{.}"),
+                             "%>%", ifelse(grepl("=", cols), paste0('mutate(., ', cols, ')'), "{.}")))
+        
+        selectcode <- 
+          with(pivot_instr,
+               {
+               ifelse(long_wide == "wide",
+                      {paste0('select(., any_of(c("', paste(
+                                ifelse(
+                                  any(grepl("=", c(names_tofrom, cols))), 
+                                  paste(str_trim(unlist(str_extract_all(c(names_tofrom, cols), ".*(?==)"))), collapse = '", "'), 
+                                  paste(c(names_tofrom, cols), sep = '", "')),
+                                values_tofrom, 
+                                paste(headercrosswalk$OldName, collapse = '", "'), sep = '", "'), '")))')}, "{.}")})
+        
+        pivotcode <- with(pivot_instr,
+                          ifelse(long_wide == "long",
+                                 paste0('pivot_longer(., ',
+                                        paste0('cols = ', cols, ', '),
+                                        'names_to = c(', paste0(
+                                          '"', paste0(str_trim(unlist(str_split(names_tofrom, ","))), collapse = '", "'), '"'
+                                        ), '), ',
+                                        ifelse(grepl("sep:", names_pattern), 
+                                               paste0('names_sep = ', gsub("sep:", "", names_pattern)), ''), ", ",
+                                        'values_to = "', values_tofrom, '")'),
+                                 paste0('pivot_wider(., ',
+                                        'names_from = c("', ifelse(grepl("=", names_tofrom), str_trim(str_extract(names_tofrom, ".*(?==)")), names_tofrom), '"), ',
+                                        'values_from = "', values_tofrom, '")')))
+        
+        filtercode <- with(pivot_instr, ifelse(long_wide == "long", paste0('filter(., !is.na(', values_tofrom, '))'), '{.}'))
+        
+        dat_rare <- dat_raw %>% 
+          {eval(parse(text = mutatecode))} %>% 
+          {eval(parse(text = selectcode))}  %>%
+          {eval(parse(text = pivotcode))} %>% 
+          {eval(parse(text = filtercode))}
+        headercrosswalk <- headercrosswalk %>% mutate(OldName = case_when(OldName == "~PIVOT~" ~ NewName,
+                                                                          TRUE ~ OldName))
+      } else {
+        stop(
+          paste0(
+            "Pivot instructions need to be entered into DataPivots.csv for file ", 
+            unique(headercrosswalk$file)))}
       
-      dat_rare <- dat_raw %>% {eval(parse(text = code))}
-      headercrosswalk <- headercrosswalk %>% mutate(OldName = case_when(OldName == "~PIVOT~" ~ NewName,
-                                                                        TRUE ~ OldName))
     } else {dat_rare <- dat_raw}
     
     
@@ -191,3 +228,6 @@ handle_readmes <- function(data, fp, header, hardcodes) {
   
   return(tmp)
 }
+
+
+mgd_options <- function() {"mgd|MGD|Mgald|Mgd|million gallons per day"}
