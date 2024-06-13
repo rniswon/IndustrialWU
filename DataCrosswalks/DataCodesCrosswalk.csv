@@ -1,0 +1,136 @@
+﻿header,original_value,new_value
+ValueType,SW,WD
+ValueType,GW,WD
+ValueType,WD,WD
+ValueType,DC,RL
+ValueType,RL,RL
+ValueType,DL,TR
+ValueType,PR,TR
+ValueType,AB,NA_character_
+SourceType,SW,SW
+SourceType,SW-SALINE,SW
+SourceType,Surface Water,SW
+SourceType,GW,GW
+SourceType,Groundwater,GW
+SourceType,TW,PS
+SourceType,DC,NA_character_
+SourceType,FW,NA_character_
+Category,AG,AG
+Category,FACILITY CATTLE FEEDLOT,AG
+Category,FACILITY DAIRY,AG
+Category,AQ,AQ
+Category,CO,CO
+Category,COM,CO
+Category,Commercial,CO
+Category,INDUSTRIAL,IN
+Category,IN,IN
+Category,IND,IN
+Category,FACILITY INDUSTRIAL USE,IN
+Category,Industrial,IN
+Category,Industrial Processing,IN
+Category,IR,IR
+Category,Agricultural Irrigation,IR
+Category,Non-Crop Irrigation,IR
+Category,MF,MF
+Category,MI,MI
+Category,FACILITY METAL MINING,MI
+Category,FACILITY SAND AND GRAVEL,MI
+Category,Mining,MI
+Category,PS,PS
+Category,WS,PS
+Category,Water Supply,PS
+Category,TE,TE
+Category,FACILITY POWER GENERATION,TE
+Category,Power Generation,TE
+Category,RM,RM
+Category,Remediation,RM
+Category,PT,NA_character_
+Category,OTH,NA_character_
+Category,Total,NA_character_
+Category,Heating/Cooling,NA_character_
+Category,Special Categories,NA_character_
+Category,Water Level Maintenance,NA_character_
+Saline,SW-SALINE,TRUE
+Saline,Saline,TRUE
+Saline,Fresh,FALSE
+Saline,Unknown,NA
+SourceType,NA,NA_character_
+SourceType,GROUNDWATER,GW
+SourceType,EFFLUENT,WW
+SourceType,OTHER OR UNKNOWN,NA_character_
+SourceType,OTHER,NA_character_
+SourceType,RECYCLED WASTEWATER,WW
+SourceType,COMMINGLED WATER,WW
+SourceType,GENERATED WASTEWATER,WW
+SourceType,EFFLUENT (DIRECT USE),WW
+SourceType,SRP SURFACE WATER,SW
+SourceType,CAP/CONTRACT,SW
+SourceType,DECREED/APPROPRIATIVE SURFACE WATER,SW
+SourceType,SPILLWATER,SW
+SourceType,IN-LIEU WATER  (CAP),SW
+SourceType,CAP,SW
+SourceType,EXCHANGE WATER - SURFACE WATER,SW
+SourceType,EFFLUENT RECOVERED OUTSIDE THE AOI,WW
+SourceType,EFFLUENT RECLAIMED SYSTEM,WW
+SourceType,CAP WATER RECOVERED,WW
+SourceType,SALT RIVER,SW
+SourceType,OTHER SURFACE WATER,SW
+SourceType,NORMAL FLOW,SW
+SourceType,CAP WATER STORED,GW
+SourceType,IN-LIEU WATER,SW
+Category,NA,NA_character_
+Saline,NA,NA
+Saline,SW,FALSE
+Saline,GW,FALSE
+Units_monthly,mgd,mgd
+Units_monthly,MGD,mgd
+Units_monthly,mgald,mgd
+Units_monthly,Mgd,mgd
+Units_monthly,million gallons per day,mgd
+Units_monthly,Mgal/d,mgd
+Method_monthly,CTDEEP_2021_Est,Estimated
+Method_monthly,CTDEEP_Estimated,Estimated
+Method_monthly,Estimated,Estimated
+Method_monthly,CTDEEP_Reported,Reported
+Method_monthly,PA 02-102,Reported
+Method_monthly,Reported,Reported
+Method_monthly,Unknown,NA_character_
+Units_annual_reported,mgd,mgd
+Units_annual_reported,MGD,mgd
+Units_annual_reported,mgald,mgd
+Units_annual_reported,Mgd,mgd
+Units_annual_reported,million gallons per day,mgd
+Units_annual_reported,Mgal/d,mgd
+Method_annual_reported,CTDEEP_2021_Est,Estimated
+Method_annual_reported,CTDEEP_Estimated,Estimated
+Method_annual_reported,Estimated,Estimated
+Method_annual_reported,CTDEEP_Reported,Reported
+Method_annual_reported,PA 02-102,Reported
+Method_annual_reported,Reported,Reported
+Method_annual_reported,Unknown,NA_character_
+Units_monthly,NA,NA_character_
+Units_annual_reported,NA,NA_character_
+Units_monthly,MG,mgal
+Units_monthly,GAL,gal
+Units_monthly,ACFT,acft
+Units_annual_reported,MG,mgal
+Units_annual_reported,GAL,gal
+Units_annual_reported,ACFT,acft
+Method_monthly,application,Permitted
+Method_monthly,permitted,Permitted
+Method_monthly,permited,Permitted
+Method_monthly,authorized,Permitted
+Method_monthly,reported,Reported
+Method_monthly,submitted,Reported
+Method_annual_reported,application,Permitted
+Method_annual_reported,permitted,Permitted
+Method_annual_reported,permited,Permitted
+Method_annual_reported,authorized,Permitted
+Method_annual_reported,reported,Reported
+Method_annual_reported,submitted,Reported
+DataProtected,No further distribution,TRUE
+DataProtected,expressed written approval,TRUE
+Method_monthly,Unknown,NA_character_
+Method_annual_reported,Unknown,NA_character_
+Units_monthly,mg,mgal
+Units_annual_reported,mg,mgal

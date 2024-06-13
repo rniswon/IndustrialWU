@@ -2,3 +2,4 @@
 /AZ/2000-2018_Industrial Data_Redacted.xlsx$Non-Turf Facilities,long,"contains(c(""-USE/PURPOSE-"", ""--""))","SourceType, Description","sep: ""-USE/PURPOSE-|--""",Annual_reported
 /AZ/2000-2018_Industrial Data_Redacted.xlsx$industrial_facilities,long,"contains(c(""-USE/PURPOSE-"", ""--""))","SourceType, Description","sep: ""-USE/PURPOSE-|--""",Annual_reported
 /CT/ConnecticutIndustrial_WU_info.xlsx$Sheet1,wide,Year = year(`TSDateTime`),Month = month.abb[month(`TSDateTime`)],,TSValue in MGD
+/MN/MN_IN_WU.xlsx$MPARS_Index_Permits-IN,long,"which(grepl(""use_[[:digit:]]"", names(.)))",Year,,Annual_reported

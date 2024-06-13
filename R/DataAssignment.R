@@ -62,14 +62,14 @@ merge_data <- function(blank, filled) {
 }
 
 
-readandrename_columns <- function(datafp, HeaderCrosswalk, pivots) {
+readandrename_columns <- function(datafp, HeaderCrosswalk, pivots, HardCodes) {
   
   filledheader <- HeaderCrosswalk
   
   headers_classified <- filledheader %>% na.omit()
   
   dat <- imap(headers_classified$file, ~{
-    
+
     i <- .y
     dat_raw <- read_in_datafile(datafp, .x)
     headercrosswalk <- headers_classified %>%
@@ -136,10 +136,26 @@ readandrename_columns <- function(datafp, HeaderCrosswalk, pivots) {
     
     if(any(c("NewName", "OldName") %in% names(headercrosswalk))) {
       tmp <- map2_dfc(headercrosswalk$NewName, headercrosswalk$OldName, ~{
-        x <- .x
-        y <- unlist(str_split(.y, ", "))
-        map_dfc(y, ~{
-          tibble(!!x := dat_rare[[.x]])
+        new <- .x
+        old <- unlist(str_split(.y, ", "))
+        map_dfc(old, ~{
+          old_sub <- .x
+          if(old_sub %in% names(dat_rare)) {
+            tmp <- tibble(!!new := dat_rare[[old_sub]])} else {
+              if(old_sub %in% names(dat_raw)) {stop("Something went wrong in the pivots")} else {
+                names_check <- dat_raw %>% 
+                  {eval(parse(text = mutatecode))} %>% 
+                  {eval(parse(text = selectcode))} %>%
+                  {eval(parse(text = paste0("select(., ", str_extract(pivotcode, "(?<=cols = ).*(?=, names_to)"), ")")))} %>%
+                  names()
+                nm <- manual_update(data.frame(tmp = NA), unique(headercrosswalk$file), old_sub, HardCodes, names_check)
+                
+                tmp <- tibble(!!new := nm[[old_sub]])
+                
+              }
+            }
+          tmp
+          
         })
       })
     } else {tmp <- data.frame()}
@@ -150,12 +166,13 @@ tmp
   return(dat)
 }
 
-reformat_data <- function(x, headers, hardcodedparams) {
-    x_munged <- x %>% formatsitedata(., headers, hardcodedparams) %>% 
-    formatlocationdata(., headers, hardcodedparams) %>%
-    formatmonthlydata(., headers, hardcodedparams) %>% 
-    formatannualdata(., headers, hardcodedparams) %>% 
-    formatmetadata(., headers, hardcodedparams) %>%
+reformat_data <- function(x, headers, hardcodedparams, codescrosswalk) {
+
+    x_munged <- x %>% formatsitedata(., hardcodedparams, codescrosswalk) %>% 
+    formatlocationdata(., headers, hardcodedparams, codescrosswalk) %>%
+    formatmonthlydata(., headers, hardcodedparams, codescrosswalk) %>% 
+    formatannualdata(., headers, hardcodedparams, codescrosswalk) %>% 
+    formatmetadata(., headers, hardcodedparams, codescrosswalk) %>%
     map(., ~unique(.x))
   
   x_munged_indices_bysize <- unlist(map(x_munged, ~length(.x))) %>% sort(decreasing = TRUE)
@@ -199,59 +216,42 @@ concat_columns <- function(data, Column) {
   return(tmp2)
 }
 
-handle_readmes <- function(data, fp, header, hardcodes) {
+handle_readmes <- function(data, fp, header, hardcodes, codescrosswalk) {
   info <- unlist(data[[header]])
-  tmp <- handle_oddformats(data, fp, header, hardcodes, info)
+  tmp <- handle_oddformats(data, fp, header, hardcodes, info, codescrosswalk)
 }
 
-handle_headers <- function(data, fp, header, headercrosswalk, hardcodedparams) {
+handle_headers <- function(data, fp, header, headercrosswalk, hardcodedparams, codescrosswalk) {
   oldheader <- headercrosswalk %>% filter(file == fp) %>% pull(header)
-  tmp <- handle_oddformats(data, fp, header, hardcodedparams, oldheader)
+  tmp <- handle_oddformats(data, fp, header, hardcodedparams, oldheader, codescrosswalk)
 }
 
-handle_oddformats <- function(data, fp, header, hardcodes, info) {
+handle_oddformats <- function(data, fp, header, hardcodes, info, codescrosswalk) {
   datatype <- ifelse(grepl("Units", header), "Units", 
-                     ifelse(grepl("Method", header), "Methods", 
-                            ifelse(grepl("DataProtected", header), "Protection", "TBD")))
+                     ifelse(grepl("Method", header), "Method", 
+                            ifelse(grepl("DataProtected", header), "Protect", 
+                                   ifelse(grepl("ValueType", header), "ValueType", "TBD"))))
+  if(datatype == "TBD") {stop("New use of ReadMe files detected")}
   
-  if(datatype == "Units") {
-    mgd_grex <- paste(mgd_options(), collapse = "|")
-    found_units <- unique(gsub(mgd_grex, "mgd", na.omit(unlist(str_extract_all(info, mgd_grex)))))
-    
-    if(length(found_units) == 1) {
-      tmp <- data %>% mutate(!!header := found_units)
-    } else {tmp <- manual_update(data, fp, header, hardcodes)}
-    
-  } else if(datatype == "Methods") {
-    
-    permit_options <- "application|permitted|permited|authorized"
-    report_options <- "reported|submitted"
-    alloptions <- paste(permit_options, report_options, sep = "|")
-    found_methods <- unique(
-      gsub(report_options, "reported",
-           gsub(permit_options, "permitted",
-                na.omit(unlist(str_extract_all(info, alloptions))))))
-    if(length(found_methods) == 1) {
-      tmp <- data %>% mutate(!!header := found_methods)
-    } else {tmp <- manual_update(data, fp, header, hardcodes)}
-  } else if(datatype == "Protection") {
-    true_options <- "No further distribution|expressed written approval"
-    found_protectionstatus <- unique(gsub(true_options, "TRUE", na.omit(unlist(str_extract_all(info, true_options)))))
-    if(length(found_protectionstatus) == 1) {
-      tmp <- data %>% mutate(!!header := found_protectionstatus)
-    } else {tmp <- manual_update(data, fp, header, hardcodes)}
-  } else {}
+  crosswalk_tmp <- read.csv(codescrosswalk, colClasses = "character") %>%
+    filter(grepl(datatype, header))
+  found_options <- na.omit(crosswalk_tmp$new_value[unique(unlist(map(crosswalk_tmp$original_value, ~grep(.x, info))))])
+  if(length(found_options) == 1) {
+    tmp <- data %>% mutate(!!header := found_options)
+  } else {tmp <- manual_update(data, fp, header, hardcodes, found_options)}
+ 
   return(tmp)
 }
 
-manual_update <- function(data, fp, header, hardcodedparams) {
+manual_update <- function(data, fp, header, hardcodedparams, inputoptions) {
+  
   hardparams <- read.csv(hardcodedparams, colClasses = "character")
   
-  if(header %in% hardparams$Header) {
-    found_param_manual <- hardparams %>% filter(Header == header) %>% pull(Value)
+  if(header %in% hardparams$Header & fp %in% hardparams$file) {
+    found_param_manual <- hardparams %>% filter(Header == header, file == fp) %>% pull(Value)
   } else {
-    found_param_manual <- svDialogs::dlg_input(message = paste("Enter suspected", header, "value based on", fp, ". Suggested options are", paste(found_methods, collapse = ", ")))$res
-    hardparams_update <- hardcodedparams %>% add_row(file = fp, Header = header, Value = found_param_manual)
+    found_param_manual <- svDialogs::dlg_input(message = paste("Enter suspected", header, "value based on", fp, ". Suggested options are", paste(inputoptions, collapse = ", ")))$res
+    hardparams_update <- hardparams %>% add_row(file = fp, Header = header, Value = found_param_manual)
     
     write.csv(hardparams_update, file = hardcodedparams, row.names = FALSE)
   }
@@ -260,7 +260,30 @@ manual_update <- function(data, fp, header, hardcodedparams) {
   return(tmp)
 }
 
-mgd_options <- function() {c("mgd", "MGD", "Mgald", "Mgd", "million gallons per day", "Mgal/d")}
-Estimated_methods <- function() {c("CTDEEP_2021_Est", "CTDEEP_Estimated", "Estimated")}
-Reported_methods <- function() {c("CTDEEP_Reported", "PA 02-102", "Reported")}
-Unknown_methods <- function() {c("Unknown")}
+
+
+crosswalk_codes <- function(data, fp, header, codescrosswalk) {
+  header_tmp <- header
+  codecrosswalk <- read.csv(codescrosswalk, colClasses = "character") %>% 
+    filter(header == header_tmp)
+  if(any(!unique(data[[header]]) %in% codecrosswalk$original_value)) {
+    stop(paste("New codes", 
+               paste(unique(data[[header]])[!unique(data[[header]]) %in% codecrosswalk$original_value], collapse = ", "), 
+               "detected for", header, "in", fp))
+  }
+  
+  crosswalk <- codecrosswalk %>% select(original_value, new_value) %>%
+    mutate(new_value = case_when(grepl("NA", new_value) ~ new_value,
+                                 .default = paste0('"', new_value, '"'))) %>%
+    summarize(
+      original_value = paste0('c("', paste(original_value, collapse = '", "'), '")'),
+      .by = new_value) %>%
+    mutate(expr = paste0(original_value, " ~ ", new_value))
+  
+  mutatecode <- paste0(
+    "mutate(., ", header_tmp, " = ", "case_match(", header_tmp, ", ", paste(crosswalk$expr, collapse = ", "), "))"
+    )
+  
+  tmp <- data %>% {eval(parse(text = mutatecode))}
+      
+}

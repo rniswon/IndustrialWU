@@ -1,17 +1,16 @@
-standard_DataProtected <- function(data, filename, hardcoded){
+standard_DataProtected <- function(data, filename, hardcoded, codescrosswalk){
   if("DataProtected" %in% names(data)) {
-    
-    if(grepl("ReadMe", filename)) {
-      tmp <- handle_readmes(data, filename, "DataProtected", hardcoded)
-    }
+    if(detect_readme(filename)) {
+      tmp <- handle_readmes(data, filename, "DataProtected", hardcoded, codescrosswalk)
+    } else (tmp <- data)
   } else (tmp <- data)
   tmp
 }
 
-formatmetadata <- function(renamed_rawdat, HeaderCrosswalk, hardcodedparams) {
-  
+formatmetadata <- function(renamed_rawdat, HeaderCrosswalk, hardcodedparams, codescrosswalk) {
+
   metadata_formatted <- renamed_rawdat %>%
-    imap(., ~standard_DataProtected(.x, .y, hardcodedparams)) %>%
+    imap(., ~standard_DataProtected(.x, .y, hardcodedparams, codescrosswalk)) %>%
     add_state()
   
   return(metadata_formatted)
