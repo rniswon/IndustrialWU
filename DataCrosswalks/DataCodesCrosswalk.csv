@@ -134,3 +134,56 @@ Method_monthly,Unknown,NA_character_
 Method_annual_reported,Unknown,NA_character_
 Units_monthly,mg,mgal
 Units_annual_reported,mg,mgal
+ValueType,RT,RL
+ValueType,WL,WD
+SourceType,AT,NA_character_
+Description,AF,Agriculture (Field)
+Description,AG,Agriculture (Greenhouse)
+Description,AL,Agriculture (Livestock)
+Description,AR,Artificial Recharge
+Description,AQ,Aquaculture
+Description,BH,Bulk Hauler
+Description,BW,Bottled Water
+Description,BK,Brook
+Description,CG,Consumer Goods
+Description,CH,Cooling and Heating
+Description,CO,Commercial
+Description,CP,Cleaning and Processing
+Description,CS,Combined Sources
+Description,CV ,Conveyance
+Description,DC,Dust Control
+Description,DO,Domestic
+Description,EV,Evaporation
+Description,FL,Forestry and Lumbering
+Description,GR,Groundwater Remediation
+Description,HP,Power (Hydro-Electric-R)
+Description,IN,Industrial
+Description,IR,Irrigation
+Description,IT,Institutional
+Description,LF,Leach Field
+Description,LG,Lagoon
+Description,LK,Lake
+Description,MI,Mining
+Description,OC,Ocean
+Description,PB,Power (Biomass)
+Description,PD,Pond
+Description,PF,Power Fossil-Fuel
+Description,PG,Power Geothermal
+Description,PH,Hydroelectric-Reporting in KWH
+Description,PN,Power Nuclear Energy
+Description,RI,Wastewater Rapid Infiltration Basin
+Description,RS,Reservoir
+Description,RV,River
+Description,SI,Spray Irrigation
+Description,SM,Snowmaking
+Description,SP,Spring
+Description,ST,Sewage Treatment
+Description,UI,Underground Injection
+Description,WB,Bedrock Well
+Description,WD,Dug Well
+Description,WF,Well Field
+Description,WG,Gravel Well
+Description,WK,Gravel-Pack Well
+Description,WL,Well (type uncertain)
+Description,WP,Well Point
+Description,WS,Water Supplier

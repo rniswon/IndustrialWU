@@ -58,6 +58,15 @@ standard_Saline <- function(data, fp, codescrosswalk, hardcoded) {
   tmp
 }
 
+standard_Description <- function(data, fp, codescrosswalk, hardcoded) {
+  if("Description" %in% names(data)) {
+    if(detect_readme(fp)) {
+      tmp <- handle_readmes(data, fp, "Description", hardcoded, codescrosswalk)
+    } else {tmp <- crosswalk_codes(data, fp, "Description", codescrosswalk, forceupdate = FALSE)}
+  } else (tmp <- data)
+  tmp
+}
+
 formatsitedata <- function(renamed_rawdat, hardcodedparams, codescrosswalk) {
 
   site_formatted <- renamed_rawdat %>% 
@@ -67,6 +76,7 @@ formatsitedata <- function(renamed_rawdat, hardcodedparams, codescrosswalk) {
     imap(., ~standard_Saline(.x, .y, codescrosswalk, hardcodedparams)) %>%
     imap(., ~standard_FacilityNumber(.x, .y, codescrosswalk, hardcodedparams)) %>%
     imap(., ~standard_SIC(.x, .y, codescrosswalk, hardcodedparams)) %>%
+    imap(., ~standard_Description(.x, .y, codescrosswalk, hardcodedparams)) %>%
     add_state()
   
   return(site_formatted)

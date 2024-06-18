@@ -246,8 +246,7 @@ handle_oddformats <- function(data, fp, header, hardcodes, info, codescrosswalk)
 manual_update <- function(data, fp, header, hardcodedparams, inputoptions) {
   
   hardparams <- read.csv(hardcodedparams, colClasses = "character")
-  
-  if(header %in% hardparams$Header & fp %in% hardparams$file) {
+  if(header %in% (hardparams$Header[hardparams$file == fp])) {
     found_param_manual <- hardparams %>% filter(Header == header, file == fp) %>% pull(Value)
   } else {
     found_param_manual <- svDialogs::dlg_input(message = paste("Enter suspected", header, "value based on", fp, ". Suggested options are", paste(inputoptions, collapse = ", ")))$res
@@ -262,14 +261,16 @@ manual_update <- function(data, fp, header, hardcodedparams, inputoptions) {
 
 
 
-crosswalk_codes <- function(data, fp, header, codescrosswalk) {
+crosswalk_codes <- function(data, fp, header, codescrosswalk, forceupdate = TRUE) {
   header_tmp <- header
   codecrosswalk <- read.csv(codescrosswalk, colClasses = "character") %>% 
     filter(header == header_tmp)
-  if(any(!unique(data[[header]]) %in% codecrosswalk$original_value)) {
-    stop(paste("New codes", 
-               paste(unique(data[[header]])[!unique(data[[header]]) %in% codecrosswalk$original_value], collapse = ", "), 
-               "detected for", header, "in", fp))
+  if(forceupdate) {
+    if(any(!unique(data[[header]]) %in% codecrosswalk$original_value)) {
+      stop(paste("New codes", 
+                 paste(unique(data[[header]])[!unique(data[[header]]) %in% codecrosswalk$original_value], collapse = ", "), 
+                 "detected for", header, "in", fp))
+    }
   }
   
   crosswalk <- codecrosswalk %>% select(original_value, new_value) %>%
@@ -281,7 +282,7 @@ crosswalk_codes <- function(data, fp, header, codescrosswalk) {
     mutate(expr = paste0(original_value, " ~ ", new_value))
   
   mutatecode <- paste0(
-    "mutate(., ", header_tmp, " = ", "case_match(", header_tmp, ", ", paste(crosswalk$expr, collapse = ", "), "))"
+    "mutate(., ", header_tmp, " = ", "case_match(", header_tmp, ", ", paste(crosswalk$expr, collapse = ", "), ", .default = ", header_tmp, "))"
     )
   
   tmp <- data %>% {eval(parse(text = mutatecode))}
