@@ -29,7 +29,7 @@ VTdat <- loadSTdata(statedirs[["VT"]])
 
 
 ## Format the data ----
-VT_dat_all <- VTdat$`2008_2019_ Vermont_Yearly_Large_GW_Withdrawal.xlsx`$`GW Withdrawal Yearly` %>%
+VT_dat_annual <- VTdat$`2008_2019_ Vermont_Yearly_Large_GW_Withdrawal.xlsx`$`GW Withdrawal Yearly` %>%
   rename_with(.fn = ~paste(VTdat$`2008_2019_ Vermont_Yearly_Large_GW_Withdrawal.xlsx`$`GW Withdrawal Yearly`[2, ], 
                             VTdat$`2008_2019_ Vermont_Yearly_Large_GW_Withdrawal.xlsx`$`GW Withdrawal Yearly`[3,])) %>%
   rename_with(.fn = ~gsub("NA ", "", .)) %>%
@@ -60,6 +60,41 @@ VT_dat_all <- VTdat$`2008_2019_ Vermont_Yearly_Large_GW_Withdrawal.xlsx`$`GW Wit
   select(Lat = Latitude, Lon = Longitude, FacilityNumber, FacilityName, Address1, 
          City1, State1, Zip1, Category, Description, Year, Annual_mgd_reported)
 
+VT_dat_monthly <- VTdat$VermontIndustrial_WU_info.xlsx$VT %>%
+  mutate(ValueType = "WD",
+    SourceType = case_match(Source_Type, 
+                                 "Groundwater" ~ "GW", .default = NA_character_),
+         Category = case_match(industrial,
+                               "IN" ~ "IN", .default = NA_character_),
+    Saline = NA,
+         FacilityName = WSName,
+         FacilityNumber = WSID,
+         SourceName = NAME,
+         SourceNumber = ST_ASGN_IDENT_CD,
+         SourceNumber2 = Well_ID,
+         NAICS = `NAICS (google searches)`,
+    SIC = NA,
+    Description = NA,
+         HUC12 = HUC12, 
+    AquiferName1 = NA,
+    BasinName1 = NA,
+    Address1 = NA,
+         Town1 = WS_Town,
+         Town2 = WR_Town,
+    County1 = NA,
+    State1 = "VT",
+    Zip1 = NA,
+         Lat = Best_Available_Lat,
+         Lon = Best_Available_Long,
+         Datum = NA,
+         Projection = NA,
+    Year = year(gwu_begin_date),
+    Month = month(gwu_begin_date),
+    Value = Estimated_Water_Use,
+    Units_monthy = "? Laura Medalie is looking into it",
+    Method_monthly = case_when(Estimated_Water_Use == Reported_System_Usage ~ "Metered",
+                               Estimated_Water_Use != Reported_System_Usage ~ "Estimated")
+         )
 #Write data ----
   
   if(outputcsv) {write.csv(

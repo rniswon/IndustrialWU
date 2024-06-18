@@ -54,3 +54,6 @@ nonSWUDStracker_local.csv
 
 # Local development files
 Link2JohnsStateData.txt
+
+# Targets branch files
+_targets/
