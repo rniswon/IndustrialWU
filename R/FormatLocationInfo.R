@@ -41,6 +41,78 @@ standard_Datum <- function(data, filename, hardcoded, codescrosswalk) {
   tmp
 }
 
+standard_Address1 <- function(data) {
+  if("Address1" %in% names(data)) {
+      tmp <- data %>%
+        mutate(Address1 = case_when(
+          grepl(", ", Address1) ~ str_extract(Address1, "^.*(?=,.*,[[:blank:]]*[[:upper:]]{2})"),
+          TRUE ~ Address1)
+        )
+    } else {tmp <- data}
+  tmp
+}
+
+standard_City1 <- function(data) {
+  if("City1" %in% names(data)) {
+    tmp <- data %>%
+      mutate(City1 = case_when(
+        grepl(", ", City1) ~ str_trim(str_extract(City1, "(?<=,).*(?=,[[:blank:]]*[[:upper:]]{2})")),
+        TRUE ~ City1)
+      )
+  } else (tmp <- data)
+  tmp
+}
+
+standard_State1 <- function(data) {
+  if("State1" %in% names(data)) {
+    tmp <- data %>%
+      mutate(State1 = case_when(
+        grepl(", ", State1) ~ str_extract(State1, "(?<=,)[[:blank:]]*[[:upper:]]{2}"),
+        nchar(State1) > 2 ~ state.abb[match(State1, state.name)],
+        TRUE ~ State1))
+  } else (tmp <- data)
+  tmp
+  }
+
+standard_Zip1 <- function(data) {
+  if("Zip1" %in% names(data)) {
+    tmp <- data %>%
+      mutate(Zip1 = case_when(
+        grepl(", ", Zip1) ~ str_trim(str_extract(Zip1, "(?<=[[:upper:]]{2})[[:blank:]]*[[:digit:]]{5}")),
+        TRUE ~ as.character(Zip1)))
+  } else (tmp <- data)
+  tmp
+}
+
+standard_Lat <- function(data) {
+  if(length(grep("Lat", names(data))) > 0) {
+    if(length(grep("Lat", names(data))) == 1) {
+      tmp <- handle_coordinates(data, "Lat")
+    } else if(length(grep("Lat", names(data))) > 1) {
+      tmp <- handle_coordinates(data, "Lat") %>%
+        concat_columns(., "Lat")  %>%
+        mutate(Lat = gsub(",.*", "", Lat))
+      
+    }
+  } else (tmp <- data)
+  tmp
+}
+
+standard_Lon <- function(data) {
+  if(length(grep("Lon", names(data))) > 0) {
+    if(length(grep("Lon", names(data))) == 1) {
+      tmp <- handle_coordinates(data, "Lon")
+    } else if(length(grep("Lon", names(data))) > 1) {
+      tmp <- handle_coordinates(data, "Lon") %>%
+        concat_columns(., "Lon")  %>%
+        mutate(Lon = gsub(",.*", "", Lon)) # keep only the first coordinate
+      
+    }
+  } else (tmp <- data)
+  tmp
+}
+
+
 
 formatlocationdata <- function(renamed_rawdat, HeaderCrosswalk, hardcodedparams, codescrosswalk) {
   location_formatted <- renamed_rawdat %>%
@@ -48,6 +120,12 @@ formatlocationdata <- function(renamed_rawdat, HeaderCrosswalk, hardcodedparams,
     imap(., ~standard_HUC10(.x, .y, hardcodedparams, codescrosswalk)) %>%
     imap(., ~standard_HUC12(.x, .y, hardcodedparams, codescrosswalk)) %>%
     imap(., ~standard_Datum(.x, .y, hardcodedparams, codescrosswalk)) %>%
+    map(., ~standard_Address1(.x)) %>%
+    map(., ~standard_City1(.x)) %>%
+    map(., ~standard_State1(.x)) %>%
+    map(., ~standard_Zip1(.x)) %>%
+    map(., ~standard_Lat(.x)) %>%
+    map(., ~standard_Lon(.x)) %>%
     add_state()
   
   return(location_formatted)

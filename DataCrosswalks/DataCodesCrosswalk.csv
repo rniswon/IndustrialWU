@@ -187,3 +187,15 @@ Description,WK,Gravel-Pack Well
 Description,WL,Well (type uncertain)
 Description,WP,Well Point
 Description,WS,Water Supplier
+ValueType,Pur,TR
+ValueType,SS,WD
+ValueType,Ss,WD
+Category,MIN,MI
+Category,MFG,MF
+Category,PWR,TE
+Saline,N,FALSE
+Saline,Y,TRUE
+SourceType,"Surface Water, Pur",PS
+SourceType,"Groundwater, SS",GW
+SourceType,"Surface Water, Ss",SW
+SourceType,"Groundwater, Pur",PS

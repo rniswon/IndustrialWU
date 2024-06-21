@@ -100,3 +100,27 @@ detect_readme <- function(filename) {
   grepl("ReadMe|readme|Read_Me|read_me", filename)
 }
 
+
+convert2decimal <- function(x) {
+  x <- as.character(x)
+  degrees <- suppressWarnings(as.numeric(str_sub(x, 1, 2)))
+  minutes <- suppressWarnings(as.numeric(str_sub(x, 3, 4)))
+  seconds <- suppressWarnings(as.numeric(str_sub(x, 5, nchar(x))))
+  
+  degrees + (minutes + (seconds / 60)) / 60
+}
+
+handle_coordinates <- function(data, header) {
+  tmp <- data %>%
+    mutate(across(contains(header), ~{
+      case_when(
+        . == "0" ~ NA_character_,
+        . == "NULL" ~ NA_character_,
+        str_detect(., "^[[:digit:]]{2}\\.") ~ as.character(.),
+        str_detect(., "^[[:digit:]]{6}\\.?") ~ as.character(convert2decimal(.)),
+        .default = as.character(.)
+      )
+    })) 
+  
+  tmp
+}

@@ -63,13 +63,11 @@ merge_data <- function(blank, filled) {
 
 
 readandrename_columns <- function(datafp, HeaderCrosswalk, pivots, HardCodes) {
-  
   filledheader <- HeaderCrosswalk
   
   headers_classified <- filledheader %>% na.omit()
   
   dat <- imap(headers_classified$file, ~{
-
     i <- .y
     dat_raw <- read_in_datafile(datafp, .x)
     headercrosswalk <- headers_classified %>%
@@ -83,7 +81,6 @@ readandrename_columns <- function(datafp, HeaderCrosswalk, pivots, HardCodes) {
       pivot_instr <- read.csv(pivots) %>% filter(file %in% headercrosswalk$file)
       
       if(nrow(pivot_instr) > 0) {
-        
         
         mutatecode <- with(pivot_instr,
                            paste0(
@@ -142,7 +139,8 @@ readandrename_columns <- function(datafp, HeaderCrosswalk, pivots, HardCodes) {
           old_sub <- .x
           if(old_sub %in% names(dat_rare)) {
             tmp <- tibble(!!new := dat_rare[[old_sub]])} else {
-              if(old_sub %in% names(dat_raw)) {stop("Something went wrong in the pivots")} else {
+              if(old_sub %in% names(dat_raw)) {stop("Something went wrong in the pivots")} else 
+                if(!exists("mutatecode")) {stop("Check entries in HeaderCrosswalk.csv that they match the data exactly.")} else {
                 names_check <- dat_raw %>% 
                   {eval(parse(text = mutatecode))} %>% 
                   {eval(parse(text = selectcode))} %>%
@@ -174,15 +172,24 @@ reformat_data <- function(x, headers, hardcodedparams, codescrosswalk) {
     formatannualdata(., headers, hardcodedparams, codescrosswalk) %>% 
     formatmetadata(., headers, hardcodedparams, codescrosswalk) %>%
     map(., ~unique(.x))
+    
+    if(any(grepl("\\.\\.\\.", unlist(map(x_munged, ~names(.x)))))) {
+      issue <- unique(na.omit(
+        str_extract(unlist(map(x_munged, ~names(.x))), ".*(?=\\.\\.\\.)")))
+      stop(paste0("New case(s) for ", paste(issue, collapse = ", ")))
+    }
   
   x_munged_indices_bysize <- unlist(map(x_munged, ~length(.x))) %>% sort(decreasing = TRUE)
-  
   x_merge_ready <- x_munged[names(x_munged_indices_bysize)] %>% keep(~{nrow(.) > 0})
-  x_merged <- reduce(x_merge_ready, merge_andreplaceNA, .dir = "forward") 
+  x_bystate <- map(state.abb, ~{st <- .x; keep_at(x_merge_ready, ~grepl(paste0("/", st, "/"), .))}); names(x_bystate) <- state.abb
+  x_readystates <- keep(x_bystate, ~length(.) > 0)
+  x_simplestates <- map(x_readystates, ~reduce(.x, merge_andreplaceNA, .dir = "forward"))
+  
+  x_all <- do.call("bind_rows", x_simplestates)
   
   ordered <- names(headers)
   
-  x_ordered <- x_merged %>% select(any_of(ordered))
+  x_ordered <- x_all %>% select(any_of(ordered))
   
   return(x_ordered)
 }
@@ -209,7 +216,10 @@ add_state <- function(renamed_rawdat) {
 concat_columns <- function(data, Column) {
   tmp <- data %>%
     rowwise() %>%
-    select(contains(Column)) %>% mutate(tmp = paste(na.omit(c_across(contains(Column))), collapse = ", ")) %>%
+    select(contains(Column)) %>% 
+    mutate(tmp = paste(na.omit(gsub("NULL", NA_character_, 
+                                    c_across(contains(Column)))), 
+                       collapse = ", ")) %>%
     pull(tmp)
   tmp2 <- data %>%
     select(-contains(Column)) %>% mutate(!!Column := tmp)

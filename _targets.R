@@ -31,7 +31,9 @@ list(
   tar_target(updatedDataDictionary, command = merge_data(blank = blankDataDictionary, filled = existingDataDictionary)),
   tar_target(blankHeaderCrosswalk, command = generate_blankHeaderCrosswalkcsv(updatedDataDictionary)),
   tar_target(updatedHeaderCrosswalk, command = merge_data(blank = blankHeaderCrosswalk, filled = existingHeaderCrosswalk)),
-  tar_target(renamed_rawdat, command = readandrename_columns(datafp, updatedHeaderCrosswalk, existingpivots, existingHardCodes)),
+  tar_target(renamed_rawdat, command = 
+               readandrename_columns(datafp, updatedHeaderCrosswalk, existingpivots, existingHardCodes)
+             ),
   tar_target(reformatted_data, command = 
                reformat_data(renamed_rawdat, updatedHeaderCrosswalk, existingHardCodes, existingCodesCrosswalk) 
              )
