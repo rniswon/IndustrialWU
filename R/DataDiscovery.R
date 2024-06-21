@@ -78,8 +78,8 @@ read_in_datafile <- function(datafp, fp) {
     data <- if(grepl("\\~\\$", fp)) {
       list("Temporary and/or corrupted file")
     } else if(
-      grepl(".csv|.txt", fp)) {
-      read.csv(fp, fill = TRUE, header = FALSE)
+      grepl(".csv|.txt|.rdb", fp)) {
+      read.csv(file.path(datafp, fp), fill = TRUE, header = FALSE)
     } else if(grepl(".xlsx|.xls", fp)) {
       workbook_fp <- str_extract(fp, ".*(?=\\$)")
       sheetnm <- str_extract(fp, "(?<=\\$).*")
@@ -89,9 +89,16 @@ read_in_datafile <- function(datafp, fp) {
       dat <- officer::read_docx(file.path(datafp, fp))
       txt <- officer::docx_summary(dat)$text
       data.frame(text = txt)
+      } else if (grepl(paste(shapefileextensions, collapse = "|"), fp)) {
+        fp_shp <- gsub(paste(shapefileextensions, collapse = "|"), ".shp", fp)
+        dat <- st_read(file.path(datafp, fp_shp))
+      } else if (grepl(".pdf", fp)) {
+        dat <- 
+          imap_dfr(str_split(pdftools::pdf_text(pdf = file.path(datafp, fp)), "\n"), 
+                    ~{data.frame(text = .x) %>% mutate(page = .y)})
+        data
       } else {
-      browser()
-      list("Other database type (e.g. Shapefile or Access)")
+      stop(paste0("New database type found that has not been built in yet (", fp, ")"))
     }
     data
 }
@@ -100,6 +107,8 @@ detect_readme <- function(filename) {
   grepl("ReadMe|readme|Read_Me|read_me", filename)
 }
 
+shapefileextensions <- c(".shp", ".dbf", ".htm", ".prj", ".sbn", ".sbx", 
+                         ".shp.xml", ".shx")
 
 convert2decimal <- function(x) {
   x <- as.character(x)

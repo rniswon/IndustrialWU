@@ -140,7 +140,7 @@ readandrename_columns <- function(datafp, HeaderCrosswalk, pivots, HardCodes) {
           if(old_sub %in% names(dat_rare)) {
             tmp <- tibble(!!new := dat_rare[[old_sub]])} else {
               if(old_sub %in% names(dat_raw)) {stop("Something went wrong in the pivots")} else 
-                if(!exists("mutatecode")) {stop("Check entries in HeaderCrosswalk.csv that they match the data exactly.")} else {
+                if(!exists("mutatecode")) {browser(); stop("Check entries in HeaderCrosswalk.csv that they match the data exactly.")} else {
                 names_check <- dat_raw %>% 
                   {eval(parse(text = mutatecode))} %>% 
                   {eval(parse(text = selectcode))} %>%
@@ -178,7 +178,6 @@ reformat_data <- function(x, headers, hardcodedparams, codescrosswalk) {
         str_extract(unlist(map(x_munged, ~names(.x))), ".*(?=\\.\\.\\.)")))
       stop(paste0("New case(s) for ", paste(issue, collapse = ", ")))
     }
-  
   x_munged_indices_bysize <- unlist(map(x_munged, ~length(.x))) %>% sort(decreasing = TRUE)
   x_merge_ready <- x_munged[names(x_munged_indices_bysize)] %>% keep(~{nrow(.) > 0})
   x_bystate <- map(state.abb, ~{st <- .x; keep_at(x_merge_ready, ~grepl(paste0("/", st, "/"), .))}); names(x_bystate) <- state.abb
@@ -195,13 +194,24 @@ reformat_data <- function(x, headers, hardcodedparams, codescrosswalk) {
 }
 
 merge_andreplaceNA <- function(x, y) {
-  
   x_complete <- x %>% select(where(~!any(is.na(.))))
   y_complete <- y %>% select(where(~!any(is.na(.))))
   
   merge_vars <- names(x_complete)[names(x_complete) %in% names(y_complete)]
   
-  merge <- rquery::natural_join(x, y, by = merge_vars, jointype = "FULL")
+  if(
+    max(pull(
+      summarize(group_by(y, across(all_of(merge_vars))), n = n(), .groups = "drop"), 
+      n)) > length(merge_vars)) {
+    datavars <- c("Annual_reported", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Sep", "Oct", "Nov", "Dec", "Year", "Category")
+    
+    y_unique <- y %>% 
+      group_by(across(any_of(c(merge_vars, datavars)))) %>% 
+      summarize(across(.cols = everything(), .fns = ~paste(unique(.), collapse = ", ")), .groups = "drop") %>%
+      mutate(across(any_of(c("Lat", "Lon", "SourceNumber")), ~gsub(",.*", "", .))) ## If more than one location or source, keep only the first one. Source will only treated this way if it isn't used to merge - so if the other data is only to the facility level, not the source level.
+    } else {y_unique <- y}
+  
+  merge <- rquery::natural_join(x, y_unique, by = merge_vars, jointype = "FULL")
   
   return(merge)
 }
@@ -217,8 +227,8 @@ concat_columns <- function(data, Column) {
   tmp <- data %>%
     rowwise() %>%
     select(contains(Column)) %>% 
-    mutate(tmp = paste(na.omit(gsub("NULL", NA_character_, 
-                                    c_across(contains(Column)))), 
+    mutate(tmp = paste(unique(na.omit(gsub("NULL", NA_character_, 
+                                    c_across(contains(Column))))), 
                        collapse = ", ")) %>%
     pull(tmp)
   tmp2 <- data %>%

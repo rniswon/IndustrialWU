@@ -108,6 +108,18 @@ standard_Description <- function(data, fp, codescrosswalk, hardcoded) {
   tmp
 }
 
+standard_FacilityName <- function(data, fp, codescrosswalk, hardcoded) {
+  if("FacilityName" %in% names(data)) {
+    if(detect_readme(fp)) {
+      tmp <- handle_readmes(data, fp, "FacilityName", hardcoded, codescrosswalk)
+    } else {
+      tmp <- data %>%
+        mutate(FacilityName = clean_strings(FacilityName, common_words = corporate_words))
+      }
+  } else (tmp <- data)
+  tmp
+}
+
 formatsitedata <- function(renamed_rawdat, hardcodedparams, codescrosswalk) {
 
   site_formatted <- renamed_rawdat %>% 
@@ -115,12 +127,14 @@ formatsitedata <- function(renamed_rawdat, hardcodedparams, codescrosswalk) {
     imap(., ~standard_SourceType(.x, .y, codescrosswalk, hardcodedparams)) %>%
     imap(., ~standard_Category(.x, .y, codescrosswalk, hardcodedparams)) %>%
     imap(., ~standard_Saline(.x, .y, codescrosswalk, hardcodedparams)) %>%
+    imap(., ~standard_FacilityName(.x, .y, codescrosswalk, hardcodedparams)) %>%   
     imap(., ~standard_FacilityNumber(.x, .y, codescrosswalk, hardcodedparams)) %>%
-    imap(., ~standard_SIC(.x, .y, codescrosswalk, hardcodedparams)) %>%
-    imap(., ~standard_Description(.x, .y, codescrosswalk, hardcodedparams)) %>%
-    imap(., ~standard_NAICS(.x, .y, codescrosswalk, hardcodedparams)) %>%
     imap(., ~standard_FacilityNumber1(.x, .y, codescrosswalk, hardcodedparams)) %>%
     imap(., ~standard_SourceNumber(.x, .y, codescrosswalk, hardcodedparams)) %>%
+    imap(., ~standard_NAICS(.x, .y, codescrosswalk, hardcodedparams)) %>%
+    imap(., ~standard_SIC(.x, .y, codescrosswalk, hardcodedparams)) %>%
+    imap(., ~standard_Description(.x, .y, codescrosswalk, hardcodedparams)) %>%
+    map(., ~remove_empty(.x, which = c("rows", "cols"))) %>%
     add_state()
   return(site_formatted)
   

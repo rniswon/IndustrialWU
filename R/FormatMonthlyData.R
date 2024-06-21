@@ -36,6 +36,7 @@ formatmonthlydata <- function(renamed_rawdat, HeaderCrosswalk, hardcodedparams, 
     imap(., ~standard_Units_monthly(.x, .y, HeaderCrosswalk, hardcodedparams, codescrosswalk)) %>%
     imap(., ~standard_Methods_monthly(.x, .y, hardcodedparams, codescrosswalk)) %>%
     imap(., ~standard_Year(.x, .y, hardcodedparams, codescrosswalk)) %>%
+    map(., ~remove_empty(.x, which = c("rows", "cols"))) %>%
     add_state()
   
   return(monthly_formatted)
