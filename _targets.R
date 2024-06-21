@@ -7,7 +7,8 @@
 library(targets)
 packages <- c("tibble", "stringr", "purrr", "readxl", "svDialogs", "dplyr", "archive",
               "furrr", "tidyr", "future", "readr", "lubridate", "tigris",
-              "zipcodeR", "data.table", "sf", "rquery", "officer")
+              "zipcodeR", "data.table", "sf", "rquery", "officer", "pdftools",
+              "fedmatch", "janitor")
 
 # Set target options:
 tar_option_set(

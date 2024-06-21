@@ -3,3 +3,4 @@
 /AZ/2000-2018_Industrial Data_Redacted.xlsx$industrial_facilities,long,"contains(c(""-USE/PURPOSE-"", ""--""))","SourceType, Description","sep: ""-USE/PURPOSE-|--""",Annual_reported
 /CT/ConnecticutIndustrial_WU_info.xlsx$Sheet1,wide,Year = year(`TSDateTime`),Month = month.abb[month(`TSDateTime`)],,TSValue in MGD
 /MN/MN_IN_WU.xlsx$MPARS_Index_Permits-IN,long,"which(grepl(""use_[[:digit:]]"", names(.)))",Year,,Annual_reported
+/OK/Industrial Permit Water Use 2000 to 2019.xlsx$Ind. Water Use (a-f per year),long,"c(""Irrigation"", ""Public Supply"", ""Industrial"", ""Power"", ""Mining"", ""Commercial"", ""Recreation Fish & Wildlife"", ""Agriculture"", ""Other Total"")",Category,,Annual_reported

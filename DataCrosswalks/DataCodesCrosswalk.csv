@@ -199,3 +199,9 @@ SourceType,"Surface Water, Pur",PS
 SourceType,"Groundwater, SS",GW
 SourceType,"Surface Water, Ss",SW
 SourceType,"Groundwater, Pur",PS
+Category,Irrigation,IR
+Category,Public Supply,PS
+Category,Power,TE
+Category,Recreation Fish & Wildlife,NA_character_
+Category,Agriculture,AG
+Category,Other Total,NA_character_

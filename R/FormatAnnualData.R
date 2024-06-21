@@ -24,6 +24,7 @@ formatannualdata <- function(renamed_rawdat, HeaderCrosswalk, hardcodedparams, c
   annual_formatted <- renamed_rawdat %>%
     imap(., ~standard_Units_annual(.x, .y, HeaderCrosswalk, hardcodedparams, codescrosswalk)) %>%
     imap(., ~standard_Method_annual(.x, .y, hardcodedparams, codescrosswalk)) %>%
+    map(., ~remove_empty(.x, which = c("rows", "cols"))) %>%
     add_state()
   
   return(annual_formatted)

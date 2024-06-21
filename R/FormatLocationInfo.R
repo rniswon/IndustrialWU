@@ -84,6 +84,23 @@ standard_Zip1 <- function(data) {
   tmp
 }
 
+standard_County1 <- function(data, fp, hardcoded, codescrosswalk) {
+  if(length(grep("County1", names(data))) > 0) {
+    if(length(grep("County1", names(data))) == 1) {
+      if(detect_readme(fp)) {
+        tmp <- handle_readmes(data, fp, "County1", hardcoded, codescrosswalk)  %>% 
+          mutate(County1 = as.character(County1))
+      } else {      tmp <- data %>% 
+        mutate(County1 = as.character(County1))}
+      
+    } else if(length(grep("County1", names(data))) > 1) {
+      tmp <- concat_columns(data, "County1") %>% 
+        mutate(County1 = as.character(County1))
+    }
+  } else (tmp <- data)
+  tmp
+}
+
 standard_Lat <- function(data) {
   if(length(grep("Lat", names(data))) > 0) {
     if(length(grep("Lat", names(data))) == 1) {
@@ -112,6 +129,40 @@ standard_Lon <- function(data) {
   tmp
 }
 
+standard_AquiferName1 <- function(data, fp, hardcoded, codescrosswalk) {
+  if(length(grep("AquiferName1", names(data))) > 0) {
+    if(length(grep("AquiferName1", names(data))) == 1) {
+      if(detect_readme(fp)) {
+        tmp <- handle_readmes(data, fp, "AquiferName1", hardcoded, codescrosswalk)  %>% 
+          mutate(AquiferName1 = as.character(AquiferName1))
+      } else {      tmp <- data %>% 
+        mutate(AquiferName1 = as.character(AquiferName1))}
+      
+    } else if(length(grep("AquiferName1", names(data))) > 1) {
+      tmp <- concat_columns(data, "AquiferName1") %>% 
+        mutate(AquiferName1 = as.character(AquiferName1))
+    }
+  } else (tmp <- data)
+  tmp
+}
+
+standard_AquiferName2 <- function(data, fp, hardcoded, codescrosswalk) {
+  if(length(grep("AquiferName2", names(data))) > 0) {
+    if(length(grep("AquiferName2", names(data))) == 1) {
+      if(detect_readme(fp)) {
+        tmp <- handle_readmes(data, fp, "AquiferName2", hardcoded, codescrosswalk)  %>% 
+          mutate(AquiferName2 = as.character(AquiferName2))
+      } else {      tmp <- data %>% 
+        mutate(AquiferName2 = as.character(AquiferName2))}
+      
+    } else if(length(grep("AquiferName2", names(data))) > 1) {
+      tmp <- concat_columns(data, "AquiferName2") %>% 
+        mutate(AquiferName2 = as.character(AquiferName2))
+    }
+  } else (tmp <- data)
+  tmp
+}
+
 
 
 formatlocationdata <- function(renamed_rawdat, HeaderCrosswalk, hardcodedparams, codescrosswalk) {
@@ -119,13 +170,17 @@ formatlocationdata <- function(renamed_rawdat, HeaderCrosswalk, hardcodedparams,
     imap(., ~standard_HUC8(.x, .y, hardcodedparams, codescrosswalk)) %>%
     imap(., ~standard_HUC10(.x, .y, hardcodedparams, codescrosswalk)) %>%
     imap(., ~standard_HUC12(.x, .y, hardcodedparams, codescrosswalk)) %>%
+    imap(., ~standard_AquiferName1(.x, .y, hardcodedparams, codescrosswalk)) %>%
+    imap(., ~standard_AquiferName2(.x, .y, hardcodedparams, codescrosswalk)) %>%
     imap(., ~standard_Datum(.x, .y, hardcodedparams, codescrosswalk)) %>%
     map(., ~standard_Address1(.x)) %>%
     map(., ~standard_City1(.x)) %>%
+    imap(., ~standard_County1(.x, .y, hardcodedparams, codescrosswalk)) %>%
     map(., ~standard_State1(.x)) %>%
     map(., ~standard_Zip1(.x)) %>%
     map(., ~standard_Lat(.x)) %>%
     map(., ~standard_Lon(.x)) %>%
+    map(., ~remove_empty(.x, which = c("rows", "cols"))) %>%
     add_state()
   
   return(location_formatted)

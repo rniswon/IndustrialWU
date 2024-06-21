@@ -16,6 +16,8 @@ Steps for adding a new state:
 
     4)  Currently, the code is very sensitive to case and spelling. Be sure that the headers are entered correctly.
 
+    5)  For shapefiles, I've just entered the headers into the line for the .shp file and have left the rest blank (e.g. .prj, .dbf files)
+
 5)  Run tar_make() this will use the input data crosswalks to format the new state's data. There are several checks built into the script that should prompt the developer to make further updates to the csv control files if necessary, but the developer should also carefully look at the output for the new state as well, as there may be new cases of data formatting that need to be dealt with in the code. The commented out code at the bottom of the `_targets.R` file are there to help with the debugging. All excel files must be closed for tar_make() to run.
 
 6)  If necessary, update `DataCrosswalks/DataPivots.csv`. The entries to this spreadsheet will be used to generate dplyr::pivot() lines of code in the `readandrename_columns` function.

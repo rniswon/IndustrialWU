@@ -11,6 +11,7 @@ formatmetadata <- function(renamed_rawdat, HeaderCrosswalk, hardcodedparams, cod
 
   metadata_formatted <- renamed_rawdat %>%
     imap(., ~standard_DataProtected(.x, .y, hardcodedparams, codescrosswalk)) %>%
+    map(., ~remove_empty(.x, which = c("rows", "cols"))) %>%
     add_state()
   
   return(metadata_formatted)
