@@ -1,12 +1,50 @@
-"file","Header","Value","Notes"
-"/AL/USGS Lovelace NP Data Request_20200812_Final.xlsx$ReadMe","Method_monthly","reported",""
-"/AL/USGS Lovelace NP Data Request_20200812_Final.xlsx$ReadMe","Method_annual_reported","permitted",""
-"/MN/MN_IN_WU.xlsx$MPARS_Index_Permits-IN","Units_annual_reported","mg",""
-"/MN/read_me.docx","ValueType","WD",""
-"/AR/read_me.docx","Method_annual_reported","Reported",""
-"/NH/read_me.docx","Units_monthly","thousand gallons","Discussion with Laura Medalie"
-"/NH/read_me.docx","Method_monthly","reported",NA
-"/TX/TX_IN_WU.xlsx$Texas_IndustrialWithdrawals_200","Units_monthly","",NA
-"/TX/read_me.docx","Method_monthly","",NA
-"/TX/TX_IN_WU.xlsx$Texas_IndustrialWithdrawals_200","Units_annual_reported","",NA
-"/TX/read_me.docx","Method_annual_reported","",NA
+file,Header,Value,Notes
+/AL/USGS Lovelace NP Data Request_20200812_Final.xlsx$ReadMe,Method_monthly,Metered,
+/AL/USGS Lovelace NP Data Request_20200812_Final.xlsx$ReadMe,Method_annual_reported,permitted,
+/MN/MN_IN_WU.xlsx$MPARS_Index_Permits-IN,Units_annual_reported,mg,
+/MN/read_me.docx,ValueType,WD,
+/AR/read_me.docx,Method_annual_reported,Metered,
+/NH/read_me.docx,Units_monthly,thousand gallons,Discussion with Laura Medalie
+/NH/read_me.docx,Method_monthly,Metered,NA
+/TX/TX_IN_WU.xlsx$Texas_IndustrialWithdrawals_200,Units_monthly,,NA
+/TX/read_me.docx,Method_monthly,,NA
+/TX/TX_IN_WU.xlsx$Texas_IndustrialWithdrawals_200,Units_annual_reported,,NA
+/TX/read_me.docx,Method_annual_reported,,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2000,ValueType,WD,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2001,ValueType,WD,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2002,ValueType,WD,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2003,ValueType,WD,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2004,ValueType,WD,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2005,ValueType,WD,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2006,ValueType,WD,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2007,ValueType,WD,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2008,ValueType,WD,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2009,ValueType,WD,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2010,ValueType,WD,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2011,ValueType,WD,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2012,ValueType,WD,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2013,ValueType,WD,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2014,ValueType,WD,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2015,ValueType,WD,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2016,ValueType,WD,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2017,ValueType,WD,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2018,ValueType,WD,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2000,Method_annual_reported,Metered,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2001,Method_annual_reported,Metered,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2002,Method_annual_reported,Metered,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2003,Method_annual_reported,Metered,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2004,Method_annual_reported,Metered,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2005,Method_annual_reported,Metered,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2006,Method_annual_reported,Metered,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2007,Method_annual_reported,Metered,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2008,Method_annual_reported,Metered,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2009,Method_annual_reported,Metered,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2010,Method_annual_reported,Metered,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2011,Method_annual_reported,Metered,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2012,Method_annual_reported,Metered,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2013,Method_annual_reported,Metered,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2014,Method_annual_reported,Metered,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2015,Method_annual_reported,Metered,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2016,Method_annual_reported,Metered,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2017,Method_annual_reported,Metered,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2018,Method_annual_reported,Metered,NA

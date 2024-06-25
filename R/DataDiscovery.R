@@ -1,23 +1,4 @@
 
-getdatafp <- function() {
-  ## If that doesn't work, another prompt should appear for the directory of the formatted state data
-  path_to_remote_tracker <- svDialogs::dlg_open(
-    title = "Please select the file `NonSWUDS_Data_Input_Tracking.xlsx` from the folder `state_data`:"
-  )$res
-  
-  
-  unformattedstatedata <- dirname(path_to_remote_tracker)
-  return(unformattedstatedata)
-}
-
-
-
-listdatadirs <- function(fp) {
-  states <- state.abb
-  subdirs <- subset(list.dirs(fp), stringr::str_extract(list.dirs(fp), "(?<=state_data/).*") %in% states)
-  return(subdirs)
-}
-
 listSTdata <- function(stDatadir) {
   reqpackages <- c("furrr", "stringr", "archive", "readxl", "purrr")
   supreq <- function(x) {suppressWarnings(require(x, character.only = TRUE))}
@@ -66,6 +47,23 @@ listSTdata <- function(stDatadir) {
   
 }
 
+listdatadirs <- function(fp) {
+  states <- state.abb
+  subdirs <- subset(list.dirs(fp), stringr::str_extract(list.dirs(fp), "(?<=state_data/).*") %in% states)
+  return(subdirs)
+}
+
+getdatafp <- function() {
+  ## If that doesn't work, another prompt should appear for the directory of the formatted state data
+  path_to_remote_tracker <- svDialogs::dlg_open(
+    title = "Please select the file `NonSWUDS_Data_Input_Tracking.xlsx` from the folder `state_data`:"
+  )$res
+  
+  
+  unformattedstatedata <- dirname(path_to_remote_tracker)
+  return(unformattedstatedata)
+}
+
 get_all_dat <- function(fp) {
   if(!exists("fp")) {
     fp <- getdatafp()
@@ -74,62 +72,63 @@ get_all_dat <- function(fp) {
   unlist(map(availdat, ~listSTdata(.x)))
 }
 
-read_in_datafile <- function(datafp, fp) {
-    data <- if(grepl("\\~\\$", fp)) {
-      list("Temporary and/or corrupted file")
-    } else if(
-      grepl(".csv|.txt|.rdb", fp)) {
-      read.csv(file.path(datafp, fp), fill = TRUE, header = FALSE)
-    } else if(grepl(".xlsx|.xls", fp)) {
-      workbook_fp <- str_extract(fp, ".*(?=\\$)")
-      sheetnm <- str_extract(fp, "(?<=\\$).*")
-      suppressWarnings(suppressMessages(
-        readxl::read_excel(file.path(datafp, workbook_fp), sheet = sheetnm)))
-    } else if(grepl(".docx", fp)) {
-      dat <- officer::read_docx(file.path(datafp, fp))
-      txt <- officer::docx_summary(dat)$text
-      data.frame(text = txt)
-      } else if (grepl(paste(shapefileextensions, collapse = "|"), fp)) {
-        fp_shp <- gsub(paste(shapefileextensions, collapse = "|"), ".shp", fp)
-        dat <- st_read(file.path(datafp, fp_shp))
-      } else if (grepl(".pdf", fp)) {
-        dat <- 
-          imap_dfr(str_split(pdftools::pdf_text(pdf = file.path(datafp, fp)), "\n"), 
-                    ~{data.frame(text = .x) %>% mutate(page = .y)})
-        data
-      } else {
-      stop(paste0("New database type found that has not been built in yet (", fp, ")"))
-    }
-    data
-}
-
-detect_readme <- function(filename) {
-  grepl("ReadMe|readme|Read_Me|read_me", filename)
-}
-
-shapefileextensions <- c(".shp", ".dbf", ".htm", ".prj", ".sbn", ".sbx", 
-                         ".shp.xml", ".shx")
-
-convert2decimal <- function(x) {
-  x <- as.character(x)
-  degrees <- suppressWarnings(as.numeric(str_sub(x, 1, 2)))
-  minutes <- suppressWarnings(as.numeric(str_sub(x, 3, 4)))
-  seconds <- suppressWarnings(as.numeric(str_sub(x, 5, nchar(x))))
+generate_blankcsv <- function(x) {
+  blankdat <- data.frame(
+    file = x,
+    SiteDescriptions = NA,
+    LocationInfo = NA,
+    MonthlyData = NA,
+    AnnualData = NA,
+    Metadata = NA,
+    Duplicate = NA,
+    NotRelevant = NA
+  )
   
-  degrees + (minutes + (seconds / 60)) / 60
+  return(blankdat)
 }
 
-handle_coordinates <- function(data, header) {
-  tmp <- data %>%
-    mutate(across(contains(header), ~{
-      case_when(
-        . == "0" ~ NA_character_,
-        . == "NULL" ~ NA_character_,
-        str_detect(., "^[[:digit:]]{2}\\.") ~ as.character(.),
-        str_detect(., "^[[:digit:]]{6}\\.?") ~ as.character(convert2decimal(.)),
-        .default = as.character(.)
-      )
-    })) 
+generate_blankHeaderCrosswalkcsv <- function(filledassignment) {
   
-  tmp
+  filledfile <- filledassignment
+  
+  blanksiteDescripts <- filledfile %>% filter(SiteDescriptions == 1 | 
+                                                LocationInfo == 1 |
+                                                MonthlyData == 1 |
+                                                AnnualData == 1 |
+                                                Metadata == 1) %>%
+    mutate(State = str_extract(file, "(?<=/)[[:alpha:]]{2}")) %>%
+    select(State, file) %>%
+    mutate(ValueType = NA, SourceType = NA, Category = NA, Saline = NA, 
+           FacilityName = NA, FacilityName1 = NA, FacilityName2 = NA,
+           FacilityNumber = NA, FacilityNumber1 = NA, FacilityNumber2 = NA,
+           SourceName = NA, SourceName1 = NA, SourceName2 = NA,
+           SourceNumber = NA, SourceNumber1 = NA, SourceNumber2 = NA, 
+           NAICS = NA, SIC = NA, Description = NA, HUC8 = NA, HUC10 = NA, 
+           HUC12 = NA, AquiferName1 = NA, AquiferName2 = NA,
+           BasinName1 = NA, BasinName2 = NA, Address1 = NA, City1 = NA,
+           County1 = NA, State1 = NA, Zip1 = NA, Address2 = NA, City2 = NA,
+           County2 = NA, State2 = NA, Zip2 = NA, Lat = NA, Lon = NA, Datum = NA, 
+           Projection = NA, Year = NA, Jan = NA, Feb = NA, Mar = NA, Apr = NA,
+           May = NA, Jun = NA, Jul = NA, Aug = NA, Sep = NA, Oct = NA, Nov = NA,
+           Dec = NA, Units_monthly = NA, Method_monthly = NA, Annual_reported = NA,
+           Units_annual_reported = NA, Method_annual_reported = NA, DataProtected = NA)
+  
+  return(blanksiteDescripts)
+}
+
+
+get_filledcsv <- function(file) {
+  read.csv(file, colClasses = "character")
+}
+
+
+merge_data <- function(blank, filled) {
+  filledfile <- get_filledcsv(filled)
+  fp_classified <- filledfile %>% na.omit() %>% dplyr::pull(file)
+  
+  fp_unclassified <- blank %>% filter(!file %in% fp_classified)
+  
+  d <- bind_rows(fp_unclassified, filledfile) %>% unique()
+  write.csv(d, filled, row.names = FALSE)
+  return(d)
 }

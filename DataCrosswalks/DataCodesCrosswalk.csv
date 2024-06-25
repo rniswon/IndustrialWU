@@ -205,3 +205,7 @@ Category,Power,TE
 Category,Recreation Fish & Wildlife,NA_character_
 Category,Agriculture,AG
 Category,Other Total,NA_character_
+SourceType,GROUND,GW
+SourceType,SURFACE,SW
+Category,INDUST,IN
+Category,COMM,CO
