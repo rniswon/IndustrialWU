@@ -1,71 +1,42 @@
 
-generate_blankcsv <- function(x) {
-  blankdat <- data.frame(
-    file = x,
-    SiteDescriptions = NA,
-    LocationInfo = NA,
-    MonthlyData = NA,
-    AnnualData = NA,
-    Metadata = NA,
-    Duplicate = NA,
-    NotRelevant = NA
-  )
-  
-  return(blankdat)
+shapefileextensions <- c(".shp", ".dbf", ".htm", ".prj", ".sbn", ".sbx", 
+                         ".shp.xml", ".shx")
+
+read_in_datafile <- function(datafp, fp) {
+  data <- if(grepl("\\~\\$", fp)) {
+    list("Temporary and/or corrupted file")
+  } else if(
+    grepl(".csv|.txt|.rdb", fp)) {
+    read.csv(file.path(datafp, fp), fill = TRUE, header = FALSE)
+  } else if(grepl(".xlsx|.xls", fp)) {
+    workbook_fp <- str_extract(fp, ".*(?=\\$)")
+    sheetnm <- str_extract(fp, "(?<=\\$).*")
+    suppressWarnings(suppressMessages(
+      readxl::read_excel(file.path(datafp, workbook_fp), sheet = sheetnm)))
+  } else if(grepl(".docx", fp)) {
+    dat <- officer::read_docx(file.path(datafp, fp))
+    txt <- officer::docx_summary(dat)$text
+    data.frame(text = txt)
+  } else if (grepl(paste(shapefileextensions, collapse = "|"), fp)) {
+    fp_shp <- gsub(paste(shapefileextensions, collapse = "|"), ".shp", fp)
+    dat <- st_read(file.path(datafp, fp_shp))
+  } else if (grepl(".pdf", fp)) {
+    dat <- 
+      imap_dfr(str_split(pdftools::pdf_text(pdf = file.path(datafp, fp)), "\n"), 
+               ~{data.frame(text = .x) %>% mutate(page = .y)})
+    data
+  } else {browser()
+    stop(paste0("New database type found that has not been built in yet (", fp, ")"))
+  }
+  data
 }
 
-
-
-generate_blankHeaderCrosswalkcsv <- function(filledassignment) {
-  
-  filledfile <- filledassignment
-  
-  blanksiteDescripts <- filledfile %>% filter(SiteDescriptions == 1 | 
-                                                LocationInfo == 1 |
-                                                MonthlyData == 1 |
-                                                AnnualData == 1 |
-                                                Metadata == 1) %>%
-    mutate(State = str_extract(file, "(?<=/)[[:alpha:]]{2}")) %>%
-    select(State, file) %>%
-    mutate(ValueType = NA, SourceType = NA, Category = NA, Saline = NA, 
-           FacilityName = NA, FacilityName1 = NA, FacilityName2 = NA,
-           FacilityNumber = NA, FacilityNumber1 = NA, FacilityNumber2 = NA,
-           SourceName = NA, SourceName1 = NA, SourceName2 = NA,
-           SourceNumber = NA, SourceNumber1 = NA, SourceNumber2 = NA, 
-           NAICS = NA, SIC = NA, Description = NA, HUC8 = NA, HUC10 = NA, 
-           HUC12 = NA, AquiferName1 = NA, AquiferName2 = NA,
-           BasinName1 = NA, BasinName2 = NA, Address1 = NA, City1 = NA,
-           County1 = NA, State1 = NA, Zip1 = NA, Address2 = NA, City2 = NA,
-           County2 = NA, State2 = NA, Zip2 = NA, Lat = NA, Lon = NA, Datum = NA, 
-           Projection = NA, Year = NA, Jan = NA, Feb = NA, Mar = NA, Apr = NA,
-           May = NA, Jun = NA, Jul = NA, Aug = NA, Sep = NA, Oct = NA, Nov = NA,
-           Dec = NA, Units_monthly = NA, Method_monthly = NA, Annual_reported = NA,
-           Units_annual_reported = NA, Method_annual_reported = NA, DataProtected = NA)
-  
-  return(blanksiteDescripts)
-}
-
-
-get_filledcsv <- function(file) {
-  read.csv(file, colClasses = "character")
-}
-
-merge_data <- function(blank, filled) {
-  filledfile <- get_filledcsv(filled)
-  fp_classified <- filledfile %>% na.omit() %>% dplyr::pull(file)
-  
-  fp_unclassified <- blank %>% filter(!file %in% fp_classified)
-  
-  d <- bind_rows(fp_unclassified, filledfile) %>% unique()
-  write.csv(d, filled, row.names = FALSE)
-  return(d)
-}
 
 
 readandrename_columns <- function(datafp, HeaderCrosswalk, pivots, HardCodes) {
   filledheader <- HeaderCrosswalk
-  
-  headers_classified <- filledheader %>% na.omit()
+
+  headers_classified <- filledheader %>% na.omit() %>% filter(State %in% state.abb)
   
   dat <- imap(headers_classified$file, ~{
     i <- .y
@@ -140,7 +111,9 @@ readandrename_columns <- function(datafp, HeaderCrosswalk, pivots, HardCodes) {
           if(old_sub %in% names(dat_rare)) {
             tmp <- tibble(!!new := dat_rare[[old_sub]])} else {
               if(old_sub %in% names(dat_raw)) {stop("Something went wrong in the pivots")} else 
-                if(!exists("mutatecode")) {browser(); stop("Check entries in HeaderCrosswalk.csv that they match the data exactly.")} else {
+                if(!exists("mutatecode")) {browser()
+                  stop("Check entries in HeaderCrosswalk.csv that they match the data exactly.")
+                  } else {
                 names_check <- dat_raw %>% 
                   {eval(parse(text = mutatecode))} %>% 
                   {eval(parse(text = selectcode))} %>%
@@ -164,147 +137,14 @@ tmp
   return(dat)
 }
 
-reformat_data <- function(x, headers, hardcodedparams, codescrosswalk) {
-
-    x_munged <- x %>% formatsitedata(., hardcodedparams, codescrosswalk) %>% 
-    formatlocationdata(., headers, hardcodedparams, codescrosswalk) %>%
-    formatmonthlydata(., headers, hardcodedparams, codescrosswalk) %>% 
-    formatannualdata(., headers, hardcodedparams, codescrosswalk) %>% 
-    formatmetadata(., headers, hardcodedparams, codescrosswalk) %>%
-    map(., ~unique(.x))
-    
-    if(any(grepl("\\.\\.\\.", unlist(map(x_munged, ~names(.x)))))) {
-      issue <- unique(na.omit(
-        str_extract(unlist(map(x_munged, ~names(.x))), ".*(?=\\.\\.\\.)")))
-      stop(paste0("New case(s) for ", paste(issue, collapse = ", ")))
-    }
-  x_munged_indices_bysize <- unlist(map(x_munged, ~length(.x))) %>% sort(decreasing = TRUE)
-  x_merge_ready <- x_munged[names(x_munged_indices_bysize)] %>% keep(~{nrow(.) > 0})
-  x_bystate <- map(state.abb, ~{st <- .x; keep_at(x_merge_ready, ~grepl(paste0("/", st, "/"), .))}); names(x_bystate) <- state.abb
-  x_readystates <- keep(x_bystate, ~length(.) > 0)
-  x_simplestates <- map(x_readystates, ~reduce(.x, merge_andreplaceNA, .dir = "forward"))
-  
-  x_all <- do.call("bind_rows", x_simplestates)
-  
-  ordered <- names(headers)
-  
-  x_ordered <- x_all %>% select(any_of(ordered))
-  
-  return(x_ordered)
-}
-
-merge_andreplaceNA <- function(x, y) {
-  x_complete <- x %>% select(where(~!any(is.na(.))))
-  y_complete <- y %>% select(where(~!any(is.na(.))))
-  
-  merge_vars <- names(x_complete)[names(x_complete) %in% names(y_complete)]
-  
-  if(
-    max(pull(
-      summarize(group_by(y, across(all_of(merge_vars))), n = n(), .groups = "drop"), 
-      n)) > length(merge_vars)) {
-    datavars <- c("Annual_reported", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Sep", "Oct", "Nov", "Dec", "Year", "Category")
-    
-    y_unique <- y %>% 
-      group_by(across(any_of(c(merge_vars, datavars)))) %>% 
-      summarize(across(.cols = everything(), .fns = ~paste(unique(.), collapse = ", ")), .groups = "drop") %>%
-      mutate(across(any_of(c("Lat", "Lon", "SourceNumber")), ~gsub(",.*", "", .))) ## If more than one location or source, keep only the first one. Source will only treated this way if it isn't used to merge - so if the other data is only to the facility level, not the source level.
-    } else {y_unique <- y}
-  
-  merge <- rquery::natural_join(x, y_unique, by = merge_vars, jointype = "FULL")
-  
-  return(merge)
-}
-
-add_state <- function(renamed_rawdat) {
-  imap(renamed_rawdat, ~{
-    state <- str_extract(.y, "(?<=^/)[[:alpha:]]{2}")
-    .x %>% mutate(State = state)
-  })
-}
-
-concat_columns <- function(data, Column) {
-  tmp <- data %>%
-    rowwise() %>%
-    select(contains(Column)) %>% 
-    mutate(tmp = paste(unique(na.omit(gsub("NULL", NA_character_, 
-                                    c_across(contains(Column))))), 
-                       collapse = ", ")) %>%
-    pull(tmp)
-  tmp2 <- data %>%
-    select(-contains(Column)) %>% mutate(!!Column := tmp)
-  return(tmp2)
-}
-
-handle_readmes <- function(data, fp, header, hardcodes, codescrosswalk) {
-  info <- unlist(data[[header]])
-  tmp <- handle_oddformats(data, fp, header, hardcodes, info, codescrosswalk)
-}
-
-handle_headers <- function(data, fp, header, headercrosswalk, hardcodedparams, codescrosswalk) {
-  oldheader <- headercrosswalk %>% filter(file == fp) %>% pull(header)
-  tmp <- handle_oddformats(data, fp, header, hardcodedparams, oldheader, codescrosswalk)
-}
-
-handle_oddformats <- function(data, fp, header, hardcodes, info, codescrosswalk) {
-  datatype <- ifelse(grepl("Units", header), "Units", 
-                     ifelse(grepl("Method", header), "Method", 
-                            ifelse(grepl("DataProtected", header), "Protect", 
-                                   ifelse(grepl("ValueType", header), "ValueType", "TBD"))))
-  if(datatype == "TBD") {stop("New use of ReadMe files detected")}
-  
-  crosswalk_tmp <- read.csv(codescrosswalk, colClasses = "character") %>%
-    filter(grepl(datatype, header))
-  found_options <- na.omit(crosswalk_tmp$new_value[unique(unlist(map(crosswalk_tmp$original_value, ~grep(.x, info))))])
-  if(length(found_options) == 1) {
-    tmp <- data %>% mutate(!!header := found_options)
-  } else {tmp <- manual_update(data, fp, header, hardcodes, found_options)}
- 
-  return(tmp)
-}
-
-manual_update <- function(data, fp, header, hardcodedparams, inputoptions) {
-  
-  hardparams <- read.csv(hardcodedparams, colClasses = "character")
-  if(header %in% (hardparams$Header[hardparams$file == fp])) {
-    found_param_manual <- hardparams %>% filter(Header == header, file == fp) %>% pull(Value)
-  } else {
-    found_param_manual <- svDialogs::dlg_input(message = paste("Enter suspected", header, "value based on", fp, ". Suggested options are", paste(inputoptions, collapse = ", ")))$res
-    hardparams_update <- hardparams %>% add_row(file = fp, Header = header, Value = found_param_manual)
-    
-    write.csv(hardparams_update, file = hardcodedparams, row.names = FALSE)
-  }
-  tmp <- data %>% mutate(!!header := found_param_manual)
-  
-  return(tmp)
-}
 
 
 
-crosswalk_codes <- function(data, fp, header, codescrosswalk, forceupdate = TRUE) {
-  header_tmp <- header
-  codecrosswalk <- read.csv(codescrosswalk, colClasses = "character") %>% 
-    filter(header == header_tmp)
-  if(forceupdate) {
-    if(any(!unique(data[[header]]) %in% codecrosswalk$original_value)) {
-      stop(paste("New codes", 
-                 paste(unique(data[[header]])[!unique(data[[header]]) %in% codecrosswalk$original_value], collapse = ", "), 
-                 "detected for", header, "in", fp))
-    }
-  }
-  
-  crosswalk <- codecrosswalk %>% select(original_value, new_value) %>%
-    mutate(new_value = case_when(grepl("NA", new_value) ~ new_value,
-                                 .default = paste0('"', new_value, '"'))) %>%
-    summarize(
-      original_value = paste0('c("', paste(original_value, collapse = '", "'), '")'),
-      .by = new_value) %>%
-    mutate(expr = paste0(original_value, " ~ ", new_value))
-  
-  mutatecode <- paste0(
-    "mutate(., ", header_tmp, " = ", "case_match(", header_tmp, ", ", paste(crosswalk$expr, collapse = ", "), ", .default = ", header_tmp, "))"
-    )
-  
-  tmp <- data %>% {eval(parse(text = mutatecode))}
-      
-}
+
+
+
+
+
+
+
+
