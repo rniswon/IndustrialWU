@@ -91,9 +91,9 @@ Units_monthly,Mgal/d,mgd
 Method_monthly,CTDEEP_2021_Est,Estimated
 Method_monthly,CTDEEP_Estimated,Estimated
 Method_monthly,Estimated,Estimated
-Method_monthly,CTDEEP_Reported,Reported
-Method_monthly,PA 02-102,Reported
-Method_monthly,Reported,Reported
+Method_monthly,CTDEEP_Reported,Metered
+Method_monthly,PA 02-102,Metered
+Method_monthly,Reported,Metered
 Method_monthly,Unknown,NA_character_
 Units_annual_reported,mgd,mgd
 Units_annual_reported,MGD,mgd
@@ -104,9 +104,9 @@ Units_annual_reported,Mgal/d,mgd
 Method_annual_reported,CTDEEP_2021_Est,Estimated
 Method_annual_reported,CTDEEP_Estimated,Estimated
 Method_annual_reported,Estimated,Estimated
-Method_annual_reported,CTDEEP_Reported,Reported
-Method_annual_reported,PA 02-102,Reported
-Method_annual_reported,Reported,Reported
+Method_annual_reported,CTDEEP_Reported,Metered
+Method_annual_reported,PA 02-102,Metered
+Method_annual_reported,Reported,Metered
 Method_annual_reported,Unknown,NA_character_
 Units_monthly,NA,NA_character_
 Units_annual_reported,NA,NA_character_
@@ -120,14 +120,14 @@ Method_monthly,application,Permitted
 Method_monthly,permitted,Permitted
 Method_monthly,permited,Permitted
 Method_monthly,authorized,Permitted
-Method_monthly,reported,Reported
-Method_monthly,submitted,Reported
+Method_monthly,reported,Metered
+Method_monthly,submitted,Metered
 Method_annual_reported,application,Permitted
 Method_annual_reported,permitted,Permitted
 Method_annual_reported,permited,Permitted
 Method_annual_reported,authorized,Permitted
-Method_annual_reported,reported,Reported
-Method_annual_reported,submitted,Reported
+Method_annual_reported,reported,Metered
+Method_annual_reported,submitted,Metered
 DataProtected,No further distribution,TRUE
 DataProtected,expressed written approval,TRUE
 Method_monthly,Unknown,NA_character_
@@ -209,3 +209,8 @@ SourceType,GROUND,GW
 SourceType,SURFACE,SW
 Category,INDUST,IN
 Category,COMM,CO
+Category,IN or MI,NA_character_
+Method_monthly,Metered,Metered
+ValueType,Gallons per year,WD
+Units_annual_reported,Gallons per year,gal
+Units_monthly,Gallons per month,gal

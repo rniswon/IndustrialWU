@@ -2,22 +2,22 @@ name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iterat
 add_state|function|2e80b96abe0afda8|||||||||||||||
 blank|stem|e2249f10768071ba|245c2e38508a3dcf|52b2393108c175b6|-1858050785||t19881.8886565366s|f1fe1fec5e4632c7|12447|rds|local|vector|||0||
 blankDataDictionary|stem|cc4b17968114b40e|2edb72bfe6e6ce0a|dc9ad4862c936417|2112771219||t19895.6271951978s|c257302c90193053|12471|rds|local|vector|||0||
-blankHeaderCrosswalk|stem|476e4ed2066a1ae1|91b740727ed99195|c2da76fd903bc6bd|203146013||t19895.6550248897s|275c733a583e26e9|2641|rds|local|vector|||0.03||
+blankHeaderCrosswalk|stem|6de613ffaf50b49e|91b740727ed99195|78cf3cd3d3229005|203146013||t19900.637319207s|5ceca1e42441d73d|2968|rds|local|vector|||0.03||
 blankSiteDescriptionDirectory|stem|c79e15cb153f444a|24531d6fe472a687|ccd63c8d445c0e67|342168709||t19884.5569928213s|6b0abd6b5ef450af|831|rds|local|vector|||0.03||
 checkSTupdates|function|11bbab065e6b7b6b|||||||||||||||
 concat_columns|function|478302cc30e2bf2a|||||||||||||||
 convert2decimal|function|024d049b47513379|||||||||||||||
-crosswalk_codes|function|9f600c3f4ca383b5|||||||||||||||
+crosswalk_codes|function|fdc35b05893df7f0|||||||||||||||
 dat|stem|ab79d66adeee7556|57e4d4c8e18ff7f3|f345d787de96b6a2|963459267||t19895.6550234377s|23cb9ef31c7664e3|11962|rds|local|vector|||30.24||
 data|stem|6c3735ea88ec1344|57e4d4c8e18ff7f3|76252ebd9db757ad|33550471||t19881.8670843515s|b5e78c792c5342b6|11938|rds|local|vector|||28.33||
-datafp|stem|e3f6a8852f7b3933|06c524624e1dbfdd|2c530c1562a7fbd1|11349336|C:/Users/cchamber/DOI/GS-W-WaterUse - Documents/GAP/industrial/state_data|t19894.8007552093s|739e0715fb533191|8192|file|local|vector|||3.84||
-detect_readme|function|76c5c0860b240d1f|||||||||||||||
+datafp|stem|e3f6a8852f7b3933|06c524624e1dbfdd|2c530c1562a7fbd1|11349336|C:/Users/cchamber/DOI/GS-W-WaterUse - Documents/GAP/industrial/state_data|t19894.8007552093s|739e0715fb533191|8192|file|local|vector|||3.74||
+detect_readme|function|373da076e3d4e873|||||||||||||||
 Estimated_methods|function|b5fdaa75b3380d6a|||||||||||||||
-existingCodesCrosswalk|stem|071bc7112dc2f9ae|50ac28a42a623cd2|2c530c1562a7fbd1|-1274528858|DataCrosswalks/DataCodesCrosswalk.csv|t19898.5118978918s|0e177796635b85f6|6328|file|local|vector|||3.67||
-existingDataDictionary|stem|28616f16f7e6fca5|f8100287f8f4c47d|2c530c1562a7fbd1|-1112456396|DataCrosswalks/DataDirectories.csv|t19895.6550244189s|66b436230acf03a6|129813|file|local|vector|||0||
-existingHardCodes|stem|f4d6ae65c258712c|b97823203edb6193|2c530c1562a7fbd1|-1677978201|DataCrosswalks/HardcodedManualAttributes.csv|t19898.978789211s|d1a96c3df9c55e5a|3634|file|local|vector|||8.22||
-existingHeaderCrosswalk|stem|32291fe4629dfab4|9b02a7dfdbd715b6|2c530c1562a7fbd1|645060105|DataCrosswalks/HeaderCrosswalk.csv|t19898.5316804079s|bc341aa428d632b8|62625|file|local|vector|||3.67||
-existingpivots|stem|57b807c7e9a26d99|e8b55e1994a3481d|2c530c1562a7fbd1|2032366224|DataCrosswalks/DataPivots.csv|t19895.806509084s|4cf3ac8d774f0829|949|file|local|vector|||3.69||
+existingCodesCrosswalk|stem|e83e3f7408c32b3e|50ac28a42a623cd2|2c530c1562a7fbd1|-1274528858|DataCrosswalks/DataCodesCrosswalk.csv|t19900.796385288s|7379504878752650|6495|file|local|vector|||8.37||
+existingDataDictionary|stem|39769b1a5447421d|f8100287f8f4c47d|2c530c1562a7fbd1|-1112456396|DataCrosswalks/DataDirectories.csv|t19900.6373185548s|bb7051fbd47b4408|129012|file|local|vector|||0||
+existingHardCodes|stem|0229987464ff4255|b97823203edb6193|2c530c1562a7fbd1|-1677978201|DataCrosswalks/HardcodedManualAttributes.csv|t19900.7227534452s|7a661bcd84162379|4276|file|local|vector|||7.92||
+existingHeaderCrosswalk|stem|cb43170ba65aee07|9b02a7dfdbd715b6|2c530c1562a7fbd1|645060105|DataCrosswalks/HeaderCrosswalk.csv|t19900.8034179523s|3ca6b332be534918|53344|file|local|vector|||8.19||
+existingpivots|stem|6e629316b38f25e4|e8b55e1994a3481d|2c530c1562a7fbd1|2032366224|DataCrosswalks/DataPivots.csv|t19900.7027798002s|d52519d7996e0e3d|1346|file|local|vector|||3.76||
 existingSiteDescriptionDirectory|stem|feb47a63397f129f|b9a3b39d0122b7fa|2c530c1562a7fbd1|190327828|DataCrosswalks/SiteDescriptionDirectories.csv|t19884.5762435549s|b5f3c8f5a61f6c2b|3322|file|local|vector|||3.71||
 filleddirectory|stem|49232c01849a155e|e005ba95080f6a5b|2c530c1562a7fbd1|-546554718|DataDirectories.csv|t19881.8941981909s|c1f5dd0dcb110529|129753|file|local|vector|||3.7||
 formatannualdata|function|c8d0aa37e03c3b12|||||||||||||||
@@ -45,11 +45,11 @@ mergeddata|stem|a0e884585e18ee94|96bb88e26f8cfb56|dfdad93808df1918|1825416019||t
 mgd_options|function|a9a321957c74cf5a|||||||||||||||
 packages|object|630acb27fa20b99d|||||||||||||||
 read_in_datafile|function|bb7aa18906b6e082|||||||||||||||
-readandrename_columns|function|2178baffbe0abb9c|||||||||||||||
-reformat_data|function|25316eaa7e7a30e9|||||||||||||||
-reformatted_data|stem|05ffab2a46a5f6fa|0a07edc3cb577287|c3073671d44bd7e5|562788577||t19899.0362360067s|6432b173ae5e7e3c|5679715|rds|local|vector|||142.89||
+readandrename_columns|function|3796efdb16de1f3e|||||||||||||||
+reformat_data|function|cae56ccccc4b7ec4|||||||||||||||
+reformatted_data|stem|37cf5e26e30d8bc3|0a07edc3cb577287|99a2c501126b1dd2|562788577||t19900.8064315019s|c2a7ab60af8f7275|5466900|rds|local|vector|||191.48||
 rename_columns|function|1d1d1d162e827e3d|||||||||||||||
-renamed_rawdat|stem|7eb4b8e19084bc30|60a79fccc99f6d4b|5f00b60a877e5436|-2108004464||t19898.9801753169s|b80f5af86a5b8276|6091361|rds|local|vector|||18.62||
+renamed_rawdat|stem|1754f05c42b2cd61|60a79fccc99f6d4b|7ce04294f92dcde3|-2108004464||t19900.804169747s|2cbda57586720ef5|6116836|rds|local|vector|||24.66|NAs introduced by coercion. NAs introduced by coercion. NAs introduced by coercion|
 Reported_methods|function|e8b8a15904bc24a3|||||||||||||||
 shapefileextensions|object|3cb3f7de5ac3049a|||||||||||||||
 standard_Address1|function|91e35a2181ca34dd|||||||||||||||
@@ -60,7 +60,7 @@ standard_Category|function|4c896e1955f9c06a|||||||||||||||
 standard_City1|function|0bf9c95111c4dc0e|||||||||||||||
 standard_coordinatetreatment|function|0e8399b359996eff|||||||||||||||
 standard_County1|function|e6e655b8f13583ea|||||||||||||||
-standard_datacodestreatment|function|a7e7117a4d50694a|||||||||||||||
+standard_datacodestreatment|function|041fc26f60f0b1a8|||||||||||||||
 standard_DataProtected|function|9d0b35a91f152ebd|||||||||||||||
 standard_Datum|function|575a8dc378c2a419|||||||||||||||
 standard_Description|function|ddff24a928cb29b9|||||||||||||||
@@ -91,6 +91,6 @@ standard_Year|function|dffa59fec3b9ff26|||||||||||||||
 standard_Yeartreatment|function|f7be9dce2a1ca983|||||||||||||||
 standard_Zip1|function|e3325d217e52c63f|||||||||||||||
 Unknown_methods|function|9c1242fc91545d3b|||||||||||||||
-updatedDataDictionary|stem|c1c5f261d2fa29dd|68614ab48c3295aa|10a12941c7ad2431|-603290823||t19895.6550244723s|e39652c8e4f6540c|17631|rds|local|vector|||0.07||
-updatedHeaderCrosswalk|stem|cb94c822dee92c25|edd81ced8305d47e|c295e5d552cec187|-1406770040||t19898.531680454s|1d4df933073c61ae|6157|rds|local|vector|||0.05||
+updatedDataDictionary|stem|fdac40b6da2eea05|68614ab48c3295aa|63e48d3e8e51fb4b|-603290823||t19900.6373186125s|9e15bddffb9bcbf2|17684|rds|local|vector|||0.08||
+updatedHeaderCrosswalk|stem|fa150b434b9decaa|edd81ced8305d47e|4910242d5fdfd188|-1406770040||t19900.8038573653s|210a7d41b71dbb51|6929|rds|local|vector|||0.06||
 updatedSiteDescriptionDirectory|stem|a0e884585e18ee94|c0de70ee5f0e3ea4|f5752621c113d6bd|150291769||t19884.5767878781s|e255484007059372|43|rds|local|vector|||0.01||

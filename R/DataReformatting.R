@@ -1,5 +1,5 @@
 detect_readme <- function(filename) {
-  grepl("ReadMe|readme|Read_Me|read_me", filename)
+  grepl("ReadMe|readme|Read_Me|read_me|metadata", filename)
 }
 
 convert2decimal <- function(x) {
@@ -300,7 +300,7 @@ reformat_data <- function(x, headercrosswalk, hardcodedparams, codescrosswalk) {
        standard_Yeartreatment) # call these to let the targets package know that they are used in this function
   
   datacodecolumns_force <- c("ValueType", "SourceType", "Category", "Saline", 
-                             "Units_monthly", "Methods_monthly", "Units_annual_reported",
+                             "Units_monthly", "Method_monthly", "Units_annual_reported",
                              "Method_annual_reported"
                              )
   datacodecolumns_unforce <- c("Description", "Datum", "Projection", "DataProtected")
