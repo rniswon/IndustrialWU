@@ -21,7 +21,7 @@ tar_source(files = "R")
 
 # Replace the target list below with your own:
 list(
-  tar_target(datafp, "C:/Users/cchamber/DOI/GS-W-WaterUse - Documents/GAP/industrial/state_data", format = "file"),
+  tar_target(datafp, "state_data", format = "file"),
   tar_target(existingDataDictionary, "DataCrosswalks/DataDirectories.csv", format = "file"),
   tar_target(existingHeaderCrosswalk, "DataCrosswalks/HeaderCrosswalk.csv", format = "file"),
   tar_target(existingHardCodes, "DataCrosswalks/HardcodedManualAttributes.csv", format = "file"),
@@ -36,8 +36,9 @@ list(
                readandrename_columns(datafp, updatedHeaderCrosswalk, existingpivots, existingHardCodes)
              ),
   tar_target(reformatted_data, command = 
-               reformat_data(renamed_rawdat, updatedHeaderCrosswalk, existingHardCodes, existingCodesCrosswalk) 
-             )
+               reformat_data(renamed_rawdat, updatedHeaderCrosswalk, existingHardCodes, existingCodesCrosswalk)
+             ),
+  tar_target(AllStates, command = write_allstates(reformatted_data), format = "file")
 )
 
 # For debugging ----

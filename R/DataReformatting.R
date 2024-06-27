@@ -360,7 +360,12 @@ reformat_data <- function(x, headercrosswalk, hardcodedparams, codescrosswalk) {
   ordered <- names(headercrosswalk)
   
   x_ordered <- x_all %>% select(any_of(ordered))
-  
+
   return(x_ordered)
 }
 
+write_allstates <- function(x) {
+  write.csv(x, "FormattedDataOutputs/AllStates.csv", row.names = FALSE)
+  save(x, file = "FormattedDataOutputs/AllStates.RDa")
+  return("FormattedDataOutputs/AllStates.csv")
+}
