@@ -1,3 +1,16 @@
+########## naics_plotly_maps.R #########################
+# Purpose: To Create Maps of NAICS Codes by county to compare
+# sites list to inventory in the US. Census CBP Dataset
+
+# Authors: Brendan McCarthy 
+# Latest Update 6/27/2024
+
+# Inputs: 
+#   CBP Data : https://data.census.gov/table?q=CBP2021.CB2100CBP&g=010XX00US$0500000&n=N0600.00
+#   Counties Shapefile: https://www.census.gov/geographies/mapping-files/2018/geo/carto-boundary-file.html
+
+####################################################
+
 library(sf)
 library(dplyr)
 library(ggplot2)
@@ -17,7 +30,7 @@ counties_SF <- counties_sf %>%
   filter(!STATEFP %in% oconus_fips)
 
 # Load data
-cbp_data <- read.table(cbp_data_csv_path, header = TRUE, sep = ",")
+cbp_data <- read.csv(cbp_data_csv_path, header = TRUE, sep = ",")
 
 # Filter by naics code to only include manufacturing 
 cbp_data <- cbp_data %>%
@@ -42,3 +55,4 @@ manufacturing_map <- ggplot(data = cbp_map) +
 plotly_map <- ggplotly(manufacturing_map)
 
 plotly_map
+
