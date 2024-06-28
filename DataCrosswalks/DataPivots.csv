@@ -1,8 +1,8 @@
 ﻿file,long_wide,cols,names_tofrom,names_pattern,values_tofrom,values_transform
 /AZ/2000-2018_Industrial Data_Redacted.xlsx$Non-Turf Facilities,long,"contains(c(""-USE/PURPOSE-"", ""--""))","SourceType, Description","sep: ""-USE/PURPOSE-|--""",Annual_reported,
 /AZ/2000-2018_Industrial Data_Redacted.xlsx$industrial_facilities,long,"contains(c(""-USE/PURPOSE-"", ""--""))","SourceType, Description","sep: ""-USE/PURPOSE-|--""",Annual_reported,
-/CT/ConnecticutIndustrial_WU_info.xlsx$Sheet1,wide,Year = year(`TSDateTime`),Month = month.abb[month(`TSDateTime`)],,TSValue in MGD,
+/CT/ConnecticutIndustrial_WU_info.xlsx$Sheet1,wide,Year = lubridate::year(`TSDateTime`),Month = month.abb[lubridate::month(`TSDateTime`)],,TSValue in MGD,
 /MN/MN_IN_WU.xlsx$MPARS_Index_Permits-IN,long,"which(grepl(""use_[[:digit:]]"", names(.)))",Year,,Annual_reported,
 /OK/Industrial Permit Water Use 2000 to 2019.xlsx$Ind. Water Use (a-f per year),long,"c(""Irrigation"", ""Public Supply"", ""Industrial"", ""Power"", ""Mining"", ""Commercial"", ""Recreation Fish & Wildlife"", ""Agriculture"", ""Other Total"")",Category,,Annual_reported,
-/VT/VermontIndustrial_WU_info.xlsx$VT,wide,"Year = year(`gwu_begin_date`), Method_monthly = ifelse(Estimated_Water_Use == Reported_System_Usage, ""Metered"", ""Estimated"")",Month = month.abb[month(`gwu_begin_date`)],,Estimated_Water_Use,
+/VT/VermontIndustrial_WU_info.xlsx$VT,wide,"Year = lubridate::year(`gwu_begin_date`), Method_monthly = ifelse(Estimated_Water_Use == Reported_System_Usage, ""Metered"", ""Estimated"")",Month = month.abb[lubridate::month(`gwu_begin_date`)],,Estimated_Water_Use,
 /VT/VermontLARGEIndustrial_WU_info.xlsx$Sheet1,long,"contains(c(""Withdrawals""))",Year,,Annual_reported,Annual_reported = as.numeric

@@ -6,9 +6,15 @@
 # Load packages required to define the pipeline:
 library(targets)
 packages <- c("tibble", "stringr", "purrr", "readxl", "svDialogs", "dplyr", "archive",
-              "furrr", "tidyr", "future", "readr", "lubridate", "tigris",
-              "zipcodeR", "data.table", "sf", "rquery", "officer", "pdftools",
+              "tidyr", "readr", "lubridate", "magrittr",
+              "sf", "rquery", "officer", "pdftools",
               "fedmatch", "janitor")
+optinstall <- function(x) {
+  if(!x %in% utils::installed.packages()) {
+    install.packages(x)
+  }
+}
+suppressWarnings(invisible(lapply(packages, optinstall)))
 
 # Set target options:
 tar_option_set(

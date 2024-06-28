@@ -9,8 +9,8 @@ read_in_datafile <- function(datafp, fp) {
     grepl(".csv|.txt|.rdb", fp)) {
     read.csv(file.path(datafp, fp), fill = TRUE, header = FALSE)
   } else if(grepl(".xlsx|.xls", fp)) {
-    workbook_fp <- str_extract(fp, ".*(?=\\$)")
-    sheetnm <- str_extract(fp, "(?<=\\$).*")
+    workbook_fp <- stringr::str_extract(fp, ".*(?=\\$)")
+    sheetnm <- stringr::str_extract(fp, "(?<=\\$).*")
     suppressWarnings(suppressMessages(
       readxl::read_excel(file.path(datafp, workbook_fp), sheet = sheetnm)))
   } else if(grepl(".docx", fp)) {
@@ -19,11 +19,11 @@ read_in_datafile <- function(datafp, fp) {
     data.frame(text = txt)
   } else if (grepl(paste(shapefileextensions, collapse = "|"), fp)) {
     fp_shp <- gsub(paste(shapefileextensions, collapse = "|"), ".shp", fp)
-    dat <- st_read(file.path(datafp, fp_shp))
+    dat <- sf::st_read(file.path(datafp, fp_shp), quiet = TRUE)
   } else if (grepl(".pdf", fp)) {
     dat <- 
-      imap_dfr(str_split(pdftools::pdf_text(pdf = file.path(datafp, fp)), "\n"), 
-               ~{data.frame(text = .x) %>% mutate(page = .y)})
+      purrr::imap_dfr(stringr::str_split(pdftools::pdf_text(pdf = file.path(datafp, fp)), "\n"), 
+               ~{data.frame(text = .x) |> dplyr::mutate(page = .y)})
     data
   } else {browser()
     stop(paste0("New database type found that has not been built in yet (", fp, ")"))
@@ -34,42 +34,43 @@ read_in_datafile <- function(datafp, fp) {
 
 
 readandrename_columns <- function(datafp, HeaderCrosswalk, pivots, HardCodes) {
+  
   filledheader <- HeaderCrosswalk
   
-  headers_classified <- filledheader %>% na.omit() %>% filter(State %in% state.abb)
+  headers_classified <- filledheader |> na.omit() |> dplyr::filter(State %in% state.abb)
   
-  dat <- imap(headers_classified$file, ~{
+  dat <- purrr::imap(headers_classified$file, ~{
     i <- .y
 
     dat_raw <- read_in_datafile(datafp, .x)
-    headercrosswalk <- headers_classified %>%
-      slice(i) %>% select(where(~{. != ""})) %>% 
+    headercrosswalk <- headers_classified |>
+      dplyr::slice(i) |> dplyr::select(where(~{. != ""})) %>% 
       {if(length(names(.)) > 2) {
-        pivot_longer(., cols = -c(State, file), names_to = "NewName", 
+        tidyr::pivot_longer(., cols = -c(State, file), names_to = "NewName", 
                      values_to = "OldName")
       } else {.}}
     
     if("~PIVOT~" %in% headercrosswalk$OldName) {
-      pivot_instr <- read.csv(pivots) %>% filter(file %in% headercrosswalk$file)
+      pivot_instr <- read.csv(pivots) |> dplyr::filter(file %in% headercrosswalk$file)
       
       if(nrow(pivot_instr) > 0) {
 
         mutatecode <- with(pivot_instr,
                            paste0(
-                             ifelse(grepl("=", names_tofrom), paste0('mutate(., ', names_tofrom, ')'), "{.}"),
-                             "%>%", ifelse(grepl("=", cols), paste0('mutate(., ', cols, ')'), "{.}")))
+                             ifelse(grepl("=", names_tofrom), paste0('dplyr::mutate(., ', names_tofrom, ')'), "{.}"),
+                             "%>%", ifelse(grepl("=", cols), paste0('dplyr::mutate(., ', cols, ')'), "{.}")))
         
         selectcode <- 
           with(pivot_instr,
                {
                  ifelse(long_wide == "wide",
-                        {paste0('select(., any_of(c("', paste(
+                        {paste0('dplyr::select(., any_of(c("', paste(
                           ifelse(
                             any(grepl("=", c(names_tofrom, cols))), 
-                            paste(str_trim(
-                              unlist(str_extract_all(
-                                unlist(str_split(
-                                  str_remove(c(names_tofrom, cols), "=="),
+                            paste(stringr::str_trim(
+                              unlist(stringr::str_extract_all(
+                                unlist(stringr::str_split(
+                                  stringr::str_remove(c(names_tofrom, cols), "=="),
                                   ",")),
                                 ".*(?==)"))),
                             collapse = '", "'
@@ -81,26 +82,29 @@ readandrename_columns <- function(datafp, HeaderCrosswalk, pivots, HardCodes) {
         pivotcode <- 
           with(pivot_instr,
                ifelse(long_wide == "long",
-                      paste0('pivot_longer(.',
+                      paste0('tidyr::pivot_longer(.',
                              paste0(', cols = ', cols),
                              ', names_to = c(', paste0(
-                               '"', paste0(str_trim(unlist(str_split(names_tofrom, ","))), collapse = '", "'), '"'
+                               '"', paste0(stringr::str_trim(unlist(stringr::str_split(names_tofrom, ","))), collapse = '", "'), '"'
                              ), ')',
                              ifelse(grepl("sep:", names_pattern), 
                                     paste0(', names_sep = ', gsub("sep:", "", names_pattern)), ''),
                              ', values_to = "', values_tofrom, '"',
                              ifelse(values_transform == '', '', paste0(', values_transform = list(', values_transform, ')')), ')'),
-                      paste0('pivot_wider(.',
-                             ', names_from = c("', ifelse(grepl("=", names_tofrom), str_trim(str_extract(names_tofrom, ".*(?==)")), names_tofrom), '")',
+                      paste0('tidyr::pivot_wider(.',
+                             ', names_from = c("', ifelse(grepl("=", names_tofrom), stringr::str_trim(stringr::str_extract(names_tofrom, ".*(?==)")), names_tofrom), '")',
                              ', values_from = "', values_tofrom, '")')))
         
-        filtercode <- with(pivot_instr, ifelse(long_wide == "long", paste0('filter(., !is.na(', values_tofrom, '))'), '{.}'))
-        dat_rare <- dat_raw %>% 
-          {eval(parse(text = mutatecode))} %>% 
-          {eval(parse(text = selectcode))}  %>%
-          {eval(parse(text = pivotcode))} %>% 
-          {eval(parse(text = filtercode))}
-        headercrosswalk <- headercrosswalk %>% mutate(OldName = case_when(OldName == "~PIVOT~" ~ NewName,
+        filtercode <- with(pivot_instr, ifelse(long_wide == "long", paste0('dplyr::filter(., !is.na(', values_tofrom, '))'), '{.}'))
+        dat_rare <- suppressWarnings({
+          dat_raw %>% 
+            {eval(parse(text = mutatecode))} %>%
+            {eval(parse(text = selectcode))} %>%
+            {eval(parse(text = pivotcode))} %>%
+            {eval(parse(text = filtercode))}
+        })
+ 
+        headercrosswalk <- headercrosswalk |> dplyr::mutate(OldName = dplyr::case_when(OldName == "~PIVOT~" ~ NewName,
                                                                           TRUE ~ OldName))
       } else {
         stop(
@@ -112,32 +116,28 @@ readandrename_columns <- function(datafp, HeaderCrosswalk, pivots, HardCodes) {
     
     
     if(any(c("NewName", "OldName") %in% names(headercrosswalk))) {
-      tmp <- map2_dfc(headercrosswalk$NewName, headercrosswalk$OldName, ~{
+      tmp <- suppressMessages(purrr::map2_dfc(headercrosswalk$NewName, headercrosswalk$OldName, ~{
         new <- .x
-        old <- unlist(str_split(.y, ", "))
-        map_dfc(old, ~{
-          old_sub <- .x
-          if(old_sub %in% names(dat_rare)) {
-            tmp <- tibble(!!new := dat_rare[[old_sub]])} else {
-              if(old_sub %in% names(dat_raw)) {stop("Something went wrong in the pivots")} else 
-                if(!exists("mutatecode")) {browser()
-                  stop("Check entries in HeaderCrosswalk.csv that they match the data exactly.")
-                } else {
-                  names_check <- dat_raw %>% 
-                    {eval(parse(text = mutatecode))} %>% 
-                    {eval(parse(text = selectcode))} %>%
-                    {eval(parse(text = paste0("select(., ", str_extract(pivotcode, "(?<=cols = ).*(?=, names_to)"), ")")))} %>%
-                    names()
-                  nm <- manual_update(data.frame(tmp = NA), unique(headercrosswalk$file), old_sub, HardCodes, names_check)
-                  
-                  tmp <- tibble(!!new := nm[[old_sub]])
-                  
-                }
-            }
-          tmp
-          
-        })
-      })
+        old <- unlist(stringr::str_split(.y, ", "))
+        
+        purrr::map(old, ~{
+            old_sub <- .x
+            if(old_sub %in% names(dat_rare)) {
+              tmp <- tibble::tibble(!!new := dat_rare[[old_sub]])} else {
+                if(old_sub %in% names(dat_raw)) {stop("Something went wrong in the pivots")} else 
+                  if(!exists("mutatecode")) {browser()
+                    stop("Check entries in HeaderCrosswalk.csv that they match the data exactly.")
+                  } else {
+                    names_check <- dat_raw %>%
+                      {eval(parse(text = mutatecode))} %>%
+                      {eval(parse(text = selectcode))} %>%
+                      {eval(parse(text = paste0("dplyr::select(., ", stringr::str_extract(pivotcode, "(?<=cols = ).*(?=, names_to)"), ")")))} |>
+                      names()
+                    nm <- manual_update(data.frame(tmp = NA), unique(headercrosswalk$file), old_sub, HardCodes, names_check)
+                    tmp <- tibble::tibble(!!new := nm[[old_sub]])}}
+            tmp
+          }) |> purrr::list_cbind(name_repair = "unique")
+      }))
     } else {tmp <- data.frame()}
     tmp
   })

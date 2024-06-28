@@ -1,11 +1,6 @@
 
 listSTdata <- function(stDatadir) {
-  reqpackages <- c("furrr", "stringr", "archive", "readxl", "purrr")
-  supreq <- function(x) {suppressWarnings(require(x, character.only = TRUE))}
   headdir <- dirname(stDatadir)
-  
-  lapply(reqpackages, supreq)
-  plan(multisession)
   
   stDatafp <- list.files(stDatadir, full.names = TRUE, recursive = TRUE)
   
@@ -19,7 +14,7 @@ listSTdata <- function(stDatadir) {
     tmp <- tempfile()
     purrr::map(fps[grepl(".zip|.7z", fps)], ~archive::archive_extract(.x, dir = tmp))
     zipfls <- list.files(tmp, recursive = TRUE, full.names = TRUE)
-    flnms <- unlist(str_extract(zipfls, "(?<=/).*"))
+    flnms <- unlist(stringr::str_extract(zipfls, "(?<=/).*"))
     
     filenames <- c(filenames[-grep(".zip|.7z", fps)], flnms)
     fps <- c(fps[-grep(".zip|.7z", fps)], zipfls)
@@ -69,7 +64,7 @@ get_all_dat <- function(fp) {
     fp <- getdatafp()
   }
   availdat <- listdatadirs(fp)
-  unlist(map(availdat, ~listSTdata(.x)))
+  unlist(purrr::map(availdat, ~listSTdata(.x)))
 }
 
 generate_blankcsv <- function(x) {
@@ -91,14 +86,14 @@ generate_blankHeaderCrosswalkcsv <- function(filledassignment) {
   
   filledfile <- filledassignment
   
-  blanksiteDescripts <- filledfile %>% filter(SiteDescriptions == 1 | 
+  blanksiteDescripts <- filledfile |> dplyr::filter(SiteDescriptions == 1 | 
                                                 LocationInfo == 1 |
                                                 MonthlyData == 1 |
                                                 AnnualData == 1 |
-                                                Metadata == 1) %>%
-    mutate(State = str_extract(file, "(?<=/)[[:alpha:]]{2}")) %>%
-    select(State, file) %>%
-    mutate(ValueType = NA, SourceType = NA, Category = NA, Saline = NA, 
+                                                Metadata == 1) |>
+    dplyr::mutate(State = stringr::str_extract(file, "(?<=/)[[:alpha:]]{2}")) |>
+    dplyr::select(State, file) |>
+    dplyr::mutate(ValueType = NA, SourceType = NA, Category = NA, Saline = NA, 
            FacilityName = NA, FacilityName1 = NA, FacilityName2 = NA,
            FacilityNumber = NA, FacilityNumber1 = NA, FacilityNumber2 = NA,
            SourceName = NA, SourceName1 = NA, SourceName2 = NA,
@@ -124,11 +119,11 @@ get_filledcsv <- function(file) {
 
 merge_data <- function(blank, filled) {
   filledfile <- get_filledcsv(filled)
-  fp_classified <- filledfile %>% na.omit() %>% dplyr::pull(file)
+  fp_classified <- filledfile |> na.omit() |> dplyr::pull(file)
   
-  fp_unclassified <- blank %>% filter(!file %in% fp_classified)
+  fp_unclassified <- blank |> dplyr::filter(!file %in% fp_classified)
   
-  d <- bind_rows(fp_unclassified, filledfile) %>% unique()
+  d <- dplyr::bind_rows(fp_unclassified, filledfile) |> unique()
   write.csv(d, filled, row.names = FALSE)
   return(d)
 }
