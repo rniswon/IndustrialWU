@@ -28,21 +28,14 @@ tar_source(files = "R")
 # Replace the target list below with your own:
 list(
   tar_target(datafp, "state_data", format = "file"),
-  tar_target(existingDataDictionary, "DataCrosswalks/DataDirectories.csv", format = "file"),
-  tar_target(existingHeaderCrosswalk, "DataCrosswalks/HeaderCrosswalk.csv", format = "file"),
-  tar_target(existingHardCodes, "DataCrosswalks/HardcodedManualAttributes.csv", format = "file"),
-  tar_target(existingpivots, "DataCrosswalks/DataPivots.csv", format = "file"),
-  tar_target(existingCodesCrosswalk, "DataCrosswalks/DataCodesCrosswalk.csv", format = "file"),
+  tar_target(existingCrosswalks, "DataCrosswalks", format = "file"),
   tar_target(dat, command = get_all_dat(datafp)),
-  tar_target(blankDataDictionary, command = generate_blankcsv(dat)),
-  tar_target(updatedDataDictionary, command = merge_data(blank = blankDataDictionary, filled = existingDataDictionary)),
-  tar_target(blankHeaderCrosswalk, command = generate_blankHeaderCrosswalkcsv(updatedDataDictionary)),
-  tar_target(updatedHeaderCrosswalk, command = merge_data(blank = blankHeaderCrosswalk, filled = existingHeaderCrosswalk)),
+  tar_target(updatedCrosswalks, command = updateCrosswalks(data = dat, existingCrosswalks = existingCrosswalks)),
   tar_target(renamed_rawdat, command = 
-               readandrename_columns(datafp, updatedHeaderCrosswalk, existingpivots, existingHardCodes)
+               readandrename_columns(datafp, updatedCrosswalks, existingCrosswalks)
              ),
   tar_target(reformatted_data, command = 
-               reformat_data(renamed_rawdat, updatedHeaderCrosswalk, existingHardCodes, existingCodesCrosswalk)
+               reformat_data(renamed_rawdat, updatedCrosswalks, existingCrosswalks)
              ),
   tar_target(AllStates, command = write_allstates(reformatted_data), format = "file")
 )
@@ -52,3 +45,4 @@ list(
 # tar_source(files = "R")
 # tar_source(files = "utility_functions")
 # tar_load_everything()
+# tar_make(callr_function = NULL)
