@@ -33,14 +33,14 @@ read_in_datafile <- function(datafp, fp) {
 
 
 
-readandrename_columns <- function(datafp, HeaderCrosswalk, pivots, HardCodes) {
+readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks) {
   
-  filledheader <- HeaderCrosswalk
+  filledheader <- updatedCrosswalks$HeaderCrosswalk
   
   headers_classified <- filledheader |> na.omit() |> dplyr::filter(State %in% state.abb)
   
   dat <- purrr::imap(headers_classified$file, ~{
-    i <- .y
+    i <- .y 
 
     dat_raw <- read_in_datafile(datafp, .x)
     headercrosswalk <- headers_classified |>
@@ -49,9 +49,9 @@ readandrename_columns <- function(datafp, HeaderCrosswalk, pivots, HardCodes) {
         tidyr::pivot_longer(., cols = -c(State, file), names_to = "NewName", 
                      values_to = "OldName")
       } else {.}}
-    
+
     if("~PIVOT~" %in% headercrosswalk$OldName) {
-      pivot_instr <- read.csv(pivots) |> dplyr::filter(file %in% headercrosswalk$file)
+      pivot_instr <- updatedCrosswalks$DataPivots |> dplyr::filter(file %in% headercrosswalk$file)
       
       if(nrow(pivot_instr) > 0) {
 
@@ -133,7 +133,7 @@ readandrename_columns <- function(datafp, HeaderCrosswalk, pivots, HardCodes) {
                       {eval(parse(text = selectcode))} %>%
                       {eval(parse(text = paste0("dplyr::select(., ", stringr::str_extract(pivotcode, "(?<=cols = ).*(?=, names_to)"), ")")))} |>
                       names()
-                    nm <- manual_update(data.frame(tmp = NA), unique(headercrosswalk$file), old_sub, HardCodes, names_check)
+                    nm <- manual_update(data.frame(tmp = NA), unique(headercrosswalk$file), old_sub, updatedCrosswalks, existingCrosswalks, names_check)
                     tmp <- tibble::tibble(!!new := nm[[old_sub]])}}
             tmp
           }) |> purrr::list_cbind(name_repair = "unique")

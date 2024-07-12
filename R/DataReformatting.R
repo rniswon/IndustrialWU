@@ -72,43 +72,43 @@ concat_columns <- function(data, Column) {
   return(tmp2)
 }
 
-handle_readmes <- function(data, fp, header, hardcodes, codescrosswalk) {
+handle_readmes <- function(data, fp, header, updatedCrosswalks, existingCrosswalks) {
   info <- unlist(data[[header]])
-  tmp <- handle_oddformats(data, fp, header, hardcodes, info, codescrosswalk)
+  tmp <- handle_oddformats(data, fp, header, updatedCrosswalks, existingCrosswalks, info)
 }
 
-handle_headers <- function(data, fp, header, headercrosswalk, hardcodedparams, codescrosswalk) {
-  oldheader <- headercrosswalk |> dplyr::filter(file == fp) |> dplyr::pull(header)
-  tmp <- handle_oddformats(data, fp, header, hardcodedparams, oldheader, codescrosswalk)
+handle_headers <- function(data, fp, header, updatedCrosswalks, existingCrosswalks) {
+  oldheader <- updatedCrosswalks$HeaderCrosswalk |> dplyr::filter(file == fp) |> dplyr::pull(header)
+  tmp <- handle_oddformats(data, fp, header, updatedCrosswalks, existingCrosswalks, info = oldheader)
 }
 
-handle_oddformats <- function(data, fp, header, hardcodes, info, codescrosswalk) {
+handle_oddformats <- function(data, fp, header, updatedCrosswalks, existingCrosswalks, info) {
   datatype <- ifelse(grepl("Units", header), "Units", 
                      ifelse(grepl("Method", header), "Method", 
                             ifelse(grepl("DataProtected", header), "Protect", 
                                    ifelse(grepl("ValueType", header), "ValueType", "TBD"))))
   if(datatype == "TBD") {stop("New use of ReadMe files detected")}
   
-  crosswalk_tmp <- read.csv(codescrosswalk, colClasses = "character") |>
+  crosswalk_tmp <- updatedCrosswalks$DataCodesCrosswalk |>
     dplyr::filter(grepl(datatype, header))
   found_options <- na.omit(crosswalk_tmp$new_value[unique(unlist(purrr::map(crosswalk_tmp$original_value, ~grep(.x, info))))])
   if(length(found_options) == 1) {
     tmp <- data |> dplyr::mutate(!!header := found_options)
-  } else {tmp <- manual_update(data, fp, header, hardcodes, found_options)}
+  } else {tmp <- manual_update(data, fp, header, updatedCrosswalks, existingCrosswalks, found_options)}
   
   return(tmp)
 }
 
-manual_update <- function(data, fp, header, hardcodedparams, inputoptions) {
+manual_update <- function(data, fp, header, updatedCrosswalks, existingCrosswalks, inputoptions) {
   
-  hardparams <- read.csv(hardcodedparams, colClasses = "character")
+  hardparams <- updatedCrosswalks$HardcodedManualAttributes
   if(header %in% (hardparams$Header[hardparams$file == fp])) {
     found_param_manual <- hardparams |> dplyr::filter(Header == header, file == fp) |> dplyr::pull(Value)
   } else {
     found_param_manual <- svDialogs::dlg_input(message = paste("Enter suspected", header, "value based on", fp, ". Suggested options are", paste(inputoptions, collapse = ", ")))$res
     hardparams_update <- hardparams |> add_row(file = fp, Header = header, Value = found_param_manual)
     
-    write.csv(hardparams_update, file = hardcodedparams, row.names = FALSE)
+    write.csv(hardparams_update, file = file.path(existingCrosswalks, "HardcodedManualAttributes.csv"), row.names = FALSE)
   }
   tmp <- data |> dplyr::mutate(!!header := found_param_manual)
   
@@ -119,7 +119,7 @@ manual_update <- function(data, fp, header, hardcodedparams, inputoptions) {
 
 crosswalk_codes <- function(data, fp, header, codescrosswalk, forceupdate = TRUE) {
   header_tmp <- header
-  codecrosswalk <- read.csv(codescrosswalk, colClasses = "character") |> 
+  codecrosswalk <- codescrosswalk |> 
     dplyr::filter(header == header_tmp)
   if(forceupdate) {
     if(any(!unique(data[[header]]) %in% codecrosswalk$original_value)) {
@@ -148,18 +148,18 @@ crosswalk_codes <- function(data, fp, header, codescrosswalk, forceupdate = TRUE
 }
 
 
-standard_datacodestreatment <- function(data, filename, header, headercrosswalk, hardcoded, codescrosswalk, force = c(TRUE, FALSE)) {
+standard_datacodestreatment <- function(data, filename, header, updatedCrosswalks, existingCrosswalks, force = c(TRUE, FALSE)) {
   if(length(grep(header, names(data))) > 0) {
     if(length(grep(header, names(data))) == 1) {
       if(detect_readme(filename)) {
-        tmp <- handle_readmes(data, filename, header, hardcoded, codescrosswalk)
+        tmp <- handle_readmes(data, filename, header, updatedCrosswalks, existingCrosswalks)
       } else if(!is.character(data[[header]])) {
-        tmp <- handle_headers(data, filename, header, headercrosswalk, hardcoded, codescrosswalk)
+        tmp <- handle_headers(data, filename, header, updatedCrosswalks, existingCrosswalks)
       } else if(is.character(data[[header]])) {
-        tmp <- crosswalk_codes(data = data, fp = filename, header = header, codescrosswalk = codescrosswalk, forceupdate = force)}
+        tmp <- crosswalk_codes(data = data, fp = filename, header = header, codescrosswalk = updatedCrosswalks$DataCodesCrosswalk, forceupdate = force)}
     } else if(length(grep(header, names(data))) > 1) {
       tmp <- concat_columns(data, header) |> 
-        crosswalk_codes(fp = filename, header = header, codescrosswalk = codescrosswalk, forceupdate = force)
+        crosswalk_codes(fp = filename, header = header, codescrosswalk = updatedCrosswalks$DataCodesCrosswalk, forceupdate = force)
     }
     
   } else (tmp <- data)
@@ -293,7 +293,7 @@ standard_Yeartreatment <- function(data, header) {
   tmp
 }
 
-reformat_data <- function(x, headercrosswalk, hardcodedparams, codescrosswalk) {
+reformat_data <- function(x, updatedCrosswalks, existingCrosswalks) {
   
   list(standard_datacodestreatment, standard_nametreatment, standard_idtreatment, 
        standard_HUCtreatment, standard_Addresstreatment, standard_coordinatetreatment,
@@ -318,11 +318,11 @@ reformat_data <- function(x, headercrosswalk, hardcodedparams, codescrosswalk) {
   
   datacodes_f_code <- paste0(
     "purrr::imap(., ~standard_datacodestreatment(.x, .y, '", datacodecolumns_force, 
-    "', headercrosswalk, hardcodedparams, codescrosswalk, force = TRUE))", collapse = " %>% "
+    "', updatedCrosswalks, existingCrosswalks, force = TRUE))", collapse = " %>% "
   )
   datacodes_u_code <- paste0(
     "purrr::imap(., ~standard_datacodestreatment(.x, .y, '", datacodecolumns_unforce, 
-    "', headercrosswalk, hardcodedparams, codescrosswalk, force = FALSE))", collapse = " %>% "
+    "', updatedCrosswalks, existingCrosswalks, force = FALSE))", collapse = " %>% "
   )
   names_code <- paste0("purrr::map(., ~standard_nametreatment(.x, '", namecolumns, "'))", collapse = " %>% ")
   ids_code <- paste0("purrr::map(., ~standard_idtreatment(.x, '", idcolumns, "'))", collapse = " %>% ")
@@ -357,7 +357,7 @@ reformat_data <- function(x, headercrosswalk, hardcodedparams, codescrosswalk) {
   
   x_all <- do.call("bind_rows", x_simplestates)
   
-  ordered <- names(headercrosswalk)
+  ordered <- names(updatedCrosswalks$HeaderCrosswalk)
   
   x_ordered <- x_all |> dplyr::select(any_of(ordered))
 

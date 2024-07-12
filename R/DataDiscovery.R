@@ -118,12 +118,46 @@ get_filledcsv <- function(file) {
 
 
 merge_data <- function(blank, filled) {
-  filledfile <- get_filledcsv(filled)
+  filledfile <- filled
   fp_classified <- filledfile |> na.omit() |> dplyr::pull(file)
   
   fp_unclassified <- blank |> dplyr::filter(!file %in% fp_classified)
   
   d <- dplyr::bind_rows(fp_unclassified, filledfile) |> unique()
-  write.csv(d, filled, row.names = FALSE)
   return(d)
+}
+
+updateCrosswalks <- function(data, existingCrosswalks) {
+  existingCrosswalks_read <- map(
+    list.files(existingCrosswalks, pattern = ".csv", full.names = TRUE), 
+    ~get_filledcsv(.x)); names(existingCrosswalks_read) <- 
+      gsub(".csv", "", list.files(existingCrosswalks, pattern = ".csv"))
+    
+    existingStateForms <- map(
+      list.files(file.path(existingCrosswalks, "StateForms"), pattern = ".csv", 
+                 full.names = TRUE), 
+      ~read.table(.x, colClasses = "character", sep = ",")); names(existingStateForms) <- 
+      gsub(".csv", "", list.files(file.path(existingCrosswalks, "StateForms"), 
+                                  pattern = ".csv"))
+    
+    existingCrosswalks_read$Forms <- existingStateForms
+    
+    updatedCrosswalks <- existingCrosswalks_read
+  
+    blankDataDictionary <- generate_blankcsv(data)
+    updatedDataDictionary <- merge_data(blank = blankDataDictionary, 
+                                      filled = existingCrosswalks_read$DataDirectories)
+    write.csv(updatedDataDictionary, 
+            file.path(existingCrosswalks, "DataDirectories.csv"), 
+            row.names = FALSE)
+    updatedCrosswalks$DataDirectories <- updatedDataDictionary
+    
+    blankHeaderCrosswalk <- generate_blankHeaderCrosswalkcsv(updatedDataDictionary)
+    updatedHeaderCrosswalk <- merge_data(blank = blankHeaderCrosswalk, filled = existingCrosswalks_read$HeaderCrosswalk)
+    write.csv(updatedHeaderCrosswalk, 
+              file.path(existingCrosswalks, "HeaderCrosswalk.csv"), 
+              row.names = FALSE) 
+    updatedCrosswalks$HeaderCrosswalk <- updatedHeaderCrosswalk
+  
+    return(updatedCrosswalks)
 }
