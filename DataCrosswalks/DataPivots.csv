@@ -6,3 +6,4 @@
 /OK/Industrial Permit Water Use 2000 to 2019.xlsx$Ind. Water Use (a-f per year),long,"c(""Irrigation"", ""Public Supply"", ""Industrial"", ""Power"", ""Mining"", ""Commercial"", ""Recreation Fish & Wildlife"", ""Agriculture"", ""Other Total"")",Category,,Annual_reported,
 /VT/VermontIndustrial_WU_info.xlsx$VT,wide,"Year = lubridate::year(`gwu_begin_date`), Method_monthly = ifelse(Estimated_Water_Use == Reported_System_Usage, ""Metered"", ""Estimated"")",Month = month.abb[lubridate::month(`gwu_begin_date`)],,Estimated_Water_Use,
 /VT/VermontLARGEIndustrial_WU_info.xlsx$Sheet1,long,"contains(c(""Withdrawals""))",Year,,Annual_reported,Annual_reported = as.numeric
+/VT/2008_2019_ Vermont_Yearly_Large_GW_Withdrawal.xlsx$GW Withdrawal Yearly,long,"which(grepl(""[[:digit:]]{4}_"", names(.)))","Year, Units_annual_reported","sep: ""_""",Annual_reported,

@@ -25,13 +25,79 @@ read_in_datafile <- function(datafp, fp) {
       purrr::imap_dfr(stringr::str_split(pdftools::pdf_text(pdf = file.path(datafp, fp)), "\n"), 
                ~{data.frame(text = .x) |> dplyr::mutate(page = .y)})
     data
-  } else {browser()
+  } else {
     stop(paste0("New database type found that has not been built in yet (", fp, ")"))
   }
   data
 }
 
+split_forms <- function(data, form_df) {
+  names(data) <- names(form_df)
+  usefulrows <- which(!rowSums(is.na(form_df)) == length(form_df))
+  rowsplits <- c(0, cumsum(diff(usefulrows) > 1))
+  
+  forms_vsplit <- form_df %>% dplyr::slice(usefulrows) %>%
+    dplyr::mutate(group = rowsplits) %>%
+    group_by(group) %>%
+    dplyr::group_split(.keep = FALSE)
+  
+  data_vsplit <- data %>% dplyr::slice(usefulrows) %>%
+    dplyr::mutate(group = rowsplits) %>%
+    group_by(group) %>%
+    dplyr::group_split(.keep = FALSE)
+  
+  
+  hsplits <- purrr::map(forms_vsplit,
+                        ~{subdf <- .x
+                        usefulcols <- colSums(is.na(.x)) == nrow(.x)
+                        colsplits <- c(0, cumsum(diff(usefulcols) > 1))
+                        colsplits})
+  
+  forms_vhsplit <- map2(forms_vsplit, hsplits, ~{
+    x <- .x; y <- .y
+    purrr::map(unique(y), ~{x[,which(y == .x)]})
+  }) %>% list_flatten()
+  
+  data_vhsplit <- map2(data_vsplit, hsplits, ~{
+    x <- .x; y <- .y
+    purrr::map(unique(y), ~{x[,which(y == .x)]})
+  }) %>% list_flatten()
+  
+  usefulsplits <- map_lgl(forms_vhsplit, ~{any(c("~HEADER~", "~DATA~") %in% unique(unlist(.x)))})
+  
+  return(list_transpose(list(data = data_vhsplit[usefulsplits], form = forms_vhsplit[usefulsplits]), simplify = FALSE))
+}
 
+munge_forms <- function(dataformlist) {
+  nativeformats <- map(dataformlist, ~{
+    checkformtype(.x$form)
+  })
+  map2(dataformlist, nativeformats, ~{
+    if(.y == "tidy") {
+      .x$data[,which(.x$form[1,] == "~HEADER~")] %>% janitor::row_to_names(1)
+    } else if(.y == "compoundheader") {
+      headers <- .x$data[c(1, find_header(.x$data)),] %>% map(., ~paste(na.omit(unique(.x)), collapse = "_"))
+      data <- .x$data[-c(1, find_header(.x$data)),]
+      
+      rbind(headers, data) %>% row_to_names(1)
+      } else {browser()}
+  })
+}
+
+checkformtype <- function(form) {
+  
+  type <- ifelse(janitor::find_header(form) == 1 & (!"~DATA~" %in% unlist(form[1,])) & 
+                   (!"~HEADER~" %in% unlist(form[-1,])),
+                 "tidy",
+                 ifelse(
+                   janitor::find_header(form) > 1 & 
+                     (!"~DATA~" %in% unlist(form[c(1:janitor::find_header(form)),])) &
+                     (!"~HEADER~" %in% unlist(form[-c(1:janitor::find_header(form)),])),
+                   "compoundheader",
+                   "TBD"
+                 ))
+  return(type)
+}
 
 readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks) {
   
@@ -41,7 +107,7 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks)
   
   dat <- purrr::imap(headers_classified$file, ~{
     i <- .y 
-
+    
     dat_raw <- read_in_datafile(datafp, .x)
     headercrosswalk <- headers_classified |>
       dplyr::slice(i) |> dplyr::select(where(~{. != ""})) %>% 
@@ -49,6 +115,31 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks)
         tidyr::pivot_longer(., cols = -c(State, file), names_to = "NewName", 
                      values_to = "OldName")
       } else {.}}
+    
+    if(any(grepl("~FORM~", headercrosswalk$OldName))) {
+      dat_raw <- rbind(names(dat_raw), dat_raw) %>%
+        dplyr::mutate(across(everything(), ~gsub("\\.\\.\\.[[:digit:]]+", NA_character_, .))) %>%
+        dplyr::mutate(across(everything(), ~gsub("^$", NA_character_, .)))
+      if(any(grepl(unique(headercrosswalk$State), names(updatedCrosswalks$Forms)))) {
+        pulledform <- updatedCrosswalks$Forms[[paste0(unique(headercrosswalk$State), "_formtemplate")]]
+        extravalues <- str_subset(unique(unlist(pulledform)), "~HEADER~|~DATA~|~IGNORE~|", negate = TRUE)
+        if(length(extravalues) > 0) {
+          message <- paste("Additional values", paste(head(extravalues), collapse = ","), "must be designated as '~HEADER~', '~DATA~', or '~IGNORE~")
+        stop(message)
+          }
+        subparts <- split_forms(dat_raw, pulledform)
+
+        subparts_merge_ready <- munge_forms(subparts) %>% map(., ~if(nrow(.x) == 0) {add_row(.x)} else {.x})
+        dat_rare <- reduce(subparts_merge_ready, merge, .dir = "forward")
+        headercrosswalk <- headercrosswalk |> dplyr::mutate(OldName = str_trim(gsub("~FORM~", "", OldName)))
+      } else {
+        write.table(dat_raw, 
+                    file = file.path(existingCrosswalks, "StateForms", paste0(unique(headercrosswalk$State), "_formtemplate.csv")),
+                    row.names = FALSE, col.names = FALSE, sep = ",")
+        message <- paste("Please use", paste0(unique(headercrosswalk$State), "_formtemplate.csv"), "to indicate '~HEADER~', '~DATA~', and '~IGNORE~' cells. " )
+        stop(message)
+      }
+      } else {dat_rare <- dat_raw}
 
     if("~PIVOT~" %in% headercrosswalk$OldName) {
       pivot_instr <- updatedCrosswalks$DataPivots |> dplyr::filter(file %in% headercrosswalk$file)
@@ -96,8 +187,8 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks)
                              ', values_from = "', values_tofrom, '")')))
         
         filtercode <- with(pivot_instr, ifelse(long_wide == "long", paste0('dplyr::filter(., !is.na(', values_tofrom, '))'), '{.}'))
-        dat_rare <- suppressWarnings({
-          dat_raw %>% 
+        dat_medrare <- suppressWarnings({
+          dat_rare %>% 
             {eval(parse(text = mutatecode))} %>%
             {eval(parse(text = selectcode))} %>%
             {eval(parse(text = pivotcode))} %>%
@@ -112,7 +203,17 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks)
             "Pivot instructions need to be entered into DataPivots.csv for file ", 
             unique(headercrosswalk$file)))}
       
-    } else {dat_rare <- dat_raw}
+    } else {dat_medrare <- dat_rare}
+    
+    if(any(grepl("~FILL~", headercrosswalk$OldName))) {
+      
+      fillcols <- gsub("~FILL~", "", 
+                        headercrosswalk$OldName[grepl("~FILL~", 
+                                                      headercrosswalk$OldName)])
+      dat_med <- dat_medrare %>%
+        mutate(across(all_of(fillcols), ~zoo::na.locf(.)))
+      headercrosswalk <- headercrosswalk |> dplyr::mutate(OldName = str_trim(gsub("~FILL~", "", OldName)))
+    } else {dat_med <- dat_medrare}
     
     
     if(any(c("NewName", "OldName") %in% names(headercrosswalk))) {
@@ -122,13 +223,13 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks)
         
         purrr::map(old, ~{
             old_sub <- .x
-            if(old_sub %in% names(dat_rare)) {
-              tmp <- tibble::tibble(!!new := dat_rare[[old_sub]])} else {
-                if(old_sub %in% names(dat_raw)) {stop("Something went wrong in the pivots")} else 
-                  if(!exists("mutatecode")) {browser()
+            if(old_sub %in% names(dat_med)) {
+              tmp <- tibble::tibble(!!new := dat_med[[old_sub]])} else {
+                if(old_sub %in% names(dat_med)) {stop("Something went wrong in the pivots")} else 
+                  if(!exists("mutatecode")) {
                     stop("Check entries in HeaderCrosswalk.csv that they match the data exactly.")
                   } else {
-                    names_check <- dat_raw %>%
+                    names_check <- dat_rare %>%
                       {eval(parse(text = mutatecode))} %>%
                       {eval(parse(text = selectcode))} %>%
                       {eval(parse(text = paste0("dplyr::select(., ", stringr::str_extract(pivotcode, "(?<=cols = ).*(?=, names_to)"), ")")))} |>

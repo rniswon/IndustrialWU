@@ -334,3 +334,7 @@ Method_monthly,UNSP,NA_character_
 Method_monthly,UNKN,NA_character_
 Method_annual_reported,UNSP,NA_character_
 Method_annual_reported,UNKN,NA_character_
+Category,Aquaculture,AQ
+Category,Thermoelectric,TE
+Units_annual_reported,Gallons per Year,gal
+Units_monthly,Gallons per Month,gal

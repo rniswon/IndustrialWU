@@ -8,7 +8,7 @@ library(targets)
 packages <- c("tibble", "stringr", "purrr", "readxl", "svDialogs", "dplyr", "archive",
               "tidyr", "readr", "lubridate", "magrittr",
               "sf", "rquery", "officer", "pdftools",
-              "fedmatch", "janitor")
+              "fedmatch", "janitor", "zoo")
 optinstall <- function(x) {
   if(!x %in% utils::installed.packages()) {
     install.packages(x)
