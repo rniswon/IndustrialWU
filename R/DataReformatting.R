@@ -86,7 +86,13 @@ handle_oddformats <- function(data, fp, header, updatedCrosswalks, existingCross
   datatype <- ifelse(grepl("Units", header), "Units", 
                      ifelse(grepl("Method", header), "Method", 
                             ifelse(grepl("DataProtected", header), "Protect", 
-                                   ifelse(grepl("ValueType", header), "ValueType", "TBD"))))
+                                   ifelse(grepl("ValueType", header),
+                                          "ValueType", 
+                                          ifelse(grepl("SourceType", header), 
+                                                 "SourceType", 
+                                                 ifelse(grepl("Category", 
+                                                              header), 
+                                                        "Category", "TBD"))))))
   if(datatype == "TBD") {stop("New use of ReadMe files detected")}
   
   crosswalk_tmp <- updatedCrosswalks$DataCodesCrosswalk |>
@@ -155,7 +161,9 @@ standard_datacodestreatment <- function(data, filename, header, updatedCrosswalk
         tmp <- handle_readmes(data, filename, header, updatedCrosswalks, existingCrosswalks)
       } else if(!is.character(data[[header]])) {
         tmp <- handle_headers(data, filename, header, updatedCrosswalks, existingCrosswalks)
-      } else if(is.character(data[[header]])) {
+      } else if(all(is.na(data[[header]]))) {
+        tmp <- handle_headers(data, filename, header, updatedCrosswalks, existingCrosswalks)
+        } else if(is.character(data[[header]])) {
         tmp <- crosswalk_codes(data = data, fp = filename, header = header, codescrosswalk = updatedCrosswalks$DataCodesCrosswalk, forceupdate = force)}
     } else if(length(grep(header, names(data))) > 1) {
       tmp <- concat_columns(data, header) |> 
@@ -293,11 +301,30 @@ standard_Yeartreatment <- function(data, header) {
   tmp
 }
 
+data_NAcodes <- c("", "n/a", "N/A", "NA", "NAN", "na", "nan", 
+                  "not reported yet", "closed")
+
+standard_datatreatment <- function(data, header) {
+  if(length(grep(header, names(data))) > 0) {
+    if(!is.numeric(data[[header]])) {
+      if(!all(unique(gsub("[[:digit:]]*|.", "", data[[header]])) %in% data_NAcodes)) {
+        stop("New non-numeric data value detected")
+      } else {
+        suppressWarnings({
+          tmp <- data |>
+            dplyr::mutate(!!header := as.numeric(data[[header]]))
+        })
+      }
+    } else (tmp <- data)
+  } else (tmp <- data)
+  tmp
+}
+
 reformat_data <- function(x, updatedCrosswalks, existingCrosswalks) {
   
   list(standard_datacodestreatment, standard_nametreatment, standard_idtreatment, 
        standard_HUCtreatment, standard_Addresstreatment, standard_coordinatetreatment,
-       standard_Yeartreatment) # call these to let the targets package know that they are used in this function
+       standard_Yeartreatment, standard_datatreatment) # call these to let the targets package know that they are used in this function
   
   datacodecolumns_force <- c("ValueType", "SourceType", "Category", "Saline", 
                              "Units_monthly", "Method_monthly", "Units_annual_reported",
@@ -315,6 +342,8 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks) {
                       "State2", "Zip2")
   coordinatecolumns <- c("Lat", "Lon")
   Yearcolumns <- "Year"
+  datacolumns <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", 
+                   "Sep", "Oct", "Nov", "Dec", "Annual_reported")
   
   datacodes_f_code <- paste0(
     "purrr::imap(., ~standard_datacodestreatment(.x, .y, '", datacodecolumns_force, 
@@ -330,6 +359,7 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks) {
   Addresses_code <- paste0("purrr::map(., ~standard_Addresstreatment(.x, '", Addresscolumns, "'))", collapse = " %>% ")
   coordinates_code <- paste0("purrr::map(., ~standard_coordinatetreatment(.x, '", coordinatecolumns, "'))", collapse = " %>% ")
   years_code <- paste0("purrr::map(., ~standard_Yeartreatment(.x, '", Yearcolumns, "'))", collapse = " %>% ")
+  data_code <- paste0("purrr::map(., ~standard_datatreatment(.x, '", datacolumns, "'))", collapse = " %>% ")
  
   x_munged <- x %>%
     {eval(parse(text = datacodes_u_code))} %>% # ~0 seconds
@@ -339,7 +369,8 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks) {
     {eval(parse(text = datacodes_f_code))} %>% # ~12 seconds
     {eval(parse(text = names_code))} %>% # ~17 seconds
     {eval(parse(text = coordinates_code))} %>% # ~ 22 seconds
-    {eval(parse(text = Addresses_code))} |> # ~60 seconds
+    {eval(parse(text = Addresses_code))} %>% # ~60 seconds
+    {eval(parse(text = data_code))} |>
     purrr::map(~janitor::remove_empty(.x, which = c("rows", "cols"))) |>
     add_state() |>
     purrr::map(~unique(.x))
@@ -365,6 +396,11 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks) {
 }
 
 write_allstates <- function(x) {
+  purrr::map(dplyr::group_split(x, .by = State),
+      ~{
+        stname <- unique(.x$State)
+        write.csv(.x, file.path("FormattedDataOutputs", "Statewise", paste0(stname, "_formatted.csv")), row.names = FALSE)
+      })
   write.csv(x, "FormattedDataOutputs/AllStates.csv", row.names = FALSE)
   save(x, file = "FormattedDataOutputs/AllStates.RDa")
   return("FormattedDataOutputs/AllStates.csv")
