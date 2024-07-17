@@ -80,23 +80,148 @@ munge_forms <- function(dataformlist) {
       data <- .x$data[-c(1, find_header(.x$data)),]
       
       rbind(headers, data) %>% row_to_names(1)
-      } else {browser()}
+    } else if(.y == "transpose") {
+      suppressWarnings({
+        form_t <- t(.x$form) %>% as.data.frame() %>% janitor::row_to_names(1)})
+      datarows_t <- which(rowSums(form_t == "~DATA~") > 0)
+      t(.x$data) %>% as.data.frame() %>% janitor::row_to_names(1) %>% .[datarows_t,]
+        } else {browser()}
   })
 }
 
 checkformtype <- function(form) {
   
-  type <- ifelse(janitor::find_header(form) == 1 & (!"~DATA~" %in% unlist(form[1,])) & 
-                   (!"~HEADER~" %in% unlist(form[-1,])),
+  form2 <- form %>% select_if(~!all(is.na(.)))
+  
+  type <- ifelse(janitor::find_header(form2) == 1 & (!"~DATA~" %in% unlist(form2[1,])) & 
+                   (!"~HEADER~" %in% unlist(form2[-1,])),
                  "tidy",
                  ifelse(
-                   janitor::find_header(form) > 1 & 
-                     (!"~DATA~" %in% unlist(form[c(1:janitor::find_header(form)),])) &
-                     (!"~HEADER~" %in% unlist(form[-c(1:janitor::find_header(form)),])),
+                   janitor::find_header(form2) > 1 & 
+                     (!"~DATA~" %in% unlist(form2[c(1:janitor::find_header(form2)),])) &
+                     (!"~HEADER~" %in% unlist(form2[-c(1:janitor::find_header(form2)),])),
                    "compoundheader",
-                   "TBD"
-                 ))
+                   ifelse(
+                     (!"~DATA~" %in% unlist(form2[,1])) & 
+                       (!"~HEADER~" %in% unlist(form2[,-1])),
+                     "transpose",
+                     "TBD"
+                   ))
+                 )
   return(type)
+}
+
+applyFORMrules <- function(dat, headercrosswalk, updatedCrosswalks, existingCrosswalks) {
+  dat1 <- rbind(names(dat), dat) %>%
+    dplyr::mutate(across(everything(), ~gsub("\\.\\.\\.[[:digit:]]+", NA_character_, .))) %>%
+    dplyr::mutate(across(everything(), ~gsub("^$", NA_character_, .)))
+  
+  filename <- paste(unique(headercrosswalk$State),
+                    paste(dim(dat1), collapse = "x"), 
+                    "formtemplate", sep = "_")
+  if(filename %in% names(updatedCrosswalks$Forms)) {
+    
+    pulledform <- updatedCrosswalks$Forms[[filename]]
+    extravalues <- str_subset(unique(unlist(pulledform)), "~HEADER~|~DATA~|~IGNORE~|", negate = TRUE)
+    if(length(extravalues) > 0) {
+      message <- paste("Additional values", paste(head(extravalues), collapse = ","), "must be designated as '~HEADER~', '~DATA~', or '~IGNORE~")
+      stop(message)
+    }
+    subparts <- split_forms(dat1, pulledform)
+    
+    subparts_merge_ready <- munge_forms(subparts) %>% map(., ~if(nrow(.x) == 0) {add_row(.x)} else {.x})
+    dat2 <- reduce(subparts_merge_ready, merge, .dir = "forward")
+    headercrosswalk <- headercrosswalk |> dplyr::mutate(OldName = str_trim(gsub("~FORM~", "", OldName)))
+  } else {
+    write.table(dat1, 
+                file = file.path(existingCrosswalks, "StateForms", paste0(filename, ".csv")),
+                row.names = FALSE, col.names = FALSE, sep = ",")
+    message <- paste("Please use", filename, "to indicate '~HEADER~', '~DATA~', and '~IGNORE~' cells. " )
+    stop(message)
+  }
+  return(list(dat_edit = dat2, headercrosswalk = headercrosswalk))
+}
+
+applyBLANKrules <- function(dat, headercrosswalk) {
+  blanknames <- which(is.na(names(dat)))
+  names(dat)[which(is.na(names(dat)))] <- paste0("V", blanknames)
+  headercrosswalk$OldName[which(grepl("~BLANK~", headercrosswalk$OldName))] <- paste0("V", blanknames)
+  return(list(dat_edit = dat, headercrosswalk = headercrosswalk))
+}
+
+applyFILLrules <- function(dat, headercrosswalk) {
+  fillcols <- gsub("~FILL~", "", 
+                   headercrosswalk$OldName[grepl("~FILL~", 
+                                                 headercrosswalk$OldName)])
+  dat2 <- dat %>%
+    mutate(across(all_of(fillcols), ~zoo::na.locf(.)))
+  headercrosswalk2 <- headercrosswalk |> dplyr::mutate(OldName = str_trim(gsub("~FILL~", "", OldName)))
+  return(list(dat_edit = dat2, headercrosswalk = headercrosswalk2))
+}
+
+applyPIVOTrules <- function(dat, headercrosswalk, updatedCrosswalks) {
+  pivot_instr <- updatedCrosswalks$DataPivots |> dplyr::filter(file %in% headercrosswalk$file)
+  
+  if(nrow(pivot_instr) > 0) {
+    mutatecode <- with(pivot_instr,
+                       paste0(
+                         ifelse(grepl("=", names_tofrom), paste0('dplyr::mutate(., ', names_tofrom, ')'), "{.}"),
+                         "%>%", ifelse(grepl("=", cols), paste0('dplyr::mutate(., ', cols, ')'), "{.}")))
+    
+    selectcode <- 
+      with(pivot_instr,
+           {
+             ifelse(long_wide == "wide",
+                    {paste0('dplyr::select(., any_of(c("', paste(
+                      ifelse(
+                        any(grepl("=", c(names_tofrom, cols))), 
+                        paste(stringr::str_trim(
+                          unlist(stringr::str_extract_all(
+                            unlist(stringr::str_split(
+                              stringr::str_remove(c(names_tofrom, cols), "=="),
+                              ",")),
+                            ".*(?==)"))),
+                          collapse = '", "'
+                        ), 
+                        paste(c(names_tofrom, cols), sep = '", "')),
+                      values_tofrom, 
+                      paste(headercrosswalk$OldName, collapse = '", "'), sep = '", "'), '")))')}, "{.}")})
+    
+    pivotcode <- 
+      with(pivot_instr,
+           ifelse(long_wide == "long",
+                  paste0('tidyr::pivot_longer(.',
+                         paste0(', cols = ', cols),
+                         ', names_to = c(', paste0(
+                           '"', paste0(stringr::str_trim(unlist(stringr::str_split(names_tofrom, ","))), collapse = '", "'), '"'
+                         ), ')',
+                         ifelse(grepl("sep:", names_pattern), 
+                                paste0(', names_sep = ', gsub("sep:", "", names_pattern)), ''),
+                         ', values_to = "', values_tofrom, '"',
+                         ifelse(values_transform == '', '', paste0(', values_transform = list(', values_transform, ')')), ')'),
+                  paste0('tidyr::pivot_wider(.',
+                         ', names_from = c("', ifelse(grepl("=", names_tofrom), stringr::str_trim(stringr::str_extract(names_tofrom, ".*(?==)")), names_tofrom), '")',
+                         ', values_from = "', values_tofrom, '")')))
+    
+    filtercode <- with(pivot_instr, ifelse(long_wide == "long", paste0('dplyr::filter(., !is.na(', values_tofrom, '))'), '{.}'))
+    dat2 <- suppressWarnings({
+      dat %>% 
+        {eval(parse(text = mutatecode))} %>%
+        {eval(parse(text = selectcode))} %>%
+        {eval(parse(text = pivotcode))} %>%
+        {eval(parse(text = filtercode))}
+    })
+    
+    headercrosswalk2 <- headercrosswalk |> dplyr::mutate(OldName = dplyr::case_when(OldName == "~PIVOT~" ~ NewName,
+                                                                                   TRUE ~ OldName))
+  } else {
+    stop(
+      paste0(
+        "Pivot instructions need to be entered into DataPivots.csv for file ", 
+        unique(headercrosswalk$file)))}
+  return(list(dat_edit = dat2, headercrosswalk = headercrosswalk2, 
+              mutatecode = mutatecode, selectcode = selectcode, 
+              pivotcode = pivotcode, filtercode = filtercode))
 }
 
 readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks) {
@@ -107,7 +232,6 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks)
   
   dat <- purrr::imap(headers_classified$file, ~{
     i <- .y 
-    
     dat_raw <- read_in_datafile(datafp, .x)
     headercrosswalk <- headers_classified |>
       dplyr::slice(i) |> dplyr::select(where(~{. != ""})) %>% 
@@ -115,106 +239,31 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks)
         tidyr::pivot_longer(., cols = -c(State, file), names_to = "NewName", 
                      values_to = "OldName")
       } else {.}}
+    dat_edit <- dat_raw
     
     if(any(grepl("~FORM~", headercrosswalk$OldName))) {
-      dat_raw <- rbind(names(dat_raw), dat_raw) %>%
-        dplyr::mutate(across(everything(), ~gsub("\\.\\.\\.[[:digit:]]+", NA_character_, .))) %>%
-        dplyr::mutate(across(everything(), ~gsub("^$", NA_character_, .)))
-      if(any(grepl(unique(headercrosswalk$State), names(updatedCrosswalks$Forms)))) {
-        pulledform <- updatedCrosswalks$Forms[[paste0(unique(headercrosswalk$State), "_formtemplate")]]
-        extravalues <- str_subset(unique(unlist(pulledform)), "~HEADER~|~DATA~|~IGNORE~|", negate = TRUE)
-        if(length(extravalues) > 0) {
-          message <- paste("Additional values", paste(head(extravalues), collapse = ","), "must be designated as '~HEADER~', '~DATA~', or '~IGNORE~")
-        stop(message)
-          }
-        subparts <- split_forms(dat_raw, pulledform)
-
-        subparts_merge_ready <- munge_forms(subparts) %>% map(., ~if(nrow(.x) == 0) {add_row(.x)} else {.x})
-        dat_rare <- reduce(subparts_merge_ready, merge, .dir = "forward")
-        headercrosswalk <- headercrosswalk |> dplyr::mutate(OldName = str_trim(gsub("~FORM~", "", OldName)))
-      } else {
-        write.table(dat_raw, 
-                    file = file.path(existingCrosswalks, "StateForms", paste0(unique(headercrosswalk$State), "_formtemplate.csv")),
-                    row.names = FALSE, col.names = FALSE, sep = ",")
-        message <- paste("Please use", paste0(unique(headercrosswalk$State), "_formtemplate.csv"), "to indicate '~HEADER~', '~DATA~', and '~IGNORE~' cells. " )
-        stop(message)
+      formapplied <- applyFORMrules(dat_edit, headercrosswalk, updatedCrosswalks, existingCrosswalks)
+      dat_edit <- formapplied$dat_edit
+      headercrosswalk <- formapplied$headercrosswalk
       }
-      } else {dat_rare <- dat_raw}
 
     if("~PIVOT~" %in% headercrosswalk$OldName) {
-      pivot_instr <- updatedCrosswalks$DataPivots |> dplyr::filter(file %in% headercrosswalk$file)
-      
-      if(nrow(pivot_instr) > 0) {
-
-        mutatecode <- with(pivot_instr,
-                           paste0(
-                             ifelse(grepl("=", names_tofrom), paste0('dplyr::mutate(., ', names_tofrom, ')'), "{.}"),
-                             "%>%", ifelse(grepl("=", cols), paste0('dplyr::mutate(., ', cols, ')'), "{.}")))
-        
-        selectcode <- 
-          with(pivot_instr,
-               {
-                 ifelse(long_wide == "wide",
-                        {paste0('dplyr::select(., any_of(c("', paste(
-                          ifelse(
-                            any(grepl("=", c(names_tofrom, cols))), 
-                            paste(stringr::str_trim(
-                              unlist(stringr::str_extract_all(
-                                unlist(stringr::str_split(
-                                  stringr::str_remove(c(names_tofrom, cols), "=="),
-                                  ",")),
-                                ".*(?==)"))),
-                            collapse = '", "'
-                            ), 
-                            paste(c(names_tofrom, cols), sep = '", "')),
-                          values_tofrom, 
-                          paste(headercrosswalk$OldName, collapse = '", "'), sep = '", "'), '")))')}, "{.}")})
-        
-        pivotcode <- 
-          with(pivot_instr,
-               ifelse(long_wide == "long",
-                      paste0('tidyr::pivot_longer(.',
-                             paste0(', cols = ', cols),
-                             ', names_to = c(', paste0(
-                               '"', paste0(stringr::str_trim(unlist(stringr::str_split(names_tofrom, ","))), collapse = '", "'), '"'
-                             ), ')',
-                             ifelse(grepl("sep:", names_pattern), 
-                                    paste0(', names_sep = ', gsub("sep:", "", names_pattern)), ''),
-                             ', values_to = "', values_tofrom, '"',
-                             ifelse(values_transform == '', '', paste0(', values_transform = list(', values_transform, ')')), ')'),
-                      paste0('tidyr::pivot_wider(.',
-                             ', names_from = c("', ifelse(grepl("=", names_tofrom), stringr::str_trim(stringr::str_extract(names_tofrom, ".*(?==)")), names_tofrom), '")',
-                             ', values_from = "', values_tofrom, '")')))
-        
-        filtercode <- with(pivot_instr, ifelse(long_wide == "long", paste0('dplyr::filter(., !is.na(', values_tofrom, '))'), '{.}'))
-        dat_medrare <- suppressWarnings({
-          dat_rare %>% 
-            {eval(parse(text = mutatecode))} %>%
-            {eval(parse(text = selectcode))} %>%
-            {eval(parse(text = pivotcode))} %>%
-            {eval(parse(text = filtercode))}
-        })
- 
-        headercrosswalk <- headercrosswalk |> dplyr::mutate(OldName = dplyr::case_when(OldName == "~PIVOT~" ~ NewName,
-                                                                          TRUE ~ OldName))
-      } else {
-        stop(
-          paste0(
-            "Pivot instructions need to be entered into DataPivots.csv for file ", 
-            unique(headercrosswalk$file)))}
-      
-    } else {dat_medrare <- dat_rare}
+      pivotapplied <- applyPIVOTrules(dat_edit, headercrosswalk, updatedCrosswalks)
+      dat_edit <- pivotapplied$dat_edit
+      headercrosswalk <- pivotapplied$headercrosswalk
+    }
     
     if(any(grepl("~FILL~", headercrosswalk$OldName))) {
-      
-      fillcols <- gsub("~FILL~", "", 
-                        headercrosswalk$OldName[grepl("~FILL~", 
-                                                      headercrosswalk$OldName)])
-      dat_med <- dat_medrare %>%
-        mutate(across(all_of(fillcols), ~zoo::na.locf(.)))
-      headercrosswalk <- headercrosswalk |> dplyr::mutate(OldName = str_trim(gsub("~FILL~", "", OldName)))
-    } else {dat_med <- dat_medrare}
+      fillapplied <- applyFILLrules(dat_edit, headercrosswalk)
+      dat_edit <- fillapplied$dat_edit
+      headercrosswalk <- fillapplied$headercrosswalk
+    } 
     
+    if(any(grepl("~BLANK~", headercrosswalk$OldName))) {
+      blankapplied <- applyBLANKrules(dat_edit, headercrosswalk)
+      dat_edit <- blankapplied$dat_edit
+      headercrosswalk <- blankapplied$headercrosswalk
+      }
     
     if(any(c("NewName", "OldName") %in% names(headercrosswalk))) {
       tmp <- suppressMessages(purrr::map2_dfc(headercrosswalk$NewName, headercrosswalk$OldName, ~{
@@ -223,16 +272,17 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks)
         
         purrr::map(old, ~{
             old_sub <- .x
-            if(old_sub %in% names(dat_med)) {
-              tmp <- tibble::tibble(!!new := dat_med[[old_sub]])} else {
-                if(old_sub %in% names(dat_med)) {stop("Something went wrong in the pivots")} else 
-                  if(!exists("mutatecode")) {
+            if(old_sub %in% names(dat_edit)) {
+              tmp <- tibble::tibble(!!new := dat_edit[[old_sub]])} else {
+                if(old_sub %in% names(dat_edit)) {
+                  stop("Something went wrong in the pivots")
+                  } else if(!exists("pivotapplied")) {browser()
                     stop("Check entries in HeaderCrosswalk.csv that they match the data exactly.")
                   } else {
-                    names_check <- dat_rare %>%
-                      {eval(parse(text = mutatecode))} %>%
-                      {eval(parse(text = selectcode))} %>%
-                      {eval(parse(text = paste0("dplyr::select(., ", stringr::str_extract(pivotcode, "(?<=cols = ).*(?=, names_to)"), ")")))} |>
+                    names_check <- dat_raw %>%
+                      {eval(parse(text = pivotapplied$mutatecode))} %>%
+                      {eval(parse(text = pivotapplied$selectcode))} %>%
+                      {eval(parse(text = paste0("dplyr::select(., ", stringr::str_extract(pivotapplied$pivotcode, "(?<=cols = ).*(?=, names_to)"), ")")))} |>
                       names()
                     nm <- manual_update(data.frame(tmp = NA), unique(headercrosswalk$file), old_sub, updatedCrosswalks, existingCrosswalks, names_check)
                     tmp <- tibble::tibble(!!new := nm[[old_sub]])}}

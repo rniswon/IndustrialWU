@@ -307,7 +307,7 @@ data_NAcodes <- c("", "n/a", "N/A", "NA", "NAN", "na", "nan",
 standard_datatreatment <- function(data, header) {
   if(length(grep(header, names(data))) > 0) {
     if(!is.numeric(data[[header]])) {
-      if(!all(unique(gsub("[[:digit:]]*", "", data[[header]])) %in% data_NAcodes)) {
+      if(!all(unique(gsub("[[:digit:]]*|.", "", data[[header]])) %in% data_NAcodes)) {
         stop("New non-numeric data value detected")
       } else {
         suppressWarnings({
@@ -324,7 +324,7 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks) {
   
   list(standard_datacodestreatment, standard_nametreatment, standard_idtreatment, 
        standard_HUCtreatment, standard_Addresstreatment, standard_coordinatetreatment,
-       standard_Yeartreatment) # call these to let the targets package know that they are used in this function
+       standard_Yeartreatment, standard_datatreatment) # call these to let the targets package know that they are used in this function
   
   datacodecolumns_force <- c("ValueType", "SourceType", "Category", "Saline", 
                              "Units_monthly", "Method_monthly", "Units_annual_reported",
@@ -396,6 +396,11 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks) {
 }
 
 write_allstates <- function(x) {
+  purrr::map(dplyr::group_split(x, .by = State),
+      ~{
+        stname <- unique(.x$State)
+        write.csv(.x, file.path("FormattedDataOutputs", "Statewise", paste0(stname, "_formatted.csv")), row.names = FALSE)
+      })
   write.csv(x, "FormattedDataOutputs/AllStates.csv", row.names = FALSE)
   save(x, file = "FormattedDataOutputs/AllStates.RDa")
   return("FormattedDataOutputs/AllStates.csv")
