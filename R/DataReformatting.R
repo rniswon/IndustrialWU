@@ -396,7 +396,7 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks) {
 }
 
 write_allstates <- function(x) {
-  purrr::map(dplyr::group_split(x, .by = State),
+  purrr::map(dplyr::group_split(x, .by = State, .keep = FALSE),
       ~{
         stname <- unique(.x$State)
         write.csv(.x, file.path("FormattedDataOutputs", "Statewise", paste0(stname, "_formatted.csv")), row.names = FALSE)
