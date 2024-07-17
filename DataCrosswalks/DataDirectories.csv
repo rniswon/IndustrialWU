@@ -89,8 +89,6 @@
 "/KS/K11963.xlsx$PART B - MUN",NA,NA,NA,NA,NA,NA,NA
 "/KS/K11963.xlsx$PART E",NA,NA,NA,NA,NA,NA,NA
 "/KS/K11963.xlsx$SIC",NA,NA,NA,NA,NA,NA,NA
-"/KY/Industrial_Water_Use_2000_2019.xls$Sheet1",NA,NA,NA,NA,NA,NA,NA
-"/KY/read_me_072220.docx",NA,NA,NA,NA,NA,NA,NA
 "/LA/John Lovelace_20200520_2015 IN Site-Specific WD.xlsx$ReadMe",NA,NA,NA,NA,NA,NA,NA
 "/LA/John Lovelace_20200520_2015 IN Site-Specific WD.xlsx$datapull",NA,NA,NA,NA,NA,NA,NA
 "/LA/John Lovelace_20200520_2015 IN Site-Specific WD.xlsx$facilities",NA,NA,NA,NA,NA,NA,NA
@@ -1377,6 +1375,8 @@
 "/WV/WV60CSR7 NDA_signed.pdf",NA,NA,NA,NA,NA,NA,NA
 "/WV/WVLQU Data Key.xlsx$WV LQU Data Key",NA,NA,NA,NA,NA,NA,NA
 "/WV/WVLQU_2019_USGS.xlsx$WVLQU_2019_USGS",NA,NA,NA,NA,NA,NA,NA
+"/KY/Industrial_Water_Use_2000_2019.xls$Sheet1","1","1","1","1","0","0","0"
+"/KY/read_me_072220.docx","0","0","0","0","1","0","0"
 "/VT/2008_2019_ Vermont_Yearly_Large_GW_Withdrawal.xlsx$GW Withdrawal Yearly","1","1","0","1","0","0","0"
 "/VT/VermontIndustrial_WU_info.xlsx$VT","1","1","1","1","0","0","0"
 "/VT/VermontIndustrial_WU_info.xlsx$FieldDescriptions","0","0","0","0","1","0","0"

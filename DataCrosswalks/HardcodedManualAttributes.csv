@@ -50,7 +50,7 @@
 "/MA/2. Water Usage by Facility_2000-2018.xlsx$2018","Method_annual_reported","Metered",""
 "/VT/VermontIndustrial_WU_info.xlsx$metadata","ValueType","WD","Entered based on context from emails"
 "/VT/VermontIndustrial_WU_info.xlsx$metadata","Units_monthly","gallons per month","Laura Medalie checked with Julia Beudoin of VT"
-"/VT/VermontLARGEIndustrial_WU_info.xlsx$Sheet1","State1","",NA
+"/VT/VermontLARGEIndustrial_WU_info.xlsx$Sheet1","State1","VT",NA
 "/WI/read_me.docx","ValueType","WD",NA
 "/WI/WDNR_SITE_INFO_05272021.xlsx$SITE_SW_PT","Units_annual_reported","gpd",NA
 "/WI/WDNR_SITE_INFO_05272021.xlsx$SITE_SW_PT","Method_annual_reported","permitted",NA
@@ -61,4 +61,8 @@
 "/MA/3.1 Water Withdrawal by Sources_2017.xlsx$Sheet2","ValueType","WD",NA
 "/MA/3.1 Water Withdrawal by Sources_2017.xlsx$Sheet220","ValueType","WD",NA
 "/MA/3.1 Water Withdrawal by Sources_2017.xlsx$Sheet218","ValueType","WD",NA
-"/MA/3.1 Water Withdrawal by Sources_2017.xlsx$Sheet217","ValueType","",NA
+"/MA/3.1 Water Withdrawal by Sources_2017.xlsx$Sheet217","ValueType","WD",NA
+"/KY/read_me_072220.docx","ValueType","WD",NA
+"/KY/read_me_072220.docx","Units_annual_reported","MGD",NA
+"/KY/read_me_072220.docx","Units_monthly","MGD",NA
+"/MA/3.1 Water Withdrawal by Sources_2017.xlsx$Sheet211","ValueType","",NA
