@@ -111,10 +111,11 @@ manual_update <- function(data, fp, header, updatedCrosswalks, existingCrosswalk
   if(header %in% (hardparams$Header[hardparams$file == fp])) {
     found_param_manual <- hardparams |> dplyr::filter(Header == header, file == fp) |> dplyr::pull(Value)
   } else {
-    found_param_manual <- svDialogs::dlg_input(message = paste("Enter suspected", header, "value based on", fp, ". Suggested options are", paste(inputoptions, collapse = ", ")))$res
-    hardparams_update <- hardparams |> add_row(file = fp, Header = header, Value = found_param_manual)
+    message = paste("Enter suspected", header, "value based on", fp, ". Suggested options are", paste(inputoptions, collapse = ", "))
+    hardparams_update <- hardparams |> add_row(file = fp, Header = header, Value = '')
     
     write.csv(hardparams_update, file = file.path(existingCrosswalks, "HardcodedManualAttributes.csv"), row.names = FALSE)
+    stop(message)
   }
   tmp <- data |> dplyr::mutate(!!header := found_param_manual)
   

@@ -121,7 +121,7 @@ merge_data <- function(blank, filled) {
   filledfile <- filled
   fp_classified <- filledfile |> na.omit() |> dplyr::pull(file)
   
-  fp_unclassified <- blank |> dplyr::filter(!file %in% fp_classified)
+  fp_unclassified <- blank |> dplyr::filter(!file %in% fp_classified) |> dplyr::mutate(across(everything(), ~as.character(.)))
   
   d <- dplyr::bind_rows(fp_unclassified, filledfile) |> unique()
   return(d)

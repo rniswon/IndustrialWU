@@ -122,9 +122,10 @@ applyFORMrules <- function(dat, headercrosswalk, updatedCrosswalks, existingCros
   if(filename %in% names(updatedCrosswalks$Forms)) {
     
     pulledform <- updatedCrosswalks$Forms[[filename]]
-    extravalues <- str_subset(unique(unlist(pulledform)), "~HEADER~|~DATA~|~IGNORE~|", negate = TRUE)
+    extravalues <- str_subset(unique(unlist(pulledform)), "~HEADER~|~DATA~|~IGNORE~|^$", negate = TRUE)
     if(length(extravalues) > 0) {
-      message <- paste("Additional values", paste(head(extravalues), collapse = ","), "must be designated as '~HEADER~', '~DATA~', or '~IGNORE~")
+      message <- paste("Additional values", paste(head(extravalues), collapse = ","), 
+                       "must be designated as '~HEADER~', '~DATA~', or '~IGNORE~ in ", filename)
       stop(message)
     }
     subparts <- split_forms(dat1, pulledform)
@@ -276,7 +277,7 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks)
               tmp <- tibble::tibble(!!new := dat_edit[[old_sub]])} else {
                 if(old_sub %in% names(dat_edit)) {
                   stop("Something went wrong in the pivots")
-                  } else if(!exists("pivotapplied")) {browser()
+                  } else if(!exists("pivotapplied")) {
                     stop("Check entries in HeaderCrosswalk.csv that they match the data exactly.")
                   } else {
                     names_check <- dat_raw %>%
