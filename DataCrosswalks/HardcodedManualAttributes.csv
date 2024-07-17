@@ -1,59 +1,62 @@
-"file","Header","Value","Notes"
-"/AL/USGS Lovelace NP Data Request_20200812_Final.xlsx$ReadMe","Method_monthly","Metered",""
-"/AL/USGS Lovelace NP Data Request_20200812_Final.xlsx$ReadMe","Method_annual_reported","permitted",""
-"/MN/MN_IN_WU.xlsx$MPARS_Index_Permits-IN","Units_annual_reported","mg",""
-"/MN/read_me.docx","ValueType","WD",""
-"/AR/read_me.docx","Method_annual_reported","Metered",""
-"/NH/read_me.docx","Units_monthly","thousand gallons","Discussion with Laura Medalie"
-"/NH/read_me.docx","Method_monthly","Metered",""
-"/TX/TX_IN_WU.xlsx$Texas_IndustrialWithdrawals_200","Units_monthly","gallons",""
-"/TX/read_me.docx","Method_monthly","Metered",""
-"/TX/TX_IN_WU.xlsx$Texas_IndustrialWithdrawals_200","Units_annual_reported","gallons",""
-"/TX/read_me.docx","Method_annual_reported","Metered",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2000","ValueType","WD",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2001","ValueType","WD",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2002","ValueType","WD",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2003","ValueType","WD",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2004","ValueType","WD",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2005","ValueType","WD",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2006","ValueType","WD",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2007","ValueType","WD",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2008","ValueType","WD",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2009","ValueType","WD",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2010","ValueType","WD",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2011","ValueType","WD",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2012","ValueType","WD",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2013","ValueType","WD",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2014","ValueType","WD",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2015","ValueType","WD",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2016","ValueType","WD",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2017","ValueType","WD",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2018","ValueType","WD",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2000","Method_annual_reported","Metered",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2001","Method_annual_reported","Metered",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2002","Method_annual_reported","Metered",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2003","Method_annual_reported","Metered",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2004","Method_annual_reported","Metered",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2005","Method_annual_reported","Metered",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2006","Method_annual_reported","Metered",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2007","Method_annual_reported","Metered",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2008","Method_annual_reported","Metered",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2009","Method_annual_reported","Metered",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2010","Method_annual_reported","Metered",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2011","Method_annual_reported","Metered",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2012","Method_annual_reported","Metered",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2013","Method_annual_reported","Metered",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2014","Method_annual_reported","Metered",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2015","Method_annual_reported","Metered",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2016","Method_annual_reported","Metered",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2017","Method_annual_reported","Metered",""
-"/MA/2. Water Usage by Facility_2000-2018.xlsx$2018","Method_annual_reported","Metered",""
-"/VT/VermontIndustrial_WU_info.xlsx$metadata","ValueType","WD","Entered based on context from emails"
-"/VT/VermontIndustrial_WU_info.xlsx$metadata","Units_monthly","gallons per month","Laura Medalie checked with Julia Beudoin of VT"
-"/VT/VermontLARGEIndustrial_WU_info.xlsx$Sheet1","State1","",NA
-"/WI/read_me.docx","ValueType","WD",NA
-"/WI/WDNR_SITE_INFO_05272021.xlsx$SITE_SW_PT","Units_annual_reported","gpd",NA
-"/WI/WDNR_SITE_INFO_05272021.xlsx$SITE_SW_PT","Method_annual_reported","permitted",NA
-"/WI/WDNR_SITE_INFO_05272021.xlsx$SITE_GW_PT","Units_annual_reported","GPD",NA
-"/WI/WDNR_SITE_INFO_05272021.xlsx$SITE_GW_PT","Method_annual_reported","Permitted",NA
-"/WI/WI industrial water use records workup for SIC codes-Reed 20191101-needs review 05102021.xlsx$WI2015_WU_hicap_sel_prep","Units_annual_reported","gal",NA
+file,Header,Value,Notes
+/AL/USGS Lovelace NP Data Request_20200812_Final.xlsx$ReadMe,Method_monthly,Metered,
+/AL/USGS Lovelace NP Data Request_20200812_Final.xlsx$ReadMe,Method_annual_reported,permitted,
+/MN/MN_IN_WU.xlsx$MPARS_Index_Permits-IN,Units_annual_reported,mg,
+/MN/read_me.docx,ValueType,WD,
+/AR/read_me.docx,Method_annual_reported,Metered,
+/NH/read_me.docx,Units_monthly,thousand gallons,Discussion with Laura Medalie
+/NH/read_me.docx,Method_monthly,Metered,
+/TX/TX_IN_WU.xlsx$Texas_IndustrialWithdrawals_200,Units_monthly,gallons,
+/TX/read_me.docx,Method_monthly,Metered,
+/TX/TX_IN_WU.xlsx$Texas_IndustrialWithdrawals_200,Units_annual_reported,gallons,
+/TX/read_me.docx,Method_annual_reported,Metered,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2000,ValueType,WD,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2001,ValueType,WD,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2002,ValueType,WD,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2003,ValueType,WD,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2004,ValueType,WD,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2005,ValueType,WD,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2006,ValueType,WD,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2007,ValueType,WD,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2008,ValueType,WD,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2009,ValueType,WD,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2010,ValueType,WD,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2011,ValueType,WD,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2012,ValueType,WD,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2013,ValueType,WD,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2014,ValueType,WD,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2015,ValueType,WD,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2016,ValueType,WD,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2017,ValueType,WD,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2018,ValueType,WD,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2000,Method_annual_reported,Metered,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2001,Method_annual_reported,Metered,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2002,Method_annual_reported,Metered,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2003,Method_annual_reported,Metered,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2004,Method_annual_reported,Metered,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2005,Method_annual_reported,Metered,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2006,Method_annual_reported,Metered,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2007,Method_annual_reported,Metered,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2008,Method_annual_reported,Metered,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2009,Method_annual_reported,Metered,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2010,Method_annual_reported,Metered,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2011,Method_annual_reported,Metered,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2012,Method_annual_reported,Metered,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2013,Method_annual_reported,Metered,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2014,Method_annual_reported,Metered,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2015,Method_annual_reported,Metered,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2016,Method_annual_reported,Metered,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2017,Method_annual_reported,Metered,
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2018,Method_annual_reported,Metered,
+/VT/VermontIndustrial_WU_info.xlsx$metadata,ValueType,WD,Entered based on context from emails
+/VT/VermontIndustrial_WU_info.xlsx$metadata,Units_monthly,gallons per month,Laura Medalie checked with Julia Beudoin of VT
+/VT/VermontLARGEIndustrial_WU_info.xlsx$Sheet1,State1,,NA
+/WI/read_me.docx,ValueType,WD,NA
+/WI/WDNR_SITE_INFO_05272021.xlsx$SITE_SW_PT,Units_annual_reported,gpd,NA
+/WI/WDNR_SITE_INFO_05272021.xlsx$SITE_SW_PT,Method_annual_reported,permitted,NA
+/WI/WDNR_SITE_INFO_05272021.xlsx$SITE_GW_PT,Units_annual_reported,GPD,NA
+/WI/WDNR_SITE_INFO_05272021.xlsx$SITE_GW_PT,Method_annual_reported,Permitted,NA
+/WI/WI industrial water use records workup for SIC codes-Reed 20191101-needs review 05102021.xlsx$WI2015_WU_hicap_sel_prep,Units_annual_reported,gal,NA
+/KY/read_me_072220.docx,ValueType,WD,NA
+/KY/read_me_072220.docx,Units_annual_reported,MGD,NA
+/KY/read_me_072220.docx,Units_monthly,MGD,NA

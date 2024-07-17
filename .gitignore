@@ -56,3 +56,4 @@ state_data/
 # Local development files
 Link2JohnsStateData.txt
 FormattedDataOutputs/AllStates.csv
+FormattedDataOutputs/AllStates.RDa

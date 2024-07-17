@@ -50,6 +50,8 @@ Category,IN61,MI
 Category,IN62,IN
 Category,IN63,IN
 Category,IN64,IN
+Category,Mining: Coal,MI
+Category,Mining: Non-Coal,MI
 Saline,SW-SALINE,TRUE
 Saline,Saline,TRUE
 Saline,Fresh,FALSE
@@ -78,6 +80,14 @@ SourceType,OTHER SURFACE WATER,SW
 SourceType,NORMAL FLOW,SW
 SourceType,CAP WATER STORED,GW
 SourceType,IN-LIEU WATER,SW
+SourceType,Stream,SW
+SourceType,Underground Mine,NA_character_
+SourceType,Lake,SW
+SourceType,Pond,SW
+SourceType,Ground,GW
+SourceType,COE Impoundment,SW
+SourceType,Slurry Impoundment,WW
+SourceType,Spring,SW
 Category,IN65,IN
 Saline,NA,NA
 Saline,SW,FALSE
