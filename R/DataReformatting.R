@@ -303,7 +303,7 @@ standard_Yeartreatment <- function(data, header) {
 }
 
 data_NAcodes <- c("", "n/a", "N/A", "NA", "NAN", "na", "nan", 
-                  "not reported yet", "closed")
+                  "not reported yet", "closed", NA)
 
 standard_datatreatment <- function(data, header) {
   if(length(grep(header, names(data))) > 0) {
