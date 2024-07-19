@@ -1,0 +1,27 @@
+# Mapping Coefficient Parameters
+
+## Purpose
+
+This R Markdown Document exists to map out the parameters used for various coefficients.
+
+Coefficients can be found in the team sharepoint at the following location [\~\GS-W-WaterUse - Industrial model\INWU\_task_folders\Lit\_review\Coefficient Values from Literature](https://doimspp.sharepoint.com/:f:/r/sites/USGSWaterUse-Internal/Shared%20Documents/Industrial%20model/INWU_task_folders/Lit_review/Coefficient%20Values%20from%20Literature?csf=1&web=1&e=1AjM1F)
+
+```{r}
+# Importing Requred Packages 
+
+library(dplyr)
+library(sf)
+library(plotly)
+
+```
+
+## Getting User Inputs
+
+## Importing Required Data
+
+## Mapping Coefficients By Paper
+
+### Ellis and Others
+
+[Ellis and Others](https://doimspp.sharepoint.com/:b:/r/sites/USGSWaterUse-Internal/Shared%20Documents/Industrial%20model/Literature/SS01_Panel1_Paper03.pdf?csf=1&web=1&e=1bzGiq) has coefficients in gal/ton of product.A table of coefficient values can be found [here](https://doimspp.sharepoint.com/:x:/r/sites/USGSWaterUse-Internal/Shared%20Documents/Industrial%20model/INWU_task_folders/Lit_review/Coefficient%20Values%20from%20Literature/Coeff_IN_WU_Ellis,%20Dillich,%20Margolis,%20n.d.%20(paper%20from%20Energetics,%20Incoporated%20and%20DOE).xlsx?d=w4a94fcc18ee247b79fa03da851c340b8&csf=1&web=1&e=hqLq8u)
+
