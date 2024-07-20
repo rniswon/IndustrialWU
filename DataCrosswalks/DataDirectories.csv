@@ -1,10 +1,4 @@
 "file","SiteDescriptions","LocationInfo","MonthlyData","AnnualData","Metadata","Duplicate","NotRelevant"
-"/CO/169562.pdf",NA,NA,NA,NA,NA,NA,NA
-"/CO/CO_Manufacture_Demands_Water.xlsx$CF&I and MolsonCoors",NA,NA,NA,NA,NA,NA,NA
-"/CO/CO_Manufacture_Demands_Water.xlsx$Western Sugar (Fort Morgan)",NA,NA,NA,NA,NA,NA,NA
-"/CO/CO_Manufacture_Demands_Water.xlsx$LePrino (Greeley)",NA,NA,NA,NA,NA,NA,NA
-"/CO/CO_Manufacture_Demands_Water.xlsx$Facility metadata",NA,NA,NA,NA,NA,NA,NA
-"/CO/read_me.docx",NA,NA,NA,NA,NA,NA,NA
 "/DE/IndustrialWaterUse_modified.xlsx$Water Use",NA,NA,NA,NA,NA,NA,NA
 "/DE/IndustrialWaterUse_modified.xlsx$Addresses",NA,NA,NA,NA,NA,NA,NA
 "/DE/IndustrialWaterUse_modified.xlsx$DE_IN_facility_list",NA,NA,NA,NA,NA,NA,NA
@@ -1375,6 +1369,12 @@
 "/WV/WV60CSR7 NDA_signed.pdf",NA,NA,NA,NA,NA,NA,NA
 "/WV/WVLQU Data Key.xlsx$WV LQU Data Key",NA,NA,NA,NA,NA,NA,NA
 "/WV/WVLQU_2019_USGS.xlsx$WVLQU_2019_USGS",NA,NA,NA,NA,NA,NA,NA
+"/CO/169562.pdf","0","0","0","0","0","0","1"
+"/CO/CO_Manufacture_Demands_Water.xlsx$CF&I and MolsonCoors","1","0","1","0","0","0","0"
+"/CO/CO_Manufacture_Demands_Water.xlsx$Western Sugar (Fort Morgan)","1","0","1","0","0","0","0"
+"/CO/CO_Manufacture_Demands_Water.xlsx$LePrino (Greeley)","0","0","0","0","0","0","1"
+"/CO/CO_Manufacture_Demands_Water.xlsx$Facility metadata","1","1","0","0","0","0","0"
+"/CO/read_me.docx","0","0","0","0","1","0","0"
 "/KY/Industrial_Water_Use_2000_2019.xls$Sheet1","1","1","1","1","0","0","0"
 "/KY/read_me_072220.docx","0","0","0","0","1","0","0"
 "/VT/2008_2019_ Vermont_Yearly_Large_GW_Withdrawal.xlsx$GW Withdrawal Yearly","1","1","0","1","0","0","0"

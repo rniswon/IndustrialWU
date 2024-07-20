@@ -111,10 +111,11 @@ manual_update <- function(data, fp, header, updatedCrosswalks, existingCrosswalk
   if(header %in% (hardparams$Header[hardparams$file == fp])) {
     found_param_manual <- hardparams |> dplyr::filter(Header == header, file == fp) |> dplyr::pull(Value)
   } else {
-    found_param_manual <- svDialogs::dlg_input(message = paste("Enter suspected", header, "value based on", fp, ". Suggested options are", paste(inputoptions, collapse = ", ")))$res
-    hardparams_update <- hardparams |> add_row(file = fp, Header = header, Value = found_param_manual)
+    message = paste("Enter suspected", header, "value based on", fp, ". Suggested options are", paste(inputoptions, collapse = ", "))
+    hardparams_update <- hardparams |> add_row(file = fp, Header = header, Value = '')
     
     write.csv(hardparams_update, file = file.path(existingCrosswalks, "HardcodedManualAttributes.csv"), row.names = FALSE)
+    stop(message)
   }
   tmp <- data |> dplyr::mutate(!!header := found_param_manual)
   
@@ -302,7 +303,7 @@ standard_Yeartreatment <- function(data, header) {
 }
 
 data_NAcodes <- c("", "n/a", "N/A", "NA", "NAN", "na", "nan", 
-                  "not reported yet", "closed")
+                  "not reported yet", "closed", NA)
 
 standard_datatreatment <- function(data, header) {
   if(length(grep(header, names(data))) > 0) {
@@ -396,7 +397,7 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks) {
 }
 
 write_allstates <- function(x) {
-  purrr::map(dplyr::group_split(x, .by = State),
+  purrr::map(dplyr::group_split(x, .by = State, .keep = FALSE),
       ~{
         stname <- unique(.x$State)
         write.csv(.x, file.path("FormattedDataOutputs", "Statewise", paste0(stname, "_formatted.csv")), row.names = FALSE)
