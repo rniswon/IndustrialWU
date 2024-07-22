@@ -49,11 +49,13 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 
-# Local non SWUDS tracker
+# Local non SWUDS tracker and state_data
 nonSWUDStracker_local.csv
+state_data/
 
 # Local development files
 Link2JohnsStateData.txt
-
+FormattedDataOutputs/AllStates.csv
+FormattedDataOutputs/AllStates.RDa
 # Targets branch files
 _targets/
