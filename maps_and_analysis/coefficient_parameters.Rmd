@@ -12,10 +12,17 @@ Coefficients can be found in the team sharepoint at the following location [\~\G
 library(dplyr)
 library(sf)
 library(plotly)
+library(readxl)
+library(httr)
 
 ```
 
 ## Getting User Inputs
+
+```{r}
+# Path to INWU model folder on local machine
+inwu_model_folder <- "D:/DOI/GS-W-WaterUse - Industrial model/"
+```
 
 ## Importing Required Data
 
@@ -25,3 +32,132 @@ library(plotly)
 
 [Ellis and Others](https://doimspp.sharepoint.com/:b:/r/sites/USGSWaterUse-Internal/Shared%20Documents/Industrial%20model/Literature/SS01_Panel1_Paper03.pdf?csf=1&web=1&e=1bzGiq) has coefficients in gal/ton of product.A table of coefficient values can be found [here](https://doimspp.sharepoint.com/:x:/r/sites/USGSWaterUse-Internal/Shared%20Documents/Industrial%20model/INWU_task_folders/Lit_review/Coefficient%20Values%20from%20Literature/Coeff_IN_WU_Ellis,%20Dillich,%20Margolis,%20n.d.%20(paper%20from%20Energetics,%20Incoporated%20and%20DOE).xlsx?d=w4a94fcc18ee247b79fa03da851c340b8&csf=1&web=1&e=hqLq8u)
 
+These coefficients are nation wide and units are gal/ammount of product (units for ammount vary by product).
+
+Currently we have no data sets for ammountof product.The [Federal Reserve Economic Data](https://fred.stlouisfed.org/series/IPMAN), and [Economic Cenus](https://www.census.gov/programs-surveys/economic-census/data/tables/industry.html) have some production values, but they all appear to be in dollar ammounts.
+
+### Boero and Pasqualini
+
+Boero and Pasqualini have National coefficients for the calendar years 1997 - 2013 in the units of gallons of water / GDP at current prices.
+
+Methodology for estimating county-level GDP from Boreo and Pasqualini:
+
+> “When considering national GDP by sector, we use the data estimated in the IO table just described. When considering county-level GDP by sector, we use local labor market data for its estimation. In particular we use annual employment and average weekly salary from the Quarterly Census of Employment and Wages (QCEW) published by the U.S. Bureau of Labor Statistics at the county level and with three-digit level of detail according to the North American Industrial Classification System (NAICS). QCEW employment and salary data at the county level is then aggregated from the three-digit NAICS level to the BEA summary level. National GDP data by sector is divided by the result of the multiplication between national number of employees and average weekly salary. By doing that, we estimate the average amount of GDP per amount of labor factor employed in each sector and we then estimate county-level GDP by multiplying average national GDP per unit of labor with the amount of labor in the county, similarly to commonly adopted approaches to the regionalization of economic variables (e.g., [29], [3]).”
+
+To map these data we must downscale national GDP to the county level.
+
+#### Plotting Coefficients
+
+##### Ecoregions
+
+Because these coefficients are mapped to the EPA Level II ecological regions we will need to pull that layer in
+
+```{r}
+
+ecoregions_download_url <- "https://gaftp.epa.gov/EPADataCommons/ORD/Ecoregions/cec_na/na_cec_eco_l2.zip"
+
+ecoregions_download_path <- '../data/l2_ecoregions.zip'
+
+if (file.exists(ecoregions_download_path)) {
+  
+  print("l2_ecoregions.zip already exists, using existing data")
+  
+} else {
+  
+  print("Downloading level II ecoregions")
+  download.file(ecoregions_download_url, ecoregions_download_path)
+  
+  unzip(ecoregions_download_path, exdir = '../data/ecoregions')
+  
+}
+
+l2_ecoregions_shp <- '../data/ecoregions/NA_CEC_Eco_Level2.shp'
+
+l2_ecoregions <- read_sf(l2_ecoregions_shp)
+```
+
+##### Reading coefficients
+
+```{r}
+
+years <- seq(1997, 2013)
+
+boreo_and_pasqualini_coefficients_folder <- paste0(inwu_model_folder, '/INWU_task_folders/Lit_review/Coefficient_Values_from_Literature/Coeff_IN_WU_Boero_Pasqualini')
+
+# Combining into one dataframe
+boreo_and_pasqualini_coefficients_df <- data.frame()
+
+for (year in years){ 
+  
+  coefficient_csv <- paste0(boreo_and_pasqualini_coefficients_folder, '/Coeff_IN_WU_Boero_Pasqualini_', year, '.csv')
+  
+  coefficient_df <- read.csv(coefficient_csv)
+  
+  coefficient_df['year'] <- year 
+  
+  boreo_and_pasqualini_coefficients_df <- rbind(boreo_and_pasqualini_coefficients_df, coefficient_df)
+  
+  }
+
+# Get a list of region columns to transform dataframe from wide to long
+region_columns <- names(boreo_and_pasqualini_coefficients_df)
+region_columns <- setdiff(region_columns, c('naics', 'naics_description', 'year'))
+
+# Filtering to only inclue manufacturing naics codes and formatting df as long
+boreo_and_pasqualini_coefficients_df <- boreo_and_pasqualini_coefficients_df %>% filter(substr(naics, 1,1) == "3") %>%
+  pivot_longer(cols = region_columns,
+               names_to = "coefficient",
+               values_to = "coefficient_value") %>%
+  mutate(l2_ecoregion = gsub("_", ".", sub(".*_(\\d+_\\d+)$", "\\1", coefficient))) %>%
+  select(-coefficient)
+
+boreo_and_pasqualini_coefficients_df
+```
+
+#### Pull Relevant Data
+
+##### National GDP by Industry
+
+National GDP by Industry is pulled from the Bureau of Economic Analysis using their API.
+
+In order to use this you must [register your email to obtain an API Key](https://apps.bea.gov/API/signup/)
+
+```{r}
+
+bea_api_key = "A0C4BEAD-2048-4D1D-A027-2F47E0D65498"
+```
+
+Make a data request for GDP results by industry
+
+```{r}
+
+bea_api_link = paste0("https://apps.bea.gov/api/data?&UserID=", bea_api_key, "&method=GETDATA&DatasetName=GDPbyIndustry&key=10&Year=ALL&Industry=ALL&FREQUENCY=A&TableID=10&ResultFormat=JSON")
+
+bea_api_response <- GET(bea_api_link)
+
+bea_content <- content(bea_api_response, 'text')
+
+bea_df <- fromJSON(bea_content, flatten = TRUE)
+```
+
+```{r}
+# URL of the Excel file
+url <- "https://www.bea.gov/sites/default/files/2024-06/gdp1q24-3rd.xlsx"
+
+bea_gdp_path <- '../data/bea_gdp.xlsx'
+
+if (file.exists(bea_gdp_path)) {
+  print("bea_gdp.xlsx already exists, using existing data")
+} else {
+  
+  print("Downloading bea_gdp.xlsx")
+  download.file(url, bea_gdp_path)
+  
+}
+
+# Read the Excel file
+data <- read_excel(bea_gdp_path)
+
+# View the data
+print(data)
+```
