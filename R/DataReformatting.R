@@ -107,16 +107,35 @@ handle_oddformats <- function(data, fp, header, updatedCrosswalks, existingCross
 
 manual_update <- function(data, fp, header, updatedCrosswalks, existingCrosswalks, inputoptions) {
   
+  # Take the hardcoded parameters that are already in the existing crosswalk
   hardparams <- updatedCrosswalks$HardcodedManualAttributes
   if(header %in% (hardparams$Header[hardparams$file == fp])) {
+    # if the header is already entered for the file in question, select the value entered 
+    # `|>` is the baseR version of the dplyr pipe `%>%`. They mostly work the same, but have slight differences. I'll note those differences in the function `reformat_data`.
+    # I tried to change as many instances of `%>%` to `|>` as I could to reduce the number of times a specific package is needed
     found_param_manual <- hardparams |> dplyr::filter(Header == header, file == fp) |> dplyr::pull(Value)
   } else {
+    # if the header isn't entered manual entry is needed
+    # Generate the error message
     message = paste("Enter suspected", header, "value based on", fp, ". Suggested options are", paste(inputoptions, collapse = ", "))
+    # Add the line to the hardcoded parameters data frame that needs to be filled out by the user
     hardparams_update <- hardparams |> add_row(file = fp, Header = header, Value = '')
     
+    # Write the dataframe back to disk. The user can update it here. It will be tracked as a change by the targets package in the line `tar_target(existingCrosswalks, "DataCrosswalks", format = "file")` next time that tar_make() is run.
     write.csv(hardparams_update, file = file.path(existingCrosswalks, "HardcodedManualAttributes.csv"), row.names = FALSE)
+    # Stopping the code here generates the message telling the user what to do, and also will send targets back to the existingCrosswalks target next time tar_make() is run.
     stop(message)
   }
+  # Once the hardcoded parameters crosswalk is updated, the entered value will be stored as `found_param_manual`
+  # The column designated by the `header` string in this function will be assigned the value of `found_param_manual` in the data frame
+  # The following is written in dplyr-ese. 
+  # `|>` is the native pipe operator
+  # `!!` indicates to dplyr that it needs to find the variable outside of the dataframe `data`. 
+  # Without including `!!`, dplyr::mutate will complain that there is no column called "header" in data. 
+  # With `!!`, dplyr::mutate knows that it needs to use the value of header to look for a column in data.
+  # `:=` is used here instead of `=` because header is a variable. Again, without it, dplyr::mutate would add a new column called "header" with the values of found_param_manual
+  # With `:=`, the name of the column is the value of header
+  # This could be done in base R pretty easily as well, but it would require multiple lines. And my personal preference is to use dplyr because the pipes execute everything together.
   tmp <- data |> dplyr::mutate(!!header := found_param_manual)
   
   return(tmp)
@@ -362,6 +381,10 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks) {
   years_code <- paste0("purrr::map(., ~standard_Yeartreatment(.x, '", Yearcolumns, "'))", collapse = " %>% ")
   data_code <- paste0("purrr::map(., ~standard_datatreatment(.x, '", datacolumns, "'))", collapse = " %>% ")
  
+  # As noted in `manual_updates`, `|>` is the base R pipe function
+  # In the next block of code, I've used `|>` where possible, but I had to use `%>%` for the lines that parse the written code
+  # The reason, I think, is that the `%>%` operator from dplyr allows you to pass an object (here a list) along using the `.` syntax while the `|>` operator does not.
+  # Because the expressions being parsed are a little wonky, and because I used the `.` notation to pass along the object in the code, I had to use `%>%` here and `|>` didn't work.
   x_munged <- x %>%
     {eval(parse(text = datacodes_u_code))} %>% # ~0 seconds
     {eval(parse(text = HUCs_code))} %>% # ~0 seconds
