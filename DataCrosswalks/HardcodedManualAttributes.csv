@@ -3,8 +3,8 @@ file,Header,Value,Notes
 /AL/USGS Lovelace NP Data Request_20200812_Final.xlsx$ReadMe,Method_annual_reported,permitted,
 /AR/read_me.docx,Method_annual_reported,Metered,
 /KY/read_me_072220.docx,ValueType,WD,NA
-/KY/read_me_072220.docx,Units_annual_reported,MGD,NA
-/KY/read_me_072220.docx,Units_monthly,MGD,NA
+/KY/read_me_072220.docx,Units_annual_reported,mgd,NA
+/KY/read_me_072220.docx,Units_monthly,mgd,NA
 /MA/2. Water Usage by Facility_2000-2018.xlsx$2000,ValueType,WD,
 /MA/2. Water Usage by Facility_2000-2018.xlsx$2000,Method_annual_reported,Metered,
 /MA/2. Water Usage by Facility_2000-2018.xlsx$2001,ValueType,WD,
@@ -185,4 +185,40 @@ file,Header,Value,Notes
 /MA/3.2 Water Withrawal by Sources_2018.xlsx$Sheet197,ValueType,WD,NA
 /CO/read_me.docx,DataProtected,TRUE,NA
 /CO/read_me.docx,ValueType,WD,NA
-/CO/CO_Manufacture_Demands_Water.xlsx$Facility metadata,Category,Industrial,NA
+/CO/CO_Manufacture_Demands_Water.xlsx$Facility metadata,Category,IN,NA
+/NV/read_me.docx,DataProtected,TRUE,NA
+/NV/read_me.docx,ValueType,WD,NA
+/AL/USGS Lovelace NP Data Request_20200812_Final.xlsx$ReadMe,DataProtected,TRUE,NA
+/VT/2008_2019_ Vermont_Yearly_Large_GW_Withdrawal.xlsx$GW Withdrawal Yearly,SourceType,GW,NA
+/CO/read_me.docx,Category,IN,NA
+/WI/WI hicap WU reporting 2017 QC data 20210114 .xlsx$2017_WI_QC_WU active PREP,Units_monthly,gallons,NA
+/WI/WDNR monthly water use data 2010-2020 retrieved 05272021.xlsx$WaterUseData,Units_monthly,gallons,NA
+/AL/USGS Lovelace NP Data Request_20200812_Final.xlsx$ReadMe,Units_monthly,mgd,NA
+/CO/read_me.docx,Method_monthly,Estimated,NA
+/WI/WI hicap WU reporting 2017 QC data 20210114 .xlsx$2017_WI_QC_WU active PREP,Units_annual_reported,gallons,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2000,Units_annual_reported,mgd,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2001,Units_annual_reported,mgd,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2002,Units_annual_reported,mgd,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2003,Units_annual_reported,mgd,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2004,Units_annual_reported,mgd,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2005,Units_annual_reported,mgd,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2006,Units_annual_reported,mgd,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2007,Units_annual_reported,mgd,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2008,Units_annual_reported,mgd,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2009,Units_annual_reported,mgd,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2010,Units_annual_reported,mgd,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2011,Units_annual_reported,mgd,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2012,Units_annual_reported,mgd,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2013,Units_annual_reported,mgd,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2014,Units_annual_reported,mgd,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2015,Units_annual_reported,mgd,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2016,Units_annual_reported,mgd,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2017,Units_annual_reported,mgd,NA
+/MA/2. Water Usage by Facility_2000-2018.xlsx$2018,Units_annual_reported,mgd,NA
+/AL/USGS Lovelace NP Data Request_20200812_Final.xlsx$SW Intakes,Units_annual_reported,mgd,NA
+/AL/USGS Lovelace NP Data Request_20200812_Final.xlsx$GW Wells,Units_annual_reported,mgd,NA
+/AL/USGS Lovelace NP Data Request_20200812_Final.xlsx$DC Points,Units_annual_reported,mgd,NA
+/CO/read_me.docx,Method_annual_reported,Estimated,NA
+/CO/CO_Manufacture_Demands_Water.xlsx$Western Sugar (Fort Morgan),FacilityName,western sugar cooperative,NA
+/MA/3.2 Water Withrawal by Sources_2018.xlsx$Sheet108,BasinName1,,Cell is left blank in source 
+/MA/3.1 Water Withdrawal by Sources_2017.xlsx$Sheet116,BasinName1,,Cell is left blank in source 

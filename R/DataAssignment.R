@@ -238,10 +238,11 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks)
   dat <- purrr::imap(headers_classified$file, ~{
     i <- .y 
     dat_raw <- read_in_datafile(datafp, .x)
+    keys <- c("State", "file", "IsReadMe")
     headercrosswalk <- headers_classified |>
       dplyr::slice(i) |> dplyr::select(where(~{. != ""})) %>% 
-      {if(length(names(.)) > 2) {
-        tidyr::pivot_longer(., cols = -c(State, file), names_to = "NewName", 
+      {if(!all(names(.) %in% keys)) { 
+        tidyr::pivot_longer(., cols = -any_of(keys), names_to = "NewName", 
                      values_to = "OldName")
       } else {.}}
     dat_edit <- dat_raw

@@ -93,6 +93,7 @@ generate_blankHeaderCrosswalkcsv <- function(filledassignment) {
                                                 Metadata == 1) |>
     dplyr::mutate(State = stringr::str_extract(file, "(?<=/)[[:alpha:]]{2}")) |>
     dplyr::select(State, file) |>
+    dplyr::mutate(IsReadMe = NA) |>
     dplyr::mutate(ValueType = NA, SourceType = NA, Category = NA, Saline = NA, 
            FacilityName = NA, FacilityName1 = NA, FacilityName2 = NA,
            FacilityNumber = NA, FacilityNumber1 = NA, FacilityNumber2 = NA,
