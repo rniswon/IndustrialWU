@@ -39,13 +39,41 @@ split_forms <- function(data, form_df) {
   forms_vsplit <- form_df %>% dplyr::slice(usefulrows) %>%
     dplyr::mutate(group = rowsplits) %>%
     group_by(group) %>%
-    dplyr::group_split(.keep = FALSE)
+    dplyr::group_split(.keep = FALSE) 
   
   data_vsplit <- data %>% dplyr::slice(usefulrows) %>%
     dplyr::mutate(group = rowsplits) %>%
     group_by(group) %>%
     dplyr::group_split(.keep = FALSE)
   
+  if(any(map_lgl(forms_vsplit, ~!"~HEADER~" %in% unlist(.x)))) {
+    vindex <- map(forms_vsplit, ~mutate(
+      .x, 
+      across(.cols = everything(), 
+             .fns = ~case_when(. == "~IGNORE~" ~ NA_character_, TRUE ~ .)))) %>%
+      map(., ~!is.na(.x)) %>%
+      map(., ~{
+        as.data.frame(.x) %>% map_lgl(., ~{sum(.x) > 0})
+      }) %>%
+      map(., ~which(.x))
+    
+    forms_vsplit <- map2(forms_vsplit,vindex, ~.x[.y])
+    data_vsplit <- map2(data_vsplit,vindex, ~.x[.y])
+    
+    orphandata <- which(map_lgl(forms_vsplit, ~!"~HEADER~" %in% unlist(.x)))
+    
+    matchdata <- which(map_lgl(forms_vsplit, ~ncol(.x) == ncol(forms_vsplit[[orphandata]]))[-orphandata])
+    
+    forms_vsplit <- list(
+      forms_vsplit[-c(matchdata, orphandata)], 
+      bind_rows(forms_vsplit[[matchdata]], forms_vsplit[[orphandata]])) %>% 
+      list_flatten()
+    
+    data_vsplit <- list(
+      data_vsplit[-c(matchdata, orphandata)], 
+      bind_rows(data_vsplit[[matchdata]], data_vsplit[[orphandata]])) %>% 
+      list_flatten()
+  }
   
   hsplits <- purrr::map(forms_vsplit,
                         ~{subdf <- .x
@@ -84,7 +112,8 @@ munge_forms <- function(dataformlist, filename) {
       suppressWarnings({
         form_t <- t(.x$form) %>% as.data.frame() %>% janitor::row_to_names(1)})
       datarows_t <- which(rowSums(form_t == "~DATA~") > 0)
-      t(.x$data) %>% as.data.frame() %>% janitor::row_to_names(1) %>% .[datarows_t,]
+      t(.x$data) %>% as.data.frame() %>% janitor::row_to_names(1) %>% 
+        as_tibble(.name_repair = "unique") %>% slice(., datarows_t) 
     } else {
           message <- paste("Format of", filename, "still needs to be handled in code. Please leave all headers as NA for now until code can accomodate.")
         stop(message)
@@ -150,8 +179,8 @@ applyFORMrules <- function(dat, headercrosswalk, updatedCrosswalks, existingCros
 }
 
 applyBLANKrules <- function(dat, headercrosswalk) {
-  blanknames <- which(is.na(names(dat)))
-  names(dat)[which(is.na(names(dat)))] <- paste0("V", blanknames)
+  blanknames <- which(str_detect(names(dat), "[[:punct:]]{3}(?=[[:digit:]])"))
+  names(dat)[blanknames] <- paste0("V", blanknames)
   headercrosswalk$OldName[which(grepl("~BLANK~", headercrosswalk$OldName))] <- paste0("V", blanknames)
   return(list(dat_edit = dat, headercrosswalk = headercrosswalk))
 }

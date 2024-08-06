@@ -222,3 +222,38 @@ file,Header,Value,Notes
 /CO/CO_Manufacture_Demands_Water.xlsx$Western Sugar (Fort Morgan),FacilityName,western sugar cooperative,NA
 /MA/3.2 Water Withrawal by Sources_2018.xlsx$Sheet108,BasinName1,,Cell is left blank in source 
 /MA/3.1 Water Withdrawal by Sources_2017.xlsx$Sheet116,BasinName1,,Cell is left blank in source 
+"/NV/4-G PROPERTIES,LTD.xls$2016",Units_monthly,mgd,NA
+"/NV/4-G PROPERTIES,LTD.xls$2015",Units_monthly,mgd,NA
+"/NV/4-G PROPERTIES,LTD.xls$2014",Units_monthly,mgd,NA
+"/NV/4-G PROPERTIES,LTD.xls$2013",Units_monthly,mgd,NA
+"/NV/4-G PROPERTIES,LTD.xls$2012",Units_monthly,mgd,NA
+"/NV/4-G PROPERTIES,LTD.xls$2011",Units_monthly,mgd,NA
+"/NV/4-G PROPERTIES,LTD.xls$2010",Units_monthly,mgd,NA
+"/NV/4-G PROPERTIES,LTD.xls$2016",Units_annual_reported,mgd,NA
+"/NV/4-G PROPERTIES,LTD.xls$2015",Units_annual_reported,mgd,NA
+"/NV/4-G PROPERTIES,LTD.xls$2014",Units_annual_reported,mgd,NA
+"/NV/4-G PROPERTIES,LTD.xls$2013",Units_annual_reported,mgd,NA
+"/NV/4-G PROPERTIES,LTD.xls$2012",Units_annual_reported,mgd,NA
+"/NV/4-G PROPERTIES,LTD.xls$2011",Units_annual_reported,mgd,NA
+"/NV/4-G PROPERTIES,LTD.xls$2010",Units_annual_reported,mgd,NA
+"/NV/4-G PROPERTIES,LTD.xls$2016",Method_monthly,Metered,NA
+"/NV/4-G PROPERTIES,LTD.xls$2015",Method_monthly,Metered,NA
+"/NV/4-G PROPERTIES,LTD.xls$2014",Method_monthly,Metered,NA
+"/NV/4-G PROPERTIES,LTD.xls$2013",Method_monthly,Metered,NA
+"/NV/4-G PROPERTIES,LTD.xls$2012",Method_monthly,Metered,NA
+"/NV/4-G PROPERTIES,LTD.xls$2011",Method_monthly,Metered,NA
+"/NV/4-G PROPERTIES,LTD.xls$2010",Method_monthly,Metered,NA
+"/NV/4-G PROPERTIES,LTD.xls$2016",Method_annual_reported,Metered,NA
+"/NV/4-G PROPERTIES,LTD.xls$2015",Method_annual_reported,Metered,NA
+"/NV/4-G PROPERTIES,LTD.xls$2014",Method_annual_reported,Metered,NA
+"/NV/4-G PROPERTIES,LTD.xls$2013",Method_annual_reported,Metered,NA
+"/NV/4-G PROPERTIES,LTD.xls$2012",Method_annual_reported,Metered,NA
+"/NV/4-G PROPERTIES,LTD.xls$2011",Method_annual_reported,Metered,NA
+"/NV/4-G PROPERTIES,LTD.xls$2010",Method_annual_reported,Metered,NA
+"/NV/4-G PROPERTIES,LTD.xls$2016",FacilityName,4-G PROPERTIES. LTD,NA
+"/NV/4-G PROPERTIES,LTD.xls$2015",FacilityName,4-G PROPERTIES. LTD,NA
+"/NV/4-G PROPERTIES,LTD.xls$2014",FacilityName,4-G PROPERTIES. LTD,NA
+"/NV/4-G PROPERTIES,LTD.xls$2013",FacilityName,4-G PROPERTIES. LTD,NA
+"/NV/4-G PROPERTIES,LTD.xls$2012",FacilityName,4-G PROPERTIES. LTD,NA
+"/NV/4-G PROPERTIES,LTD.xls$2011",FacilityName,4-G PROPERTIES. LTD,NA
+"/NV/4-G PROPERTIES,LTD.xls$2010",FacilityName,4-G PROPERTIES. LTD,NA
