@@ -6,22 +6,38 @@ This R Markdown Document exists to map out the parameters used for various coeff
 
 Coefficients can be found in the team sharepoint at the following location [\~\GS-W-WaterUse - Industrial model\INWU\_task_folders\Lit\_review\Coefficient Values from Literature](https://doimspp.sharepoint.com/:f:/r/sites/USGSWaterUse-Internal/Shared%20Documents/Industrial%20model/INWU_task_folders/Lit_review/Coefficient%20Values%20from%20Literature?csf=1&web=1&e=1AjM1F)
 
-```{r}
+```{r, message=FALSE, warning=FALSE, include=FALSE}
 # Importing Requred Packages 
 
-library(dplyr)
+library(tidyverse)
+library(ggplot2)
 library(sf)
-library(plotly)
-library(readxl)
-library(httr)
+library(viridis)
 
+source("../utility_functions/download_shape_zip.R")
 ```
 
 ## Getting User Inputs
 
-```{r}
+```{r, include=FALSE}
 # Path to INWU model folder on local machine
 inwu_model_folder <- "D:/DOI/GS-W-WaterUse - Industrial model/"
+
+export_figures = TRUE
+```
+
+## Defining Functions 
+
+```{r}
+
+export_figure <- function(figure, path,name, width=10, height=5){
+  ggsave(paste0(path, name, ".png"), 
+         figure, 
+         bg='white', 
+         width = width, 
+         height = height)
+}
+
 ```
 
 ## Importing Required Data
@@ -52,28 +68,29 @@ To map these data we must downscale national GDP to the county level.
 
 Because these coefficients are mapped to the EPA Level II ecological regions we will need to pull that layer in
 
-```{r}
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
 
 ecoregions_download_url <- "https://gaftp.epa.gov/EPADataCommons/ORD/Ecoregions/cec_na/na_cec_eco_l2.zip"
 
 ecoregions_download_path <- '../data/l2_ecoregions.zip'
 
-if (file.exists(ecoregions_download_path)) {
-  
-  print("l2_ecoregions.zip already exists, using existing data")
-  
-} else {
-  
-  print("Downloading level II ecoregions")
-  download.file(ecoregions_download_url, ecoregions_download_path)
-  
-  unzip(ecoregions_download_path, exdir = '../data/ecoregions')
-  
-}
+download_shape_zip(ecoregions_download_url, ecoregions_download_path)
+
+# Clip to CONUS 
+
+us_states_url <- "https://www2.census.gov/geo/tiger/GENZ2018/shp/cb_2018_us_state_500k.zip"
+
+us_states_download_path <- '../data/us_states.zip'
+
+download_shape_zip(us_states_url, us_states_download_path)
+
+# Plot
 
 l2_ecoregions_shp <- '../data/ecoregions/NA_CEC_Eco_Level2.shp'
 
 l2_ecoregions <- read_sf(l2_ecoregions_shp)
+
+plot(l2_ecoregions['NA_L2CODE'])
 ```
 
 ##### Reading coefficients
@@ -113,6 +130,42 @@ boreo_and_pasqualini_coefficients_df <- boreo_and_pasqualini_coefficients_df %>%
 
 boreo_and_pasqualini_coefficients_df
 ```
+
+##### Mapping Coefficients
+
+```{r, message=FALSE, warning=FALSE,}
+naics_list = unique(boreo_and_pasqualini_coefficients_df$naics)
+for (year in years){
+  for (naics in naics_list) {
+    
+    # Filtering by year and naics
+    filtered_boreo_and_pasqualini_df<- boreo_and_pasqualini_coefficients_df %>%
+      filter(year == !!year, naics == !!naics)
+    
+    # filtered_boreo_and_pasqualini_df['coefficient_value_per_trillion'] <- filtered_boreo_and_pasqualini_df['coefficient_value'] * 1000000000000
+    
+    # left join the filtered dataframe to the sf object
+    boreo_and_pasqualini_sf <- left_join(l2_ecoregions, filtered_boreo_and_pasqualini_df, by = c("NA_L2CODE" = "l2_ecoregion"))
+
+    # set the geometry column
+    boreo_and_pasqualini_sf <- st_set_geometry(boreo_and_pasqualini_sf, "geometry")
+    
+    boreo_and_pasqualini_map <- ggplot(boreo_and_pasqualini_sf) +
+      geom_sf(aes(fill = coefficient_value)) +
+      scale_fill_viridis(option = "plasma", na.value = "grey50", trans = "log10") +
+      labs(title = paste0("Coefficient Values for ", naics, ' ', year, 'in gal/ dollar of gdp'), fill = "Coefficient Value") +
+      theme_void()
+    
+    if (export_figures) 
+      {export_figure(boreo_and_pasqualini_map,'../outputs/', paste0(year, '_', naics), 10, 5)
+} 
+    
+  }
+  
+}
+
+```
+
 
 #### Pull Relevant Data
 
