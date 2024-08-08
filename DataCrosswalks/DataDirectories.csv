@@ -110,28 +110,7 @@
 "/LA/LA_NPDES_082720.xlsx$NPDES_082720",NA,NA,NA,NA,NA,NA,NA
 "/LA/LA_NPDES_082720.xlsx$notes",NA,NA,NA,NA,NA,NA,NA
 "/ME/site_specific_data_20240619.zip",NA,NA,NA,NA,NA,NA,NA
-"/MI/~$EGLE industrial monthly water use 2010-2019.xlsx",NA,NA,NA,NA,NA,NA,NA
-"/MI/EGLE industrial monthly water use 2010-2019.xlsx$2010",NA,NA,NA,NA,NA,NA,NA
-"/MI/EGLE industrial monthly water use 2010-2019.xlsx$2011",NA,NA,NA,NA,NA,NA,NA
-"/MI/EGLE industrial monthly water use 2010-2019.xlsx$2012",NA,NA,NA,NA,NA,NA,NA
-"/MI/EGLE industrial monthly water use 2010-2019.xlsx$2013",NA,NA,NA,NA,NA,NA,NA
-"/MI/EGLE industrial monthly water use 2010-2019.xlsx$2014",NA,NA,NA,NA,NA,NA,NA
-"/MI/EGLE industrial monthly water use 2010-2019.xlsx$2015",NA,NA,NA,NA,NA,NA,NA
-"/MI/EGLE industrial monthly water use 2010-2019.xlsx$2016",NA,NA,NA,NA,NA,NA,NA
-"/MI/EGLE industrial monthly water use 2010-2019.xlsx$2017",NA,NA,NA,NA,NA,NA,NA
-"/MI/EGLE industrial monthly water use 2010-2019.xlsx$2018",NA,NA,NA,NA,NA,NA,NA
-"/MI/EGLE industrial monthly water use 2010-2019.xlsx$2019",NA,NA,NA,NA,NA,NA,NA
-"/MI/MI industrial water use records workup for SIC codes-Reed 20200529-INTERNAL USE ONLY.xlsx$Notes",NA,NA,NA,NA,NA,NA,NA
-"/MI/MI industrial water use records workup for SIC codes-Reed 20200529-INTERNAL USE ONLY.xlsx$SIC-NAICS lookup",NA,NA,NA,NA,NA,NA,NA
-"/MI/MI industrial water use records workup for SIC codes-Reed 20200529-INTERNAL USE ONLY.xlsx$Task 1",NA,NA,NA,NA,NA,NA,NA
-"/MI/MI industrial water use records workup for SIC codes-Reed 20200529-INTERNAL USE ONLY.xlsx$Task 2",NA,NA,NA,NA,NA,NA,NA
-"/MI/MI industrial water use records workup for SIC codes-Reed 20200529-INTERNAL USE ONLY.xlsx$Task 3",NA,NA,NA,NA,NA,NA,NA
-"/MI/MI industrial water use records workup for SIC codes-Reed 20200529-INTERNAL USE ONLY.xlsx$MI_IN_WU_Data",NA,NA,NA,NA,NA,NA,NA
-"/MI/MI industrial water use records workup for SIC codes-Reed 20200529-INTERNAL USE ONLY.xlsx$MI_IN_Recs-ALL for prep",NA,NA,NA,NA,NA,NA,NA
-"/MI/Michigan monthly water use by facility and source.xlsx$2019",NA,NA,NA,NA,NA,NA,NA
-"/MI/Michigan monthly water use by facility and source.xlsx$2020",NA,NA,NA,NA,NA,NA,NA
-"/MI/Michigan monthly water use by facility and source.xlsx$2021",NA,NA,NA,NA,NA,NA,NA
-"/MI/Michigan monthly water use by facility and source.xlsx$2022",NA,NA,NA,NA,NA,NA,NA
+"/MI/MI_WU_crosswalk.xlsx$Sheet1",NA,NA,NA,NA,NA,NA,NA
 "/MO/Industrial_2000-2019.xlsx$Sheet1",NA,NA,NA,NA,NA,NA,NA
 "/MO/MO_IN_WU.xlsx$MO_IN_WU",NA,NA,NA,NA,NA,NA,NA
 "/MO/MO_IN_WU.xlsx$MO_IN_facility_list",NA,NA,NA,NA,NA,NA,NA
@@ -352,6 +331,28 @@
 "/WV/WV60CSR7 NDA_signed.pdf",NA,NA,NA,NA,NA,NA,NA
 "/WV/WVLQU Data Key.xlsx$WV LQU Data Key",NA,NA,NA,NA,NA,NA,NA
 "/WV/WVLQU_2019_USGS.xlsx$WVLQU_2019_USGS",NA,NA,NA,NA,NA,NA,NA
+"/MI/~$EGLE industrial monthly water use 2010-2019.xlsx","0","0","0","0","0","1","0"
+"/MI/EGLE industrial monthly water use 2010-2019.xlsx$2010","1","1","1","1","1","0","0"
+"/MI/EGLE industrial monthly water use 2010-2019.xlsx$2011","1","1","1","1","1","0","0"
+"/MI/EGLE industrial monthly water use 2010-2019.xlsx$2012","1","1","1","1","1","0","0"
+"/MI/EGLE industrial monthly water use 2010-2019.xlsx$2013","1","1","1","1","1","0","0"
+"/MI/EGLE industrial monthly water use 2010-2019.xlsx$2014","1","1","1","1","1","0","0"
+"/MI/EGLE industrial monthly water use 2010-2019.xlsx$2015","1","1","1","1","1","0","0"
+"/MI/EGLE industrial monthly water use 2010-2019.xlsx$2016","1","1","1","1","1","0","0"
+"/MI/EGLE industrial monthly water use 2010-2019.xlsx$2017","1","1","1","1","1","0","0"
+"/MI/EGLE industrial monthly water use 2010-2019.xlsx$2018","1","1","1","1","1","0","0"
+"/MI/EGLE industrial monthly water use 2010-2019.xlsx$2019","1","1","1","1","1","0","0"
+"/MI/MI industrial water use records workup for SIC codes-Reed 20200529-INTERNAL USE ONLY.xlsx$Notes","0","0","0","0","0","0","1"
+"/MI/MI industrial water use records workup for SIC codes-Reed 20200529-INTERNAL USE ONLY.xlsx$SIC-NAICS lookup","0","0","0","0","0","0","1"
+"/MI/MI industrial water use records workup for SIC codes-Reed 20200529-INTERNAL USE ONLY.xlsx$Task 1","1","1","0","0","0","0","0"
+"/MI/MI industrial water use records workup for SIC codes-Reed 20200529-INTERNAL USE ONLY.xlsx$Task 2","0","0","0","0","0","0","1"
+"/MI/MI industrial water use records workup for SIC codes-Reed 20200529-INTERNAL USE ONLY.xlsx$Task 3","0","0","0","0","0","0","1"
+"/MI/MI industrial water use records workup for SIC codes-Reed 20200529-INTERNAL USE ONLY.xlsx$MI_IN_WU_Data","0","0","0","0","0","0","1"
+"/MI/MI industrial water use records workup for SIC codes-Reed 20200529-INTERNAL USE ONLY.xlsx$MI_IN_Recs-ALL for prep","0","0","0","0","0","0","1"
+"/MI/Michigan monthly water use by facility and source.xlsx$2019","1","1","1","1","1","0","0"
+"/MI/Michigan monthly water use by facility and source.xlsx$2020","1","1","1","1","1","0","0"
+"/MI/Michigan monthly water use by facility and source.xlsx$2021","1","1","1","1","1","0","0"
+"/MI/Michigan monthly water use by facility and source.xlsx$2022","1","1","1","1","1","0","0"
 "/CO/CFIandMolsonCoors_Copy.xlsx$CF&I and MolsonCoors","0","0","0","0","0","1","0"
 "/CO/CFIandMolsonCoors_Copy.xlsx$ReadMe","0","0","0","0","0","0","1"
 "/CO/CFIandMolsonCoors_Copy.xlsx$CFI_MC_reformat","1","0","1","0","0","0","0"

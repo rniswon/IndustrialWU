@@ -163,7 +163,8 @@ standard_datacodestreatment <- function(data, filename, header, updatedCrosswalk
     if(length(grep(header, names(data))) == 1) {
       if(detect_readme(filename, updatedCrosswalks)) {
         tmp <- handle_readmes(data, filename, header, updatedCrosswalks, existingCrosswalks)
-      } else if(!is.character(data[[header]]) | all(varhandle::check.numeric(data[[header]]))) {
+      } else if(!is.character(data[[header]]) | 
+                all(varhandle::check.numeric(gsub("E", "e", data[[header]])))) {
         tmp <- handle_headers(data, filename, header, updatedCrosswalks, existingCrosswalks)
       } else if(all(is.na(data[[header]]))) {
         tmp <- handle_headers(data, filename, header, updatedCrosswalks, existingCrosswalks)

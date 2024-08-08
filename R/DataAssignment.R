@@ -102,18 +102,24 @@ munge_forms <- function(dataformlist, filename) {
   })
   map2(dataformlist, nativeformats, ~{
     if(.y == "tidy") {
-      .x$data[,which(.x$form[1,] == "~HEADER~")] %>% janitor::row_to_names(1)
+      .x$data[,which(.x$form[1,] == "~HEADER~")] %>% 
+        janitor::remove_empty("rows") %>% 
+        janitor::row_to_names(1)
     } else if(.y == "compoundheader") {
       headers <- .x$data[c(1, find_header(.x$data)),] %>% map(., ~paste(na.omit(unique(.x)), collapse = "_"))
       data <- .x$data[-c(1, find_header(.x$data)),]
       
-      rbind(headers, data) %>% row_to_names(1)
+      rbind(headers, data) %>% janitor::remove_empty("rows") %>% 
+        janitor::row_to_names(1)
     } else if(.y == "transpose") {
       suppressWarnings({
-        form_t <- t(.x$form) %>% as.data.frame() %>% janitor::row_to_names(1)})
+        form_t <- t(.x$form) %>% as.data.frame() %>% 
+          janitor::remove_empty("rows") %>% janitor::row_to_names(1)})
       datarows_t <- which(rowSums(form_t == "~DATA~") > 0)
-      t(.x$data) %>% as.data.frame() %>% janitor::row_to_names(1) %>% 
-        as_tibble(.name_repair = "unique") %>% slice(., datarows_t) 
+      suppressMessages({data_t <- t(.x$data) %>% as.data.frame() %>% 
+        janitor::remove_empty("rows") %>% janitor::row_to_names(1) %>% 
+        as_tibble(.name_repair = "unique") %>% slice(., datarows_t)}) 
+      data_t
     } else {
           message <- paste("Format of", filename, "still needs to be handled in code. Please leave all headers as NA for now until code can accomodate.")
         stop(message)
@@ -190,7 +196,7 @@ applyFILLrules <- function(dat, headercrosswalk) {
                    headercrosswalk$OldName[grepl("~FILL~", 
                                                  headercrosswalk$OldName)])
   dat2 <- dat %>%
-    mutate(across(all_of(fillcols), ~zoo::na.locf(.)))
+    mutate(across(all_of(fillcols), ~zoo::na.locf(., na.rm = FALSE)))
   headercrosswalk2 <- headercrosswalk |> dplyr::mutate(OldName = str_trim(gsub("~FILL~", "", OldName)))
   return(list(dat_edit = dat2, headercrosswalk = headercrosswalk2))
 }
@@ -303,7 +309,8 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks)
     if(any(c("NewName", "OldName") %in% names(headercrosswalk))) {
       tmp <- suppressMessages(purrr::map2_dfc(headercrosswalk$NewName, headercrosswalk$OldName, ~{
         new <- .x
-        old <- unlist(stringr::str_split(.y, ", "))
+        if(.y %in% names(dat_edit)) {old <- .y} else {
+          old <- unlist(stringr::str_split(.y, ", "))}
         
         purrr::map(old, ~{
             old_sub <- .x
@@ -312,7 +319,7 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks)
                 if(old_sub %in% names(dat_edit)) {
                   stop("Something went wrong in the pivots")
                   } else if(!exists("pivotapplied")) {
-                    stop("Check entries in HeaderCrosswalk.csv that they match the data exactly.")
+                    stop(paste0("Check entries", old, " in HeaderCrosswalk.csv that they match the data exactly. Options include ", paste(names(dat_edit), collapse = ", ")))
                   } else {
                     names_check <- dat_raw %>%
                       {eval(parse(text = flatten(pivotapplied$pivotinstructions)$mutatecode))} %>%
