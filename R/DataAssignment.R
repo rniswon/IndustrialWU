@@ -39,13 +39,41 @@ split_forms <- function(data, form_df) {
   forms_vsplit <- form_df %>% dplyr::slice(usefulrows) %>%
     dplyr::mutate(group = rowsplits) %>%
     group_by(group) %>%
-    dplyr::group_split(.keep = FALSE)
+    dplyr::group_split(.keep = FALSE) 
   
   data_vsplit <- data %>% dplyr::slice(usefulrows) %>%
     dplyr::mutate(group = rowsplits) %>%
     group_by(group) %>%
     dplyr::group_split(.keep = FALSE)
   
+  if(any(map_lgl(forms_vsplit, ~!"~HEADER~" %in% unlist(.x)))) {
+    vindex <- map(forms_vsplit, ~mutate(
+      .x, 
+      across(.cols = everything(), 
+             .fns = ~case_when(. == "~IGNORE~" ~ NA_character_, TRUE ~ .)))) %>%
+      map(., ~!is.na(.x)) %>%
+      map(., ~{
+        as.data.frame(.x) %>% map_lgl(., ~{sum(.x) > 0})
+      }) %>%
+      map(., ~which(.x))
+    
+    forms_vsplit <- map2(forms_vsplit,vindex, ~.x[.y])
+    data_vsplit <- map2(data_vsplit,vindex, ~.x[.y])
+    
+    orphandata <- which(map_lgl(forms_vsplit, ~!"~HEADER~" %in% unlist(.x)))
+    
+    matchdata <- which(map_lgl(forms_vsplit, ~ncol(.x) == ncol(forms_vsplit[[orphandata]]))[-orphandata])
+    
+    forms_vsplit <- list(
+      forms_vsplit[-c(matchdata, orphandata)], 
+      bind_rows(forms_vsplit[[matchdata]], forms_vsplit[[orphandata]])) %>% 
+      list_flatten()
+    
+    data_vsplit <- list(
+      data_vsplit[-c(matchdata, orphandata)], 
+      bind_rows(data_vsplit[[matchdata]], data_vsplit[[orphandata]])) %>% 
+      list_flatten()
+  }
   
   hsplits <- purrr::map(forms_vsplit,
                         ~{subdf <- .x
@@ -74,17 +102,24 @@ munge_forms <- function(dataformlist, filename) {
   })
   map2(dataformlist, nativeformats, ~{
     if(.y == "tidy") {
-      .x$data[,which(.x$form[1,] == "~HEADER~")] %>% janitor::row_to_names(1)
+      .x$data[,which(.x$form[1,] == "~HEADER~")] %>% 
+        janitor::remove_empty("rows") %>% 
+        janitor::row_to_names(1)
     } else if(.y == "compoundheader") {
       headers <- .x$data[c(1, find_header(.x$data)),] %>% map(., ~paste(na.omit(unique(.x)), collapse = "_"))
       data <- .x$data[-c(1, find_header(.x$data)),]
       
-      rbind(headers, data) %>% row_to_names(1)
+      rbind(headers, data) %>% janitor::remove_empty("rows") %>% 
+        janitor::row_to_names(1)
     } else if(.y == "transpose") {
       suppressWarnings({
-        form_t <- t(.x$form) %>% as.data.frame() %>% janitor::row_to_names(1)})
+        form_t <- t(.x$form) %>% as.data.frame() %>% 
+          janitor::remove_empty("rows") %>% janitor::row_to_names(1)})
       datarows_t <- which(rowSums(form_t == "~DATA~") > 0)
-      t(.x$data) %>% as.data.frame() %>% janitor::row_to_names(1) %>% .[datarows_t,]
+      suppressMessages({data_t <- t(.x$data) %>% as.data.frame() %>% 
+        janitor::remove_empty("rows") %>% janitor::row_to_names(1) %>% 
+        as_tibble(.name_repair = "unique") %>% slice(., datarows_t)}) 
+      data_t
     } else {
           message <- paste("Format of", filename, "still needs to be handled in code. Please leave all headers as NA for now until code can accomodate.")
         stop(message)
@@ -150,8 +185,8 @@ applyFORMrules <- function(dat, headercrosswalk, updatedCrosswalks, existingCros
 }
 
 applyBLANKrules <- function(dat, headercrosswalk) {
-  blanknames <- which(is.na(names(dat)))
-  names(dat)[which(is.na(names(dat)))] <- paste0("V", blanknames)
+  blanknames <- which(str_detect(names(dat), "[[:punct:]]{3}(?=[[:digit:]])"))
+  names(dat)[blanknames] <- paste0("V", blanknames)
   headercrosswalk$OldName[which(grepl("~BLANK~", headercrosswalk$OldName))] <- paste0("V", blanknames)
   return(list(dat_edit = dat, headercrosswalk = headercrosswalk))
 }
@@ -161,7 +196,7 @@ applyFILLrules <- function(dat, headercrosswalk) {
                    headercrosswalk$OldName[grepl("~FILL~", 
                                                  headercrosswalk$OldName)])
   dat2 <- dat %>%
-    mutate(across(all_of(fillcols), ~zoo::na.locf(.)))
+    mutate(across(all_of(fillcols), ~zoo::na.locf(., na.rm = FALSE)))
   headercrosswalk2 <- headercrosswalk |> dplyr::mutate(OldName = str_trim(gsub("~FILL~", "", OldName)))
   return(list(dat_edit = dat2, headercrosswalk = headercrosswalk2))
 }
@@ -238,10 +273,11 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks)
   dat <- purrr::imap(headers_classified$file, ~{
     i <- .y 
     dat_raw <- read_in_datafile(datafp, .x)
+    keys <- c("State", "file", "IsReadMe")
     headercrosswalk <- headers_classified |>
       dplyr::slice(i) |> dplyr::select(where(~{. != ""})) %>% 
-      {if(length(names(.)) > 2) {
-        tidyr::pivot_longer(., cols = -c(State, file), names_to = "NewName", 
+      {if(!all(names(.) %in% keys)) { 
+        tidyr::pivot_longer(., cols = -any_of(keys), names_to = "NewName", 
                      values_to = "OldName")
       } else {.}}
     dat_edit <- dat_raw
@@ -273,7 +309,8 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks)
     if(any(c("NewName", "OldName") %in% names(headercrosswalk))) {
       tmp <- suppressMessages(purrr::map2_dfc(headercrosswalk$NewName, headercrosswalk$OldName, ~{
         new <- .x
-        old <- unlist(stringr::str_split(.y, ", "))
+        if(.y %in% names(dat_edit)) {old <- .y} else {
+          old <- unlist(stringr::str_split(.y, ", "))}
         
         purrr::map(old, ~{
             old_sub <- .x
@@ -282,7 +319,7 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks)
                 if(old_sub %in% names(dat_edit)) {
                   stop("Something went wrong in the pivots")
                   } else if(!exists("pivotapplied")) {
-                    stop("Check entries in HeaderCrosswalk.csv that they match the data exactly.")
+                    stop(paste0("Check entries", old, " in HeaderCrosswalk.csv that they match the data exactly. Options include ", paste(names(dat_edit), collapse = ", ")))
                   } else {
                     names_check <- dat_raw %>%
                       {eval(parse(text = flatten(pivotapplied$pivotinstructions)$mutatecode))} %>%

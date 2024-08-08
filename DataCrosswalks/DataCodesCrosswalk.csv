@@ -87,7 +87,7 @@ SourceType,Pond,SW
 SourceType,Ground,GW
 SourceType,COE Impoundment,SW
 SourceType,Slurry Impoundment,WW
-SourceType,Spring,SW
+SourceType,Spring,GW
 Category,IN65,IN
 Saline,NA,NA
 Saline,SW,FALSE
@@ -348,3 +348,16 @@ Category,Aquaculture,AQ
 Category,Thermoelectric,TE
 Units_annual_reported,Gallons per Year,gal
 Units_monthly,Gallons per Month,gal
+SourceType,UG,GW
+SourceType,GEO,GW
+SourceType,EFF,WW
+SourceType,SPR,SW
+SourceType,STR,SW
+SourceType,OSW,SW
+SourceType,OGW,GW
+SourceType,(SW),SW
+SourceType,(GW),GW
+Units_monthly,All values in AF,acft
+Units_annual_reported,All values in AF,acft
+SourceType,Surface,SW
+SourceType,Surface and ground,NA_character_

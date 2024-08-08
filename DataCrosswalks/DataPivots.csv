@@ -9,3 +9,4 @@
 /VT/2008_2019_ Vermont_Yearly_Large_GW_Withdrawal.xlsx$GW Withdrawal Yearly,long,"which(grepl(""[[:digit:]]{4}_"", names(.)))","Year, Units_annual_reported","sep: ""_""",Annual_reported,
 /CO/CO_Manufacture_Demands_Water.xlsx$Western Sugar (Fort Morgan),long,"contains(c(""DivTotal""))","SourceNumber, Units_monthly","sep: "", DivTotal, """,Monthly_reported,
 /CO/CO_Manufacture_Demands_Water.xlsx$Western Sugar (Fort Morgan),wide,"Year = lubridate::year(lubridate::as_date(`DATE`, format = ""%Y-%m"")), SourceNumber, Units_monthly","Month = month.abb[lubridate::month(lubridate::as_date(`DATE`, format = ""%Y-%m""))]",,Monthly_reported,
+/CO/CFIandMolsonCoors_Copy.xlsx$CFI_MC_reformat,wide,Year = lubridate::year(lubridate::as_date(`Date`)),Month = month.abb[lubridate::month(lubridate::as_date(`Date`))],,Diversions,

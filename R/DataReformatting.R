@@ -1,5 +1,6 @@
-detect_readme <- function(filename) {
-  grepl("ReadMe|readme|Read_Me|read_me|metadata", filename)
+detect_readme <- function(filename, updatedCrosswalks) {
+  ReadMeentry <- updatedCrosswalks$HeaderCrosswalk %>% filter(file == filename) %>% pull(IsReadMe)
+  ReadMeentry != ""
 }
 
 convert2decimal <- function(x) {
@@ -38,13 +39,13 @@ merge_andreplaceNA <- function(x, y) {
     max(dplyr::pull(
       dplyr::summarize(dplyr::group_by(y, dplyr::across(all_of(merge_vars))), n = dplyr::n(), .groups = "drop"), 
       n)) > length(merge_vars)) {
-    datavars <- c("Annual_reported", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Sep", "Oct", "Nov", "Dec", "Year", "Category")
+    datavars <- c("Annual_reported", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Year", "Category")
     
     y_unique <- y |> 
       dplyr::group_by(dplyr::across(any_of(c(merge_vars, datavars)))) |> 
       dplyr::summarize(dplyr::across(.cols = everything(), .fns = ~paste(unique(.), collapse = ", ")), .groups = "drop") |>
       dplyr::mutate(dplyr::across(any_of(c("Lat", "Lon", "SourceNumber")), ~gsub(",.*", "", .))) ## If more than one location or source, keep only the first one. Source will only treated this way if it isn't used to merge - so if the other data is only to the facility level, not the source level.
-  } else {y_unique <- y}
+      } else {y_unique <- y}
   
   merge <- rquery::natural_join(x, y_unique, by = merge_vars, jointype = "FULL")
   
@@ -83,24 +84,7 @@ handle_headers <- function(data, fp, header, updatedCrosswalks, existingCrosswal
 }
 
 handle_oddformats <- function(data, fp, header, updatedCrosswalks, existingCrosswalks, info) {
-  datatype <- ifelse(grepl("Units", header), "Units", 
-                     ifelse(grepl("Method", header), "Method", 
-                            ifelse(grepl("DataProtected", header), "Protect", 
-                                   ifelse(grepl("ValueType", header),
-                                          "ValueType", 
-                                          ifelse(grepl("SourceType", header), 
-                                                 "SourceType", 
-                                                 ifelse(grepl("Category", 
-                                                              header), 
-                                                        "Category", "TBD"))))))
-  if(datatype == "TBD") {stop("New use of ReadMe files detected")}
-  
-  crosswalk_tmp <- updatedCrosswalks$DataCodesCrosswalk |>
-    dplyr::filter(grepl(datatype, header))
-  found_options <- na.omit(crosswalk_tmp$new_value[unique(unlist(purrr::map(crosswalk_tmp$original_value, ~grep(.x, info))))])
-  if(length(found_options) == 1) {
-    tmp <- data |> dplyr::mutate(!!header := found_options)
-  } else {tmp <- manual_update(data, fp, header, updatedCrosswalks, existingCrosswalks, found_options)}
+  tmp <- manual_update(data, fp, header, updatedCrosswalks, existingCrosswalks, "")
   
   return(tmp)
 }
@@ -135,7 +119,7 @@ manual_update <- function(data, fp, header, updatedCrosswalks, existingCrosswalk
   # With `!!`, dplyr::mutate knows that it needs to use the value of header to look for a column in data.
   # `:=` is used here instead of `=` because header is a variable. Again, without it, dplyr::mutate would add a new column called "header" with the values of found_param_manual
   # With `:=`, the name of the column is the value of header
-  # This could be done in base R pretty easily as well, but it would require multiple lines. And my personal preference is to use dplyr because the pipes execute everything together.
+  # This could be done in base R pretty easily as well, but it would require multiple lines and my personal preference is to use dplyr because the pipes execute everything together.
   tmp <- data |> dplyr::mutate(!!header := found_param_manual)
   
   return(tmp)
@@ -177,14 +161,18 @@ crosswalk_codes <- function(data, fp, header, codescrosswalk, forceupdate = TRUE
 standard_datacodestreatment <- function(data, filename, header, updatedCrosswalks, existingCrosswalks, force = c(TRUE, FALSE)) {
   if(length(grep(header, names(data))) > 0) {
     if(length(grep(header, names(data))) == 1) {
-      if(detect_readme(filename)) {
+      if(detect_readme(filename, updatedCrosswalks)) {
         tmp <- handle_readmes(data, filename, header, updatedCrosswalks, existingCrosswalks)
-      } else if(!is.character(data[[header]])) {
+      } else if(!is.character(data[[header]]) | 
+                all(varhandle::check.numeric(gsub("E", "e", data[[header]])))) {
         tmp <- handle_headers(data, filename, header, updatedCrosswalks, existingCrosswalks)
       } else if(all(is.na(data[[header]]))) {
         tmp <- handle_headers(data, filename, header, updatedCrosswalks, existingCrosswalks)
         } else if(is.character(data[[header]])) {
-        tmp <- crosswalk_codes(data = data, fp = filename, header = header, codescrosswalk = updatedCrosswalks$DataCodesCrosswalk, forceupdate = force)}
+        tmp <- crosswalk_codes(data = data, fp = filename, header = header, 
+                               codescrosswalk = updatedCrosswalks$DataCodesCrosswalk, 
+                               forceupdate = force)
+        }
     } else if(length(grep(header, names(data))) > 1) {
       tmp <- concat_columns(data, header) |> 
         crosswalk_codes(fp = filename, header = header, codescrosswalk = updatedCrosswalks$DataCodesCrosswalk, forceupdate = force)
@@ -194,11 +182,15 @@ standard_datacodestreatment <- function(data, filename, header, updatedCrosswalk
   tmp
 }
 
-standard_nametreatment <- function(data, header) {
+standard_nametreatment <- function(data, filename, header, updatedCrosswalks, existingCrosswalks) {
   if(length(grep(header, names(data))) > 0) {
     if(sum(names(data) == header) == 1) {
-      tmp <- data %>%
-        dplyr::mutate(!!header := fedmatch::clean_strings(as.character(.[[header]]), common_words = fedmatch::corporate_words))
+      if(all(is.na(data[[header]]))) {
+        tmp <- handle_headers(data, filename, header, updatedCrosswalks, existingCrosswalks)
+      } else {
+        tmp <- data %>%
+          dplyr::mutate(!!header := fedmatch::clean_strings(as.character(.[[header]]), common_words = fedmatch::corporate_words))
+      }
     } else if(length(grep(header, names(data))) > 1) {
       tmp <- concat_columns(data, header) %>% 
         dplyr::mutate(!!header := fedmatch::clean_strings(as.character(.[[header]]), common_words = fedmatch::corporate_words))
@@ -216,6 +208,10 @@ standard_idtreatment <- function(data, header) {
     tmp <- concat_columns(data, header) %>% 
       dplyr::mutate(!!header := as.character(.[[header]]))
   } else (tmp <- data)
+  if(header == "FacilityNumber" & sum(names(data) == "FacilityNumber") == 1 & 
+     !"FacilityName" %in% names(tmp)) {
+    tmp <- tmp %>% dplyr::filter(!is.na(FacilityNumber))
+  }
   tmp
 }
 
@@ -277,8 +273,8 @@ standard_Addresstreatment <- function(data, header) {
           zip <- stringr::str_extract(paste(x_clean, collapse = ", "), zip_regex)
         }}
       
-      if(type == "Address") {tmp <- address} else if(
-        type == "City") {tmp <- city} else if(
+      if(type == "Address") {tmp <- str_to_title(address)} else if(
+        type == "City") {tmp <- str_to_title(city)} else if(
           type == "State") {tmp <- state} else if(
             type == "Zip") {tmp <- zip}
       if(length(tmp) == 0) {tmp <- NA_character_}
@@ -326,7 +322,7 @@ data_NAcodes <- c("", "n/a", "N/A", "NA", "NAN", "na", "nan",
 
 standard_datatreatment <- function(data, header) {
   if(length(grep(header, names(data))) > 0) {
-    if(!is.numeric(data[[header]])) {
+    if(!is.numeric(data[[header]])) { 
       if(!all(unique(gsub("[[:digit:]]*|.", "", data[[header]])) %in% data_NAcodes)) {
         stop("New non-numeric data value detected")
       } else {
@@ -373,7 +369,9 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks) {
     "purrr::imap(., ~standard_datacodestreatment(.x, .y, '", datacodecolumns_unforce, 
     "', updatedCrosswalks, existingCrosswalks, force = FALSE))", collapse = " %>% "
   )
-  names_code <- paste0("purrr::map(., ~standard_nametreatment(.x, '", namecolumns, "'))", collapse = " %>% ")
+  names_code <- paste0(
+    "purrr::imap(., ~standard_nametreatment(.x, .y, '", namecolumns, 
+    "', updatedCrosswalks, existingCrosswalks))", collapse = " %>% ")
   ids_code <- paste0("purrr::map(., ~standard_idtreatment(.x, '", idcolumns, "'))", collapse = " %>% ")
   HUCs_code <- paste0("purrr::map(., ~standard_HUCtreatment(.x, '", HUCcolumns, "'))", collapse = " %>% ")
   Addresses_code <- paste0("purrr::map(., ~standard_Addresstreatment(.x, '", Addresscolumns, "'))", collapse = " %>% ")

@@ -52,6 +52,7 @@ rsconnect/
 # Local non SWUDS tracker and state_data
 nonSWUDStracker_local.csv
 state_data/
+Industrial model/
 
 # Local development files
 Link2JohnsStateData.txt
