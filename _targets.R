@@ -28,16 +28,22 @@ tar_source(files = "R")
 # Replace the target list below with your own:
 list(
   tar_target(datafp, "state_data", format = "file"),
-  tar_target(existingCrosswalks, "DataCrosswalks", format = "file"),
+  tar_target(existingCrosswalks, "DataCrosswalks/StateDataCrosswalks", format = "file"),
+  tar_target(NationalDataCrosswalks, "DataCrosswalks/NationalDataCrosswalks", format = "file"),
+  tar_target(NAICSworkup, "Industrial model/Industrial_DataSummary_By_LEE.xlsx", format = "file"),
   tar_target(dat, command = get_all_dat(datafp)),
   tar_target(updatedCrosswalks, command = updateCrosswalks(data = dat, existingCrosswalks = existingCrosswalks)),
   tar_target(renamed_rawdat, command = 
-               readandrename_columns(datafp, updatedCrosswalks, existingCrosswalks)
+               readandrename_columns(datafp, updatedCrosswalks, existingCrosswalks, data = "State")
              ),
   tar_target(reformatted_data, command = 
-               reformat_data(renamed_rawdat, updatedCrosswalks, existingCrosswalks)
+               reformat_data(renamed_rawdat, updatedCrosswalks, existingCrosswalks, data = "State")
              ),
-  tar_target(AllStates, command = write_allstates(reformatted_data), format = "file")
+  tar_target(combined_dat, command = merge_nationaldata(nonSWUDS = reformatted_data, 
+                                                        national_Xwalks = NationalDataCrosswalks, 
+                                                        datacodes_Xwalks = updatedCrosswalks$DataCodesCrosswalk,
+                                                        natdata = list(NAICSworkup))),
+  tar_target(AllStates, command = write_allstates(combined_dat), format = "file")
 )
 
 # For debugging ----

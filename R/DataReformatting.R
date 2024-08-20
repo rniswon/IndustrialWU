@@ -60,13 +60,17 @@ add_state <- function(renamed_rawdat) {
   })
 }
 
+pastecomma <- function(x, y) {
+  x = gsub("NULL", NA_character_, x)
+  y = gsub("NULL", NA_character_, y)
+  concat <- unlist(map2(x, y, ~{paste(unique(na.omit(c(.x, .y))), collapse = ", ")}) %>% modify_if(~length(.) == 0, ~NA_character_), use.names = FALSE)
+  return(concat)
+  }
+
 concat_columns <- function(data, Column) {
   tmp <- data |>
-    dplyr::rowwise() |>
     dplyr::select(contains(Column)) |> 
-    dplyr::mutate(tmp = paste(unique(na.omit(gsub("NULL", NA_character_, 
-                                           dplyr::c_across(contains(Column))))), 
-                       collapse = ", ")) |>
+    dplyr::mutate(tmp = reduce(across(contains(Column)), .f = pastecomma)) |>
     dplyr::pull(tmp)
   tmp2 <- data |>
     dplyr::select(-contains(Column)) |> dplyr::mutate(!!Column := tmp)
@@ -223,8 +227,10 @@ standard_HUCtreatment <- function(data, header) {
 }
 
 standard_Addresstreatment <- function(data, header) {
-  if(header %in% names(data)) {
-    entrylines <- stringr::str_split(data[[header]], ",") |> purrr::map(~stringr::str_trim(.x))
+  if(length(grep(header, names(data))) > 0) {
+    entrylines <- concat_columns(data[c(grep(header, names(data)))], header) |> 
+      pull(header) |>
+      stringr::str_split(",") |> purrr::map(~stringr::str_trim(.x))
     type <- stringr::str_extract(header, "Address|City|State|Zip")
     
     state_regex <- paste0(
@@ -284,6 +290,7 @@ standard_Addresstreatment <- function(data, header) {
     )
     
     tmp <- data |>
+      dplyr::select(-contains(header)) |>
       dplyr::mutate(!!header := tmpvals)
     
   } else {tmp <- data}
@@ -336,7 +343,7 @@ standard_datatreatment <- function(data, header) {
   tmp
 }
 
-reformat_data <- function(x, updatedCrosswalks, existingCrosswalks) {
+reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, data = c("State", "National")) {
   
   list(standard_datacodestreatment, standard_nametreatment, standard_idtreatment, 
        standard_HUCtreatment, standard_Addresstreatment, standard_coordinatetreatment,
@@ -378,7 +385,6 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks) {
   coordinates_code <- paste0("purrr::map(., ~standard_coordinatetreatment(.x, '", coordinatecolumns, "'))", collapse = " %>% ")
   years_code <- paste0("purrr::map(., ~standard_Yeartreatment(.x, '", Yearcolumns, "'))", collapse = " %>% ")
   data_code <- paste0("purrr::map(., ~standard_datatreatment(.x, '", datacolumns, "'))", collapse = " %>% ")
- 
   # As noted in `manual_updates`, `|>` is the base R pipe function
   # In the next block of code, I've used `|>` where possible, but I had to use `%>%` for the lines that parse the written code
   # The reason, I think, is that the `%>%` operator from dplyr allows you to pass an object (here a list) along using the `.` syntax while the `|>` operator does not.
@@ -396,7 +402,7 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks) {
     purrr::map(~janitor::remove_empty(.x, which = c("rows", "cols"))) |>
     add_state() |>
     purrr::map(~unique(.x))
-  
+
   if(any(grepl("\\.\\.\\.", unlist(purrr::map(x_munged, ~names(.x)))))) {
     issue <- unique(na.omit(
       stringr::str_extract(unlist(purrr::map(x_munged, ~names(.x))), ".*(?=\\.\\.\\.)")))
@@ -404,11 +410,20 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks) {
   }
   x_munged_indices_bysize <- unlist(purrr::map(x_munged, ~length(.x))) |> sort(decreasing = TRUE)
   x_merge_ready <- x_munged[names(x_munged_indices_bysize)] |> purrr::keep(~{nrow(.) > 0})
-  x_bystate <- purrr::map(state.abb, ~{st <- .x; purrr::keep_at(x_merge_ready, ~grepl(paste0("/", st, "/"), .))}); names(x_bystate) <- state.abb
-  x_readystates <- purrr::keep(x_bystate, ~length(.) > 0)
-  x_simplestates <- purrr::map(x_readystates, ~{purrr::reduce(.x, merge_andreplaceNA, .dir = "forward")})
-  
-  x_all <- do.call("bind_rows", x_simplestates)
+  if(data == "State") {
+    x_bystate <- purrr::map(state.abb, ~{st <- .x; purrr::keep_at(x_merge_ready, ~grepl(paste0("/", st, "/"), .))}); names(x_bystate) <- state.abb
+    x_readystates <- purrr::keep(x_bystate, ~length(.) > 0)
+    x_simplestates <- purrr::map(x_readystates, ~{purrr::reduce(.x, merge_andreplaceNA, .dir = "forward")})
+    x_all <- do.call("bind_rows", x_simplestates) %>% 
+      mutate(FacilityName = case_when(is.na(FacilityName) ~ FacilityNumber, 
+                                      !is.na(FacilityName) ~ FacilityName))
+  } else if(data == "National") {
+    if(length(x_merge_ready) > 1) {
+      x_all <- purrr::map(x_merge_ready, ~{purrr::reduce(.x, merge_andreplaceNA, .dir = "forward")})
+    } else {x_all <- pluck(x_merge_ready, 1)}
+    
+  }
+
   
   ordered <- names(updatedCrosswalks$HeaderCrosswalk)
   

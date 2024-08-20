@@ -19,16 +19,21 @@ read_in_datafile <- function(datafp, fp) {
     data.frame(text = txt)
   } else if (grepl(paste(shapefileextensions, collapse = "|"), fp)) {
     fp_shp <- gsub(paste(shapefileextensions, collapse = "|"), ".shp", fp)
-    dat <- sf::st_read(file.path(datafp, fp_shp), quiet = TRUE)
+    dat <- sf::st_read(file.path(datafp, fp_shp), quiet = TRUE) %>%
+      sf::st_drop_geometry()
+    dat
   } else if (grepl(".pdf", fp)) {
     dat <- 
       purrr::imap_dfr(stringr::str_split(pdftools::pdf_text(pdf = file.path(datafp, fp)), "\n"), 
                ~{data.frame(text = .x) |> dplyr::mutate(page = .y)})
-    data
+    dat
   } else {
     stop(paste0("New database type found that has not been built in yet (", fp, ")"))
   }
-  data
+  tmp <- data %>% 
+    mutate(across(everything(), 
+                  .fns = ~str_replace_all(str_trim(.), "^$", NA_character_)))
+  return(tmp)
 }
 
 split_forms <- function(data, form_df) {
@@ -264,14 +269,19 @@ applyPIVOTrules <- function(dat, headercrosswalk, updatedCrosswalks) {
               pivotinstructions = instructions))
 }
 
-readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks) {
-  
+readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks, data = c("State", "National")) {
   filledheader <- updatedCrosswalks$HeaderCrosswalk
   
-  headers_classified <- filledheader |> na.omit() |> dplyr::filter(State %in% state.abb)
+  if(data == "State") {
+    headers_classified <- filledheader |> na.omit() |> dplyr::filter(State %in% state.abb)
+  } else if(data == "National") {headers_classified <- filledheader |> na.omit()}
   
   dat <- purrr::imap(headers_classified$file, ~{
     i <- .y 
+    if(data == "National") {
+      filename <- gsub("\\$.*", "", .x)
+      datafp <- dirname(datafp[[grep(filename, datafp)]])
+    }
     dat_raw <- read_in_datafile(datafp, .x)
     keys <- c("State", "file", "IsReadMe")
     headercrosswalk <- headers_classified |>
