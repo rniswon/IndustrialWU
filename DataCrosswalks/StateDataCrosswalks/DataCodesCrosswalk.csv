@@ -361,3 +361,9 @@ Units_monthly,All values in AF,acft
 Units_annual_reported,All values in AF,acft
 SourceType,Surface,SW
 SourceType,Surface and ground,NA_character_
+SourceType,IND,NA_character_
+SourceType,INDOTH,NA_character_
+SourceType,INDFP,NA_character_
+SourceType, ,NA_character_
+SourceType,WELL,GW
+SourceType,SURFACE INTAKE,SW
