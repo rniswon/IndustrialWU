@@ -31,6 +31,7 @@ list(
   tar_target(existingCrosswalks, "DataCrosswalks/StateDataCrosswalks", format = "file"),
   tar_target(NationalDataCrosswalks, "DataCrosswalks/NationalDataCrosswalks", format = "file"),
   tar_target(NAICSworkup, "Industrial model/Industrial_DataSummary_By_LEE.xlsx", format = "file"),
+  tar_target(SWUDS, "Industrial model/SWUDS_records/natprod_CN_QNTY_industrial_2024-07-12.xlsx", format = "file"),
   tar_target(dat, command = get_all_dat(datafp)),
   tar_target(updatedCrosswalks, command = updateCrosswalks(data = dat, existingCrosswalks = existingCrosswalks)),
   tar_target(renamed_rawdat, command = 
@@ -42,7 +43,7 @@ list(
   tar_target(combined_dat, command = merge_nationaldata(nonSWUDS = reformatted_data, 
                                                         national_Xwalks = NationalDataCrosswalks, 
                                                         datacodes_Xwalks = updatedCrosswalks$DataCodesCrosswalk,
-                                                        natdata = list(NAICSworkup))),
+                                                        natdata = list(NAICSworkup, SWUDS))),
   tar_target(AllStates, command = write_allstates(combined_dat), format = "file")
 )
 

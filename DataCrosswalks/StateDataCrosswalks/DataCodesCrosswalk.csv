@@ -367,3 +367,28 @@ SourceType,INDFP,NA_character_
 SourceType, ,NA_character_
 SourceType,WELL,GW
 SourceType,SURFACE INTAKE,SW
+ValueType,UD,TR
+ValueType,UR,RL
+SourceType,WW,WW
+SourceType,TR,WW
+SourceType,FN,PS
+SourceType,UN,NA_character_
+Saline,Unspecified,NA
+Units_monthly,Tgal/m,Tgal
+Units_monthly,gal/m,gal
+Units_monthly,Mgal/m,mgal
+Units_monthly,acre-feet/m,acft
+Units_annual_reported,Mgal/yr,mgal
+Units_annual_reported,gal/yr,gal
+Method_annual_reported,Unspecified,NA_character_
+Method_annual_reported,Metered Type Unknown,Metered
+Method_annual_reported,Flowmeter Cumulative,Metered
+Method_monthly,Unspecified,NA_character_
+Method_monthly,Metered Type Unknown,Metered
+Method_monthly,Flowmeter Cumulative,Metered
+Units_annual_reported,Tgal/yr,Tgal
+Units_annual_reported,gal/d,gal per day
+Units_annual_reported,acre-feet/yr,acft
+Units_monthly,gal/d,gal per day
+Units_monthly,Mgal/yr,NA_character_
+Units_monthly,gal/yr,NA_character_

@@ -415,11 +415,11 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, data = c("St
     x_readystates <- purrr::keep(x_bystate, ~length(.) > 0)
     x_simplestates <- purrr::map(x_readystates, ~{purrr::reduce(.x, merge_andreplaceNA, .dir = "forward")})
     x_all <- do.call("bind_rows", x_simplestates) %>% 
-      mutate(FacilityName = case_when(is.na(FacilityName) ~ FacilityNumber, 
-                                      !is.na(FacilityName) ~ FacilityName))
+      plugFacilityName(drop = FALSE)
   } else if(data == "National") {
     if(length(x_merge_ready) > 1) {
-      x_all <- purrr::map(x_merge_ready, ~{purrr::reduce(.x, merge_andreplaceNA, .dir = "forward")})
+      x_all <- purrr::map(x_merge_ready, ~plugFacilityName(.x, drop = TRUE)) %>%
+        purrr::reduce(merge_andreplaceNA, .dir = "forward")
     } else {x_all <- pluck(x_merge_ready, 1)}
     
   }
@@ -430,6 +430,16 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, data = c("St
   x_ordered <- x_all |> dplyr::select(any_of(ordered))
 
   return(x_ordered)
+}
+
+plugFacilityName <- function(x, drop = TRUE) {
+  if(all(c("FacilityName", "FacilityNumber") %in% names(x))) {
+    tmp <-   dplyr::mutate(x, FacilityName = dplyr::case_when(is.na(FacilityName) ~ FacilityNumber, 
+                                                              !is.na(FacilityName) ~ FacilityName))
+  } else {tmp <- x}
+  
+  if(drop == TRUE) {tmp <- filter(tmp, !is.na(FacilityName))}
+return(tmp)
 }
 
 write_allstates <- function(x) {
