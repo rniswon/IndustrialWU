@@ -55,11 +55,9 @@ Currently we have no data sets for ammountof product.The [Federal Reserve Econom
 
 ### Boero and Pasqualini
 
+<https://doi.org/10.1016/j.wri.2017.09.001>
+
 Boero and Pasqualini have National coefficients for the calendar years 1997 - 2013 in the units of gallons of water / GDP at current prices.
-
-Methodology for estimating county-level GDP from Boreo and Pasqualini:
-
-> “When considering national GDP by sector, we use the data estimated in the IO table just described. When considering county-level GDP by sector, we use local labor market data for its estimation. In particular we use annual employment and average weekly salary from the Quarterly Census of Employment and Wages (QCEW) published by the U.S. Bureau of Labor Statistics at the county level and with three-digit level of detail according to the North American Industrial Classification System (NAICS). QCEW employment and salary data at the county level is then aggregated from the three-digit NAICS level to the BEA summary level. National GDP data by sector is divided by the result of the multiplication between national number of employees and average weekly salary. By doing that, we estimate the average amount of GDP per amount of labor factor employed in each sector and we then estimate county-level GDP by multiplying average national GDP per unit of labor with the amount of labor in the county, similarly to commonly adopted approaches to the regionalization of economic variables (e.g., [29], [3]).”
 
 To map these data we must downscale national GDP to the county level.
 
@@ -132,6 +130,29 @@ boreo_and_pasqualini_coefficients_df <- boreo_and_pasqualini_coefficients_df %>%
 boreo_and_pasqualini_coefficients_df
 ```
 
+###### Selecting NAICS Codes with high water useage
+
+many naics have coefficients at or near 0. highest coefficients to see what highest categores are
+
+```{r}
+
+# Summarize mean coefficient value by NAICS and get the top 10
+top_naics <- boreo_and_pasqualini_coefficients_df %>%
+  group_by(naics, naics_description) %>%
+  summarise(mean_coefficient_value = mean(coefficient_value, na.rm = TRUE)) %>%
+  arrange(desc(mean_coefficient_value)) %>%
+  slice_head(n=10) 
+
+# View the top 10 NAICS
+top_naics <- top_naics$naics[0:10]
+
+boreo_and_pasqualini_coefficients_df <- boreo_and_pasqualini_coefficients_df%>%
+  filter(naics %in% top_naics)
+
+print(unique(boreo_and_pasqualini_coefficients_df$naics))
+
+```
+
 ##### Mapping Coefficients
 
 Creating Maps of coefficient values.
@@ -175,7 +196,7 @@ for (year in years){
 
 ##### Plotting Coefficients
 
-Here we create plots of the coefficient by ecoregion by year. 
+Here we create plots of the coefficient by ecoregion by year.
 
 ```{r}
 
@@ -211,7 +232,11 @@ for (ecoregion in ecoregion_list) {
 
 ```
 
-#### Pull Relevant Data
+##### Recreating variables
+
+Methodology for estimating county-level GDP from Boreo and Pasqualini:
+
+> “When considering national GDP by sector, we use the data estimated in the IO table just described. When considering county-level GDP by sector, we use local labor market data for its estimation. In particular we use annual employment and average weekly salary from the Quarterly Census of Employment and Wages (QCEW) published by the U.S. Bureau of Labor Statistics at the county level and with three-digit level of detail according to the North American Industrial Classification System (NAICS). QCEW employment and salary data at the county level is then aggregated from the three-digit NAICS level to the BEA summary level. National GDP data by sector is divided by the result of the multiplication between national number of employees and average weekly salary. By doing that, we estimate the average amount of GDP per amount of labor factor employed in each sector and we then estimate county-level GDP by multiplying average national GDP per unit of labor with the amount of labor in the county, similarly to commonly adopted approaches to the regionalization of economic variables (e.g., [29], [3]).”
 
 ##### National GDP by Industry
 
