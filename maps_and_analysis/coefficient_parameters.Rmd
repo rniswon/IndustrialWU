@@ -13,6 +13,7 @@ library(tidyverse)
 library(ggplot2)
 library(sf)
 library(viridis)
+library(readxl)
 
 source("../utility_functions/download_shape_zip.R")
 ```
@@ -26,7 +27,7 @@ inwu_model_folder <- "D:/DOI/GS-W-WaterUse - Industrial model/"
 export_figures = TRUE
 ```
 
-## Defining Functions 
+## Defining Functions
 
 ```{r}
 
@@ -133,14 +134,21 @@ boreo_and_pasqualini_coefficients_df
 
 ##### Mapping Coefficients
 
+Creating Maps of coefficient values.
+
 ```{r, message=FALSE, warning=FALSE,}
 naics_list = unique(boreo_and_pasqualini_coefficients_df$naics)
+
+boreo_and_pasqualini_output_dir <-'../outputs/boreo_and_pasqualini_coefficients/'
+
 for (year in years){
   for (naics in naics_list) {
-    
+        
     # Filtering by year and naics
     filtered_boreo_and_pasqualini_df<- boreo_and_pasqualini_coefficients_df %>%
       filter(year == !!year, naics == !!naics)
+    
+    naics_description <- first(filtered_boreo_and_pasqualini_df$naics_description)
     
     # filtered_boreo_and_pasqualini_df['coefficient_value_per_trillion'] <- filtered_boreo_and_pasqualini_df['coefficient_value'] * 1000000000000
     
@@ -153,19 +161,55 @@ for (year in years){
     boreo_and_pasqualini_map <- ggplot(boreo_and_pasqualini_sf) +
       geom_sf(aes(fill = coefficient_value)) +
       scale_fill_viridis(option = "plasma", na.value = "grey50", trans = "log10") +
-      labs(title = paste0("Coefficient Values for ", naics, ' ', year, 'in gal/ dollar of gdp'), fill = "Coefficient Value") +
+      labs(title = paste0("Boreo and Pasqualini coefficients for ", naics, naics_description, ' ', year), fill = "gal / $ of GDP") +
       theme_void()
     
     if (export_figures) 
-      {export_figure(boreo_and_pasqualini_map,'../outputs/', paste0(year, '_', naics), 10, 5)
+      {export_figure(boreo_and_pasqualini_map, boreo_and_pasqualini_output_dir, paste0('map_',year, '_', naics), 10, 5)
 } 
     
   }
   
 }
-
 ```
 
+##### Plotting Coefficients
+
+Here we create plots of the coefficient by ecoregion by year. 
+
+```{r}
+
+ecoregion_list <- unique(boreo_and_pasqualini_coefficients_df$l2_ecoregion)
+
+# Loop through each ecoregion
+for (ecoregion in ecoregion_list) {
+  for (naics in naics_list) {
+    
+    # Filter the DataFrame based on ecoregion and NAICS code
+    filtered_boreo_and_pasqualini_df <- boreo_and_pasqualini_coefficients_df %>%
+      filter(l2_ecoregion == !!ecoregion, naics == !!naics)
+    
+    # Get the first NAICS description
+    naics_description <- first(filtered_boreo_and_pasqualini_df$naics_description)
+    
+    # Create the plot
+    boreo_and_pasqualini_plot <- ggplot(filtered_boreo_and_pasqualini_df, aes(x = year, y = coefficient_value)) + 
+      geom_point() +
+      labs(title = paste("Coefficient Value by Year for", naics_description),
+           x = "Year",
+           y = "Coefficient Value") + 
+      theme_minimal()
+    
+    # Export the figure if the flag is set
+    if (export_figures) {
+      export_figure(boreo_and_pasqualini_plot, boreo_and_pasqualini_output_dir, 
+                    paste0('plot_', ecoregion, '_', naics), 10, 5)
+    }
+  }
+}
+
+
+```
 
 #### Pull Relevant Data
 
@@ -186,7 +230,7 @@ Make a data request for GDP results by industry
 
 bea_api_link = paste0("https://apps.bea.gov/api/data?&UserID=", bea_api_key, "&method=GETDATA&DatasetName=GDPbyIndustry&key=10&Year=ALL&Industry=ALL&FREQUENCY=A&TableID=10&ResultFormat=JSON")
 
-bea_api_response <- GET(bea_api_link)
+bea_api_response <- get(bea_api_link)
 
 bea_content <- content(bea_api_response, 'text')
 
