@@ -143,7 +143,7 @@ top_naics <- boreo_and_pasqualini_coefficients_df %>%
   arrange(desc(mean_coefficient_value)) %>%
   slice_head(n=10) 
 
-# View the top 10 NAICS
+# View the top NAICS
 top_naics <- top_naics$naics[0:10]
 
 boreo_and_pasqualini_coefficients_df <- boreo_and_pasqualini_coefficients_df%>%
@@ -156,80 +156,73 @@ print(unique(boreo_and_pasqualini_coefficients_df$naics))
 ##### Mapping Coefficients
 
 Creating Maps of coefficient values.
-
-```{r, message=FALSE, warning=FALSE,}
+```{r}
 naics_list = unique(boreo_and_pasqualini_coefficients_df$naics)
 
 boreo_and_pasqualini_output_dir <-'../outputs/boreo_and_pasqualini_coefficients/'
 
-for (year in years){
-  for (naics in naics_list) {
-        
-    # Filtering by year and naics
-    filtered_boreo_and_pasqualini_df<- boreo_and_pasqualini_coefficients_df %>%
-      filter(year == !!year, naics == !!naics)
-    
-    naics_description <- first(filtered_boreo_and_pasqualini_df$naics_description)
-    
-    # filtered_boreo_and_pasqualini_df['coefficient_value_per_trillion'] <- filtered_boreo_and_pasqualini_df['coefficient_value'] * 1000000000000
-    
-    # left join the filtered dataframe to the sf object
-    boreo_and_pasqualini_sf <- left_join(l2_ecoregions, filtered_boreo_and_pasqualini_df, by = c("NA_L2CODE" = "l2_ecoregion"))
 
-    # set the geometry column
-    boreo_and_pasqualini_sf <- st_set_geometry(boreo_and_pasqualini_sf, "geometry")
-    
-    boreo_and_pasqualini_map <- ggplot(boreo_and_pasqualini_sf) +
-      geom_sf(aes(fill = coefficient_value)) +
-      scale_fill_viridis(option = "plasma", na.value = "grey50", trans = "log10") +
-      labs(title = paste0("Boreo and Pasqualini coefficients for ", naics, naics_description, ' ', year), fill = "gal / $ of GDP") +
-      theme_void()
-    
-    if (export_figures) 
-      {export_figure(boreo_and_pasqualini_map, boreo_and_pasqualini_output_dir, paste0('map_',year, '_', naics), 10, 5)
-} 
-    
-  }
+# Merge to include naics_description
+average_coefficients <- boreo_and_pasqualini_coefficients_df %>%
+  group_by(naics, l2_ecoregion) %>%
+  summarise(average_coefficient = mean(coefficient_value, na.rm = TRUE)) %>%
+  left_join(boreo_and_pasqualini_coefficients_df %>% select(naics, naics_description) %>% distinct(), 
+            by = "naics") %>%
+  ungroup()
+
+for (naics in naics_list) {
   
+  # Get the corresponding naics_description
+  naics_desc <- average_coefficients %>%
+    filter(naics == !!naics) %>%
+    pull(naics_description) %>%
+    unique()
+  
+  boreo_and_pasqualini_map <- ggplot(data = merged %>% filter(naics == !!naics)) +
+    geom_sf(aes(fill = average_coefficient)) +
+    scale_fill_viridis(option = "plasma", na.value = "grey50", trans = "log10") +
+    labs(title = paste0("Boreo and Pasqualini coefficients for ", naics, ": ", naics_desc), 
+         fill = "gal / $ of GDP") +
+    theme_void() +
+    theme(legend.position = "right")
+
+  if (export_figures) {
+    export_figure(boreo_and_pasqualini_map, boreo_and_pasqualini_output_dir, paste0('map_', naics), 10, 5)
+  }
 }
 ```
-
 ##### Plotting Coefficients
 
 Here we create plots of the coefficient by ecoregion by year.
 
 ```{r}
 
-ecoregion_list <- unique(boreo_and_pasqualini_coefficients_df$l2_ecoregion)
-
 # Loop through each ecoregion
-for (ecoregion in ecoregion_list) {
-  for (naics in naics_list) {
+#for (ecoregion in ecoregion_list) {
+for (naics in naics_list) {
     
-    # Filter the DataFrame based on ecoregion and NAICS code
-    filtered_boreo_and_pasqualini_df <- boreo_and_pasqualini_coefficients_df %>%
-      filter(l2_ecoregion == !!ecoregion, naics == !!naics)
-    
-    # Get the first NAICS description
-    naics_description <- first(filtered_boreo_and_pasqualini_df$naics_description)
-    
-    # Create the plot
-    boreo_and_pasqualini_plot <- ggplot(filtered_boreo_and_pasqualini_df, aes(x = year, y = coefficient_value)) + 
-      geom_point() +
-      labs(title = paste("Coefficient Value by Year for", naics_description),
-           x = "Year",
-           y = "Coefficient Value") + 
-      theme_minimal()
-    
-    # Export the figure if the flag is set
-    if (export_figures) {
-      export_figure(boreo_and_pasqualini_plot, boreo_and_pasqualini_output_dir, 
-                    paste0('plot_', ecoregion, '_', naics), 10, 5)
-    }
+  # Filter the DataFrame for the desired NAICS codes
+  filtered_boreo_and_pasqualini_df <- boreo_and_pasqualini_coefficients_df %>%
+    filter(naics == !!naics)  # Adjust this if you want to filter by specific NAICS
+  
+  # Create the plot, coloring by ecoregion
+  boreo_and_pasqualini_plot <- ggplot(filtered_boreo_and_pasqualini_df, aes(x = year, y = coefficient_value, color = l2_ecoregion)) + 
+    geom_point() +
+    labs(title = "Coefficient Value by Year",
+         x = "Year",
+         y = "Coefficient Value") + 
+    theme_minimal() +
+    scale_color_discrete(name = "Ecoregion")  # Optional: Customize the legend title
+  
+  # Export the figure if the flag is set
+  if (export_figures) {
+    export_figure(boreo_and_pasqualini_plot, boreo_and_pasqualini_output_dir, 
+                  paste0('plot_', naics), 10, 5)
   }
-}
-
-
+  }
+#}
+ 
+ 
 ```
 
 ##### Recreating variables
