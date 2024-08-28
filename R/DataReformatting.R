@@ -955,6 +955,7 @@ write_allstates <- function(x) {
                    }
                })
   write.csv(x, "FormattedDataOutputs/AllStates.csv", row.names = FALSE)
+  write.csv(x, "Industrial model/INWU_task_folders/Data_processing/SWUDSandNONSWUDS_AllStates.csv")
   save(x, file = "FormattedDataOutputs/AllStates.RDa")
   return("FormattedDataOutputs/AllStates.csv")
 }
