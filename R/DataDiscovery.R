@@ -250,5 +250,18 @@ updateCrosswalks <- function(data, existingCrosswalks) {
             row.names = FALSE) 
   updatedCrosswalks$HeaderCrosswalk <- updatedHeaderCrosswalk
   
+  unprocessedstates <- unique(c(
+    flag_unprocessedstates(updatedCrosswalks$DataDirectories),
+    flag_unprocessedstates(updatedCrosswalks$HeaderCrosswalk)))
+  
+  if(length(unprocessedstates > 0)) {
+    message(paste("Unprocessed data remains for the following state(s):", paste(unprocessedstates, collapse = ", ")))}
+  
   return(updatedCrosswalks)
+}
+
+flag_unprocessedstates <- function(x) {
+  states <- x %>% filter(if_any(.cols = everything(), .fns = ~is.na(.))) %>%
+    pull(file) %>% str_extract(., "(?<=/)[[:alpha:]]{2}(?=/)") %>% unique()
+  return(states)
 }
