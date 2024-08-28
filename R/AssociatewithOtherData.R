@@ -30,8 +30,8 @@ merge_nationaldata <- function(nonSWUDS, national_Xwalks, datacodes_Xwalks, natd
    reformat_data(., natHeaders, national_Xwalks, data = "National") %>%
    filter(!is.na(FacilityName)) %>% mutate(State = State1)
  
- nonSWUDSwNat <- merge_andreplaceNA(nonSWUDS, natData) |> 
-   dplyr::select(State, any_of(names(natHeaders$HeaderCrosswalk)))
+ nonSWUDSwNat <- merge_andreplaceNA(mutate(nonSWUDS, Source = "NonSWUDS"), natData) |> 
+   dplyr::select(State, any_of(names(natHeaders$HeaderCrosswalk)), DataSource)
  
  return(nonSWUDSwNat)
 

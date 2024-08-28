@@ -116,7 +116,7 @@ handle_coordinates <- function(data, header) {
 #'   result <- merge_andreplaceNA(data_frame1, data_frame2)
 #'   }
 #'
-merge_andreplaceNA <- function(x, y) {
+merge_andreplaceNA <- function(x, y, yname = NULL) {
   
   # Select columns from x that have no NA values
   x_complete <- x |> dplyr::select(where(~!any(is.na(.))))
@@ -125,6 +125,9 @@ merge_andreplaceNA <- function(x, y) {
   
   # Identify common columns to use for merging
   merge_vars <- names(x_complete)[names(x_complete) %in% names(y_complete)]
+  if(is.null(yname)) {
+    merge_vars <- subset(merge_vars, merge_vars != "DataSource")
+  }
   
   # Check if the maximum row count from grouped y exceeds the number of merge variables
   if(
@@ -142,8 +145,17 @@ merge_andreplaceNA <- function(x, y) {
       dplyr::mutate(dplyr::across(any_of(c("Lat", "Lon", "SourceNumber")),  ~gsub(",.*", "", .))) ## If more than one location or source, keep only the first one. Source will only treated this way if it isn't used to merge - so if the other data is only to the facility level, not the source level.
   } else {y_unique <- y} # If  maximum row count from grouped y does not exceed the number of merge variables, keep y as is
   
+  if(is.null(yname)) {
+    y_named <- rename(y_unique, DataSource_new = DataSource)
+  } else {
+    y_named <- mutate(y_unique, DataSource_new = yname)
+  }
   # Perform a full natural join on x and the unique version of y
-  merge <- rquery::natural_join(x, y_unique, by = merge_vars, jointype = "FULL")
+  merge <- rquery::natural_join(x, y_named, by = merge_vars, jointype = "FULL") %>%
+    mutate(DataSource = map2_chr(DataSource, DataSource_new, ~{
+      paste(unique(str_split_1(paste(na.omit(c(.x, .y)), collapse = ", "), ", ")), collapse = ", ")
+    })) %>% 
+    select(-DataSource_new)
   
   # Return the merged data frame
   return(merge)
@@ -858,23 +870,26 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, data = c("St
     stop(paste0("New case(s) for ", paste(issue, collapse = ", ")))
   }
   x_munged_indices_bysize <- unlist(purrr::map(x_munged, ~length(.x))) |> sort(decreasing = TRUE)
-  x_merge_ready <- x_munged[names(x_munged_indices_bysize)] |> purrr::keep(~{nrow(.) > 0})
+  x_merge_ready <- x_munged[names(x_munged_indices_bysize)] |> purrr::keep(~{nrow(.) > 0}) 
   if(data == "State") {
     x_bystate <- purrr::map(state.abb, ~{st <- .x; purrr::keep_at(x_merge_ready, ~grepl(paste0("/", st, "/"), .))}); names(x_bystate) <- state.abb
     x_readystates <- purrr::keep(x_bystate, ~length(.) > 0)
-    x_simplestates <- purrr::map(x_readystates, ~{purrr::reduce(.x, merge_andreplaceNA, .dir = "forward")})
+    x_simplestates <- purrr::map(x_readystates, ~{
+      purrr::reduce2(.x = .x, .y = names(.x), .f = merge_andreplaceNA, 
+                     .init = mutate(.x[[1]], DataSource = names(.x)[1]))})
     x_all <- do.call("bind_rows", x_simplestates) %>% 
       plugFacilityName(drop = FALSE)
   } else if(data == "National") {
     if(length(x_merge_ready) > 1) {
       x_all <- purrr::map(x_merge_ready, ~plugFacilityName(.x, drop = TRUE)) %>%
-        purrr::reduce(merge_andreplaceNA, .dir = "forward")
+        purrr::reduce2(.x = ., .y = names(.), .f = merge_andreplaceNA, 
+                       .init = mutate(.[[1]], DataSource = names(.)[1]))
     } else {x_all <- pluck(x_merge_ready, 1)}
     
   }
 
   
-  ordered <- names(updatedCrosswalks$HeaderCrosswalk)
+  ordered <- c(names(updatedCrosswalks$HeaderCrosswalk), "DataSource")
   
   x_ordered <- x_all |> dplyr::select(any_of(ordered))
 
@@ -927,8 +942,18 @@ write_allstates <- function(x) {
   purrr::map(dplyr::group_split(x, .by = State, .keep = FALSE), 
              ~{
                stname <- unique(.x$State)
-               write.csv(.x, file.path("FormattedDataOutputs", "Statewise", paste0(stname, "_formatted.csv")), row.names = FALSE)
-             })
+               if(nrow(.x) > 100000) {
+                 purrr::map(group_split(.x, .by = Year, .keep = FALSE),
+                            ~{
+                              yr <- unique(.x$Year)
+                              write.csv(.x, file.path("FormattedDataOutputs",
+                                                      "Statewise", 
+                                                      paste0(stname, yr, "_formatted.csv")), 
+                                        row.names = FALSE)})
+                 } else {
+                 write.csv(.x, file.path("FormattedDataOutputs", "Statewise", paste0(stname, "_formatted.csv")), row.names = FALSE)
+                   }
+               })
   write.csv(x, "FormattedDataOutputs/AllStates.csv", row.names = FALSE)
   save(x, file = "FormattedDataOutputs/AllStates.RDa")
   return("FormattedDataOutputs/AllStates.csv")
