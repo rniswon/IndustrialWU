@@ -422,9 +422,11 @@ crosswalk_codes <- function(data, fp, header, codescrosswalk, forceupdate = TRUE
   if(forceupdate) {
     # Check for any new codes not present in the crosswalk
     if(any(!unique(data[[header]]) %in% codecrosswalk$original_value)) {
-      stop(paste("New codes", 
+      message(paste("New codes", 
                  paste(unique(data[[header]])[!unique(data[[header]]) %in% codecrosswalk$original_value], collapse = ", "), 
                  "detected for", header, "in", fp))
+      stopflag <- TRUE
+      assign("stopflag", stopflag, envir = .GlobalEnv)
     }
   }
   
@@ -879,6 +881,7 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, data = c("St
       stringr::str_extract(unlist(purrr::map(x_munged, ~names(.x))), ".*(?=\\.\\.\\.)")))
     stop(paste0("New case(s) for ", paste(issue, collapse = ", ")))
   }
+  if(exists("stopflag", envir = .GlobalEnv)) {stop("Execution halted to edit data crosswalks")}
   x_munged_indices_bysize <- unlist(purrr::map(x_munged, ~length(.x))) |> sort(decreasing = TRUE)
   x_merge_ready <- x_munged[names(x_munged_indices_bysize)] |> purrr::keep(~{nrow(.) > 0}) 
   if(data == "State") {

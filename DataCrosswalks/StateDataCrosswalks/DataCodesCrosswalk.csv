@@ -392,3 +392,21 @@ Units_annual_reported,acre-feet/yr,acft
 Units_monthly,gal/d,gal per day
 Units_monthly,Mgal/yr,NA_character_
 Units_monthly,gal/yr,NA_character_
+ValueType,"total withdrawal, in gallons per year",WD
+Units_monthly,"total withdrawal, in gallons per month",gal
+Units_annual_reported,"total withdrawal, in gallons per year",gal
+SourceType,ISW,SW
+SourceType,GLCW,SW
+SourceType,GW;ISW,NA_character_
+SourceType,GLCW;GW,NA_character_
+SourceType,GLCW;ISW,NA_character_
+SourceType,GLCW;GW;ISW,NA_character_
+Category,Bottled Water,IN
+Category,Public Water Supply,PS
+Category,Fire Protection,NA_character_
+Category,Lake Augmentation,NA_character_
+Category,HVAC,CO
+Category,Dewatering,NA_character_
+Category,Snow Making,CO
+Category,Splash Pad,CO
+Units_monthly,"withdrawal for January, in gallons per month",gal

@@ -114,8 +114,8 @@ split_forms <- function(data, form_df) {
     dplyr::mutate(group = rowsplits) %>%
     group_by(group) %>%
     dplyr::group_split(.keep = FALSE) 
-  
-  # Split the data based on the same useful rows and groupings
+ 
+   # Split the data based on the same useful rows and groupings
   data_vsplit <- data %>% dplyr::slice(usefulrows) %>%
     dplyr::mutate(group = rowsplits) %>%
     group_by(group) %>%
@@ -173,11 +173,19 @@ split_forms <- function(data, form_df) {
     purrr::map(unique(y), ~{x[,which(y == .x)]})
   }) %>% list_flatten()
   
+  # Drop any remaining ~IGNORE~ columns 
+  keepcols <- map(forms_vhsplit, 
+      ~(which(unlist(summarize(.x, across(.cols = everything(), 
+                                    .fns = ~(!all(. == "~IGNORE~")))), use.names = FALSE))))
+  
+  forms_split <- map2(forms_vhsplit, keepcols, ~(.x %>% select(all_of(.y))))
+  dat_split <- map2(data_vhsplit, keepcols, ~(.x %>% select(all_of(.y))))
+  
   # Determine which splits contain useful data
-  usefulsplits <- map_lgl(forms_vhsplit, ~{any(c("~HEADER~", "~DATA~") %in% unique(unlist(.x)))})
+  usefulsplits <- map_lgl(forms_split, ~{any(c("~HEADER~", "~DATA~") %in% unique(unlist(.x)))})
   
   # Return a transposed list of useful data and corresponding forms
-  return(list_transpose(list(data = data_vhsplit[usefulsplits], form = forms_vhsplit[usefulsplits]), simplify = FALSE))
+  return(list_transpose(list(data = dat_split[usefulsplits], form = forms_split[usefulsplits]), simplify = FALSE))
 }
 
 #' Process and Format Data from Various Forms
@@ -266,7 +274,7 @@ munge_forms <- function(dataformlist, filename) {
 checkformtype <- function(form) {
   
   # Remove columns where all elements are NA
-  form2 <- form %>% select_if(~!all(is.na(.)))
+  form2 <- form %>% select_if(~!all(is.na(.))) 
   
   # Determine the type of form based on specific conditions
   type <- ifelse(janitor::find_header(form2) == 1 & (!"~DATA~" %in% unlist(form2[1,])) & 
@@ -522,6 +530,25 @@ applyPIVOTrules <- function(dat, headercrosswalk, updatedCrosswalks) {
               pivotinstructions = instructions))
 }
 
+applyFILENAMErules <- function(dat, headercrosswalk) {
+  # Identify columns that need to be filled with information from the file name
+  filenamecols <- headercrosswalk$NewName[grepl("~FILENAME~", 
+                                                 headercrosswalk$OldName)]
+  # Fill missing values in the identified columns using last observation carried forward
+  filename <- unique(headercrosswalk$file)
+  
+  newcols <- set_names(rep(filename, length(filenamecols)), filenamecols)
+  dat2 <- dat %>%
+    add_column(!!!newcols)
+  # Update the header crosswalk to remove the "~FILL~" tag
+  headercrosswalk2 <- headercrosswalk |> 
+    dplyr::mutate(OldName = case_when(grepl("~FILENAME~", OldName) ~ NewName,
+                                      !grepl("~FILENAME~", OldName) ~ OldName))
+  # Return the edited data and updated header crosswalk
+  return(list(dat_edit = dat2, headercrosswalk = headercrosswalk2))
+  
+}
+
 #' Read and Rename Columns Based on Crosswalks
 #'
 #' This function reads data files and renames their columns based on specified
@@ -597,6 +624,13 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks,
       headercrosswalk <- blankapplied$headercrosswalk
     }
     
+    # Apply FILENAME rules if specified
+    if(any(grepl("~FILENAME~", headercrosswalk$OldName))) {
+      filenameapplied <- applyFILENAMErules(dat_edit, headercrosswalk)
+      dat_edit <- filenameapplied$dat_edit
+      headercrosswalk <- filenameapplied$headercrosswalk
+    }
+    
     # Rename columns based on the specified old and new names
     if(any(c("NewName", "OldName") %in% names(headercrosswalk))) {
       tmp <- suppressMessages(purrr::map2_dfc(headercrosswalk$NewName, headercrosswalk$OldName, ~{
@@ -611,7 +645,8 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks,
             if(old_sub %in% names(dat_edit)) {
               stop("Something went wrong in the pivots")
             } else if(!exists("pivotapplied")) {
-              stop(paste0("Check entries ", old, " in HeaderCrosswalk.csv that they match the data exactly. Options include ", paste(names(dat_edit), collapse = ", ")))
+              stop(paste0("Check entries ", old, " in HeaderCrosswalk.csv for file ",
+              unique(headercrosswalk$file), " that they match the data exactly. Options include ", paste(names(dat_edit), collapse = ", ")))
             } else {
               names_check <- dat_raw %>%
                 {eval(parse(text = flatten(pivotapplied$pivotinstructions)$mutatecode))} %>%
