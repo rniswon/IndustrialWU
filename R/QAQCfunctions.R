@@ -83,7 +83,7 @@ checkQAQCstatus <- function(newdf, previousQAQCstatus) {
   
   write.csv(newQAQC, previousQAQCstatus, row.names = FALSE)
   
-  unQAQCdstates <- newQAQC %>% filter(Checked == "No") %>% pull(State)
+  unQAQCdstates <- newQAQC %>% filter(Checked == "No") %>% pull(State) %>% sort()
   
   if(length(unQAQCdstates) > 0) {
     message(paste("QAQC recommended for the following state(s):", paste(unQAQCdstates, collapse = ", ")))

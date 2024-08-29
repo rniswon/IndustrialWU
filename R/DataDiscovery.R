@@ -252,7 +252,7 @@ updateCrosswalks <- function(data, existingCrosswalks) {
   
   unprocessedstates <- unique(c(
     flag_unprocessedstates(updatedCrosswalks$DataDirectories),
-    flag_unprocessedstates(updatedCrosswalks$HeaderCrosswalk)))
+    flag_unprocessedstates(updatedCrosswalks$HeaderCrosswalk))) %>% sort()
   
   if(length(unprocessedstates > 0)) {
     message(paste("Unprocessed data remains for the following state(s):", paste(unprocessedstates, collapse = ", ")))}

@@ -41,7 +41,9 @@ list(
   tar_target(SWUDS_workup, "Industrial model/SWUDS_records/From_To_Sites missing lat lng.xlsx"), # Load added lat/lon
   tar_target(QAQCstatus, "FormattedDataOutputs/DataQAQCstatus.csv", format = "file"), # Load QAQC status from previous pipeline runs
   tar_target(dat, command = get_all_dat(datafp)),  # List all data from the state data file
-  tar_target(updatedCrosswalks, command = updateCrosswalks(data = dat, existingCrosswalks = existingCrosswalks)),  # Update state crosswalks with new data
+  tar_target(updatedCrosswalks, 
+             command = updateCrosswalks(data = dat, existingCrosswalks = existingCrosswalks),
+             cue = tar_cue(mode = "always")),  # Update state crosswalks with new data
   tar_target(renamed_rawdat, command = 
                readandrename_columns(datafp, updatedCrosswalks, existingCrosswalks, data = "State") # Read and rename columns in the data
   ),
@@ -54,7 +56,8 @@ list(
                                   datacodes_Xwalks = updatedCrosswalks$DataCodesCrosswalk,
                                   natdata = list(NAICSworkup, SWUDS, SWUDS_workup))), # Combine state data with national data
   tar_target(AllStates, command = write_allstates(combined_dat), format = "file"),  # Write combined data for all states to a file
-  tar_target(QAQCupdate, command = checkQAQCstatus(combined_dat, QAQCstatus)) # Look for any changes in number of duplicates and missing data rows introduced
+  tar_target(QAQCupdate, command = checkQAQCstatus(combined_dat, QAQCstatus),
+             cue = tar_cue(mode = "always")) # Look for any changes in number of duplicates and missing data rows introduced
   )
 
 # For debugging ----
