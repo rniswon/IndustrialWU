@@ -623,7 +623,8 @@ standard_Addresstreatment <- function(data, header) {
     type <- stringr::str_extract(header, "Address|City|State|Zip")
     
     state_regex <- paste0(
-      "(", paste(state.name, state.abb, stringr::str_to_upper(state.name), sep = "|", collapse = "|"), ")(?!-)")
+      "(", paste(state.name, state.abb, stringr::str_to_title(state.abb), 
+                 stringr::str_to_upper(state.name), sep = "|", collapse = "|"), ")(?!-|[[:alpha:]])")
     zip_regex <- "[[:digit:]]{5}(-[[:digit:]]{4})?( - [[:digit:]]{4})?$"
     
     tmpvals <- purrr::map_chr(entrylines, ~{
@@ -659,6 +660,10 @@ standard_Addresstreatment <- function(data, header) {
         if(length(c(index_zip, index_state)) > 0) {
           address <- x_clean[-c(index_state, index_zip)][grep("[[:digit:]]", x_clean[-c(index_state, index_zip)])]
           city <- x_clean[-c(index_state, index_zip)][which(!grepl("[[:digit:]]", x_clean[-c(index_state, index_zip)]))]
+          if(length(city) > 1) {
+            address <- city[1]
+            city <- city[2]
+          }
           state <- stringr::str_extract(x_clean[index_state], state_regex)
           zip <- stringr::str_extract(x_clean[index_zip], zip_regex)
         } else {
@@ -670,7 +675,12 @@ standard_Addresstreatment <- function(data, header) {
       
       if(type == "Address") {tmp <- str_to_title(address)} else if(
         type == "City") {tmp <- str_to_title(city)} else if(
-          type == "State") {tmp <- state} else if(
+          type == "State") {
+            if(!str_to_upper(state) %in% state.abb) {
+              state <- state.abb[state.name == str_to_sentence(state)]
+          }
+          tmp <- state
+          } else if(
             type == "Zip") {tmp <- zip}
       if(length(tmp) == 0) {tmp <- NA_character_}
       if(length(tmp) > 1) {tmp <- paste(tmp, collapse = ", ")}

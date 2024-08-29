@@ -26,9 +26,16 @@ merge_nationaldata <- function(nonSWUDS, national_Xwalks, datacodes_Xwalks, natd
     HeaderCrosswalk = get_filledcsv(file.path(national_Xwalks, "HeaderCrosswalk.csv")),
     DataCodesCrosswalk = datacodes_Xwalks
     )
+  if(any(!str_detect(paste(natHeaders$HeaderCrosswalk$file, collapse = ""), 
+                     basename(unlist(natdata))))) {
+     unxwalked <- natdata[!str_detect(paste(natHeaders$HeaderCrosswalk$file, collapse = ""), 
+                 basename(unlist(natdata)))]
+     stop(paste0("Headers Need to be Crosswalked for ", unxwalked))
+  }
  natData <- readandrename_columns(natdata, natHeaders, national_Xwalks, data = "National") %>%
    reformat_data(., natHeaders, national_Xwalks, data = "National") %>%
-   filter(!is.na(FacilityName)) %>% mutate(State = State1)
+   filter(!is.na(FacilityName)) %>% mutate(State = State1) %>%
+    standard_Addresstreatment(., "State")
  
  nonSWUDSwNat <- merge_andreplaceNA(mutate(nonSWUDS, Source = "NonSWUDS"), natData) |> 
    dplyr::select(State, any_of(names(natHeaders$HeaderCrosswalk)), DataSource)
