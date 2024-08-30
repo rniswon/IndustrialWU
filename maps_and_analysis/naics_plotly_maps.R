@@ -15,6 +15,7 @@ library(sf)
 library(dplyr)
 library(ggplot2)
 library(plotly)
+library(tidyr)
 
 # Get User Inputs 
 counties_shapefile_path <- "data/cb_2018_us_county_500k.shp"
@@ -26,8 +27,8 @@ counties_sf <- st_read(counties_shapefile_path)
 # Filter counties outside of CONUS
 oconus_fips <- c('02', '15', '72', '66', '78', '60', '69')
 
-counties_SF <- counties_sf %>%
-  filter(!STATEFP %in% oconus_fips)
+counties_sf <- counties_sf %>%
+  subset(!STATEFP %in% oconus_fips)
 
 # Load data
 cbp_data <- read.csv(cbp_data_csv_path, header = TRUE, sep = ",")
@@ -37,12 +38,13 @@ cbp_data <- cbp_data %>%
   mutate(ESTAB = as.numeric(ESTAB)) %>%
   filter(between(NAICS2017, 310000, 330000)) %>%
   group_by(GEO_ID) %>%
-  summarise(Establishment_Count = sum(ESTAB, na.rm = TRUE))
+  summarise(Establishment_Count = sum(ESTAB, na.rm = FALSE))
 
 # Formatting shapefile geoid 
 counties_sf$GEOID <- paste0('0500000US', counties_sf$GEOID)
 
 cbp_map <- merge(counties_sf, cbp_data, by.x = 'AFFGEOID', by.y = 'GEO_ID')
+
 
 manufacturing_map <- ggplot(data = cbp_map) + 
   geom_sf(aes(fill = Establishment_Count, text = paste("County:", NAME, "<br>",
