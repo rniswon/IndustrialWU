@@ -622,7 +622,7 @@ standard_Addresstreatment <- function(data, header) {
     entrylines <- concat_columns(data[c(grep(header, names(data)))], header) |> 
       pull(header) |>
       stringr::str_split(",") |> purrr::map(~stringr::str_trim(.x))
-    type <- stringr::str_extract(header, "Address|City|State|Zip")
+    type <- stringr::str_extract(header, "Address|City|State|Zip|County")
     
     state_regex <- paste0(
       "(", paste(state.name, state.abb, stringr::str_to_title(state.abb), 
@@ -652,12 +652,13 @@ standard_Addresstreatment <- function(data, header) {
       }
       
       if(length(x_clean) == 0) {
-        address <- city <- state <- zip <- NA_character_
+        address <- city <- state <- zip <- county <- NA_character_
       } else if(length(x_clean) == 1) {
         address <- x_clean
         city <- x_clean
         state <- stringr::str_extract(x_clean, state_regex)
         zip <- stringr::str_extract(x_clean, zip_regex)
+        county <- x_clean
       } else if(length(x_clean) > 1) {
         if(length(c(index_zip, index_state)) > 0) {
           address <- x_clean[-c(index_state, index_zip)][grep("[[:digit:]]", x_clean[-c(index_state, index_zip)])]
@@ -668,11 +669,13 @@ standard_Addresstreatment <- function(data, header) {
           }
           state <- stringr::str_extract(x_clean[index_state], state_regex)
           zip <- stringr::str_extract(x_clean[index_zip], zip_regex)
+          county <- paste(x_clean, collapse = " ")
         } else {
           address <- paste(x_clean, collapse = ", ")
           city <- paste(x_clean, collapse = ", ")
           state <- stringr::str_extract(paste(x_clean, collapse = ", "), state_regex)
           zip <- stringr::str_extract(paste(x_clean, collapse = ", "), zip_regex)
+          county <- paste(x_clean, collapse = " ")
         }}
       
       if(type == "Address") {tmp <- str_to_title(address)} else if(
@@ -683,7 +686,8 @@ standard_Addresstreatment <- function(data, header) {
           }
           tmp <- state
           } else if(
-            type == "Zip") {tmp <- zip}
+            type == "Zip") {tmp <- zip} else if(
+              type == "County") {tmp <- str_trim(gsub("COUNTY", "", str_to_upper(county)))}
       if(length(tmp) == 0) {tmp <- NA_character_}
       if(length(tmp) > 1) {tmp <- paste(tmp, collapse = ", ")}
       tmp
@@ -830,11 +834,10 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, data = c("St
                    "SourceName1", "SourceName2", "AquiferName1", "AquiferName2",
                    "BasinName1", "BasinName2")
   idcolumns <- c("FacilityNumber", "FacilityNumber1", "FacilityNumber2", "SourceNumber",
-                 "SourceNumber1", "SourceNumber2", "NAICS", "SIC", "County1",
-                 "County2")
+                 "SourceNumber1", "SourceNumber2", "NAICS", "SIC")
   HUCcolumns <- c("HUC8", "HUC10", "HUC12")
   Addresscolumns <- c("Address1", "City1", "State1", "Zip1", "Address2", "City2",
-                      "State2", "Zip2")
+                      "State2", "Zip2", "County1", "County2")
   coordinatecolumns <- c("Lat", "Lon")
   Yearcolumns <- "Year"
   datacolumns <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", 
