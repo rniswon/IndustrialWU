@@ -36,7 +36,7 @@ read_in_datafile <- function(datafp, fp) {
   } else if(
     grepl(".csv|.txt|.rdb", fp)) {
     # Read CSV or text files 
-    read.csv(file.path(datafp, fp), fill = TRUE, header = FALSE)
+    read.csv(file.path(datafp, fp), fill = TRUE, header = TRUE)
   } else if(grepl(".xlsx|.xls", fp)) {
     # Read Excel files
     workbook_fp <- stringr::str_extract(fp, ".*(?=\\$)")  # Extract workbook filename
@@ -577,8 +577,11 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks,
   filledheader <- updatedCrosswalks$HeaderCrosswalk
   
   if(data == "State") {
-    headers_classified <- filledheader |> na.omit() |> dplyr::filter(State %in% state.abb)
-  } else if(data == "National") {headers_classified <- filledheader |> na.omit()}
+    headers_classified <- filledheader |> na.omit() |> dplyr::filter(State %in% fedmatch::State_FIPS$Abbreviation)
+  } else if(data == "National") {
+    headers_classified <- filledheader |> na.omit() |> 
+      filter(gsub("\\$.*", "", file) %in% basename(unlist(datafp)))
+  }
   
   dat <- purrr::imap(headers_classified$file, ~{
     i <- .y 

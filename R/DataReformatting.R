@@ -116,7 +116,7 @@ handle_coordinates <- function(data, header) {
 #'   result <- merge_andreplaceNA(data_frame1, data_frame2)
 #'   }
 #'
-merge_andreplaceNA <- function(x, y, yname = NULL) {
+merge_andreplaceNA <- function(x, y, yname = NULL, merge_vars = NULL, jointype = "FULL") {
   
   # Select columns from x that have no NA values
   x_complete <- x |> dplyr::select(where(~!any(is.na(.))))
@@ -124,9 +124,11 @@ merge_andreplaceNA <- function(x, y, yname = NULL) {
   y_complete <- y |> dplyr::select(where(~!any(is.na(.))))
   
   # Identify common columns to use for merging
-  merge_vars <- names(x_complete)[names(x_complete) %in% names(y_complete)]
-  if(is.null(yname)) {
-    merge_vars <- subset(merge_vars, merge_vars != "DataSource")
+  if(is.null(merge_vars)) {
+    merge_vars <- names(x_complete)[names(x_complete) %in% names(y_complete)]
+    if(is.null(yname)) {
+      merge_vars <- subset(merge_vars, merge_vars != "DataSource")
+    }
   }
   
   # Check if the maximum row count from grouped y exceeds the number of merge variables
@@ -151,7 +153,7 @@ merge_andreplaceNA <- function(x, y, yname = NULL) {
     y_named <- mutate(y_unique, DataSource_new = yname)
   }
   # Perform a full natural join on x and the unique version of y
-  merge <- rquery::natural_join(x, y_named, by = merge_vars, jointype = "FULL") %>%
+  merge <- rquery::natural_join(x, y_named, by = merge_vars, jointype = jointype) %>%
     mutate(DataSource = map2_chr(DataSource, DataSource_new, ~{
       paste(unique(str_split_1(paste(na.omit(c(.x, .y)), collapse = ", "), ", ")), collapse = ", ")
     })) %>% 
@@ -618,15 +620,15 @@ standard_HUCtreatment <- function(data, header) {
 #'
 standard_Addresstreatment <- function(data, header) {
   # Check if the header exists in the data
-  if(length(grep(header, names(data))) > 0) {
-    entrylines <- concat_columns(data[c(grep(header, names(data)))], header) |> 
+  if(length(grep(header, names(data))) > 0 ) {
+    entrylines <- concat_columns(data[which(str_detect(names(data), header))], header) |> 
       pull(header) |>
       stringr::str_split(",") |> purrr::map(~stringr::str_trim(.x))
     type <- stringr::str_extract(header, "Address|City|State|Zip|County")
     
     state_regex <- paste0(
-      "(", paste(state.name, state.abb, stringr::str_to_title(state.abb), 
-                 stringr::str_to_upper(state.name), sep = "|", collapse = "|"), ")(?!-|[[:alpha:]])")
+      "(", paste(fedmatch::State_FIPS$State, fedmatch::State_FIPS$Abbreviation, stringr::str_to_title(fedmatch::State_FIPS$Abbreviation), 
+                 stringr::str_to_upper(fedmatch::State_FIPS$State), sep = "|", collapse = "|"), ")(?!-|[[:alpha:]])")
     zip_regex <- "[[:digit:]]{5}(-[[:digit:]]{4})?( - [[:digit:]]{4})?$"
     
     tmpvals <- purrr::map_chr(entrylines, ~{
@@ -641,8 +643,8 @@ standard_Addresstreatment <- function(data, header) {
           if(sum(index_state %in% index_zip) == 1) {
             index_state <- subset(index_state, index_state %in% index_zip)
           } else {index_state <- integer(0)}
-        } else if(any(x_clean %in% c(state.abb, state.name))) {
-          index_state <- which(x_clean %in% c(state.abb, state.name))
+        } else if(any(x_clean %in% c(fedmatch::State_FIPS$Abbreviation, fedmatch::State_FIPS$State))) {
+          index_state <- which(x_clean %in% c(fedmatch::State_FIPS$Abbreviation, fedmatch::State_FIPS$State))
         }
         if(length(index_zip) > 1) {
           if(any(index_zip %in% index_state)) {
@@ -681,8 +683,8 @@ standard_Addresstreatment <- function(data, header) {
       if(type == "Address") {tmp <- str_to_title(address)} else if(
         type == "City") {tmp <- str_to_title(city)} else if(
           type == "State") {
-            if(!str_to_upper(state) %in% state.abb) {
-              state <- state.abb[state.name == str_to_sentence(state)]
+            if(!str_to_upper(state) %in% fedmatch::State_FIPS$Abbreviation) {
+              state <- fedmatch::State_FIPS$Abbreviation[fedmatch::State_FIPS$State == str_to_sentence(state)]
           }
           tmp <- state
           } else if(
@@ -818,8 +820,7 @@ standard_datatreatment <- function(data, header) {
 #'   result <- reformat_data(data_frame, updated_crosswalks, existing_crosswalks, "State")
 #'   }
 #'
-reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, data = c("State", "National")) {
-  
+reformat_data <- function(x, updatedCrosswalks, existingCrosswalks) {
   list(standard_datacodestreatment, standard_nametreatment, standard_idtreatment, 
        standard_HUCtreatment, standard_Addresstreatment, standard_coordinatetreatment,
        standard_Yeartreatment, standard_datatreatment) # call these to let the targets package know that they are used in this function
@@ -885,10 +886,15 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, data = c("St
     stop(paste0("New case(s) for ", paste(issue, collapse = ", ")))
   }
   if(exists("stopflag", envir = .GlobalEnv)) {stop("Execution halted to edit data crosswalks")}
+
+  return(x_munged)
+}
+
+merge_formatteddata <- function(x_munged = list(), updatedCrosswalks, data = c("State", "National")) {
   x_munged_indices_bysize <- unlist(purrr::map(x_munged, ~length(.x))) |> sort(decreasing = TRUE)
   x_merge_ready <- x_munged[names(x_munged_indices_bysize)] |> purrr::keep(~{nrow(.) > 0}) 
   if(data == "State") {
-    x_bystate <- purrr::map(state.abb, ~{st <- .x; purrr::keep_at(x_merge_ready, ~grepl(paste0("/", st, "/"), .))}); names(x_bystate) <- state.abb
+    x_bystate <- purrr::map(fedmatch::State_FIPS$Abbreviation, ~{st <- .x; purrr::keep_at(x_merge_ready, ~grepl(paste0("/", st, "/"), .))}); names(x_bystate) <- fedmatch::State_FIPS$Abbreviation
     x_readystates <- purrr::keep(x_bystate, ~length(.) > 0)
     x_simplestates <- purrr::map(x_readystates, ~{
       purrr::reduce2(.x = .x, .y = names(.x), .f = merge_andreplaceNA, 
@@ -903,12 +909,12 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, data = c("St
     } else {x_all <- pluck(x_merge_ready, 1)}
     
   }
-
+  
   
   ordered <- c(names(updatedCrosswalks$HeaderCrosswalk), "DataSource")
   
   x_ordered <- x_all |> dplyr::select(any_of(ordered))
-
+  
   return(x_ordered)
 }
 
@@ -955,19 +961,22 @@ plugFacilityName <- function(x, drop = TRUE) {
 #'   }
 #'
 write_allstates <- function(x) {
+  statedir <- file.path("FormattedDataOutputs","Statewise")
   purrr::map(dplyr::group_split(x, .by = State, .keep = FALSE), 
              ~{
+               if(!dir.exists(statedir)) {
+                 dir.create(statedir)
+               }
                stname <- unique(.x$State)
                if(nrow(.x) > 100000) {
                  purrr::map(group_split(.x, .by = Year, .keep = FALSE),
                             ~{
                               yr <- unique(.x$Year)
-                              write.csv(.x, file.path("FormattedDataOutputs",
-                                                      "Statewise", 
+                              write.csv(.x, file.path(statedir, 
                                                       paste0(stname, yr, "_formatted.csv")), 
                                         row.names = FALSE)})
                  } else {
-                 write.csv(.x, file.path("FormattedDataOutputs", "Statewise", paste0(stname, "_formatted.csv")), row.names = FALSE)
+                 write.csv(x = .x, file = file.path(statedir, paste0(stname, "_formatted.csv")), row.names = FALSE)
                    }
                })
   write.csv(x, "FormattedDataOutputs/AllStates.csv", row.names = FALSE)

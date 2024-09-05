@@ -33,8 +33,9 @@ merge_nationaldata <- function(nonSWUDS, national_Xwalks, datacodes_Xwalks, natd
      stop(paste0("Headers Need to be Crosswalked for ", unxwalked))
   }
  natData <- readandrename_columns(natdata, natHeaders, national_Xwalks, data = "National") %>%
-   reformat_data(., natHeaders, national_Xwalks, data = "National") %>%
-   filter(!is.na(FacilityName)) %>% mutate(State = State1) %>%
+   reformat_data(., natHeaders, national_Xwalks) %>%
+   merge_formatteddata(., natHeaders, data = "National") %>%
+   filter(!is.na(FacilityName)) %>%  mutate(State = State1) %>%
     standard_Addresstreatment(., "State")
  
  nonSWUDSwNat <- merge_andreplaceNA(mutate(nonSWUDS, Source = "NonSWUDS"), natData) |> 
@@ -42,4 +43,31 @@ merge_nationaldata <- function(nonSWUDS, national_Xwalks, datacodes_Xwalks, natd
  
  return(nonSWUDSwNat)
 
+}
+
+augment_data <- function(data, national_Xwalks, extradata = list()) {
+  extrasHeaders <- list(
+    HeaderCrosswalk = get_filledcsv(file.path(national_Xwalks, "HeaderCrosswalk.csv"))
+  )
+  if(any(!str_detect(paste(extrasHeaders$HeaderCrosswalk$file, collapse = ""), 
+                     basename(unlist(extradata))))) {
+    unxwalked <- extradata[!str_detect(paste(extrasHeaders$HeaderCrosswalk$file, collapse = ""), 
+                                     basename(unlist(extradata)))]
+    stop(paste0("Headers Need to be Crosswalked for ", unxwalked))
+  }
+  
+  augmentedData <- readandrename_columns(extradata, extrasHeaders, national_Xwalks, data = "National") |>
+    reformat_data(extrasHeaders, national_Xwalks) %>%
+    map(., ~filter(.x, !is.na(County1))) %>%
+    map(., ~mutate(.x, across(any_of("State"), ~State1))) %>%
+    map(., ~standard_Addresstreatment(.x, "State")) %>% 
+    purrr::reduce2(.x = ., .y = names(.), .f = merge_fips, 
+                   .init = data) |> 
+      dplyr::select(State, any_of(names(extrasHeaders$HeaderCrosswalk)), DataSource)
+  
+  return(augmentedData)
+}
+
+merge_fips <- function(x, y, yname) {
+  merge_andreplaceNA(x = x, y = y, yname = yname, merge_vars = c("County1", "State"), jointype = "LEFT")
 }

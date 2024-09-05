@@ -5,14 +5,12 @@
 #
 # Follow this script to set up your data processing pipeline using the targets library.
 
-# Load necessary packages
-library(targets)
 
 # Specify the packages required for the pipeline
 packages <- c("tibble", "stringr", "purrr", "readxl", "svDialogs", "dplyr", "archive",
               "tidyr", "readr", "lubridate", "magrittr",
               "sf", "rquery", "officer", "pdftools", "rqdatatable",
-              "fedmatch", "janitor", "zoo", "varhandle")
+              "fedmatch", "janitor", "zoo", "varhandle", "targets", "tarchetypes")
 
 # Function to install missing packages
 optinstall <- function(x) {
@@ -24,6 +22,9 @@ optinstall <- function(x) {
 # Suppress warnings and install any missing packages
 suppressWarnings(invisible(lapply(packages, optinstall)))
 
+# Load necessary packages
+library(targets)
+library(tarchetypes)
 # Set options for the targets package
 tar_option_set(packages = packages,  # Define required packages
                format = "rds")        # Set default storage format to "rds"
@@ -33,6 +34,13 @@ tar_source(files = "R")
 
 # Define the list of targets for the pipeline
 list(
+  tar_download(name = FIPSstates, urls = make_fipsURLS(),
+               paths = make_fipsPaths(file.path("Industrial model", 
+                                                "INWU_task_folders", 
+                                                "Data_processing",
+                                                "StateFIPS"), 
+                                      make_fipsURLS())),
+  tar_target(FIPSdata, compile_fips(FIPSstates), format = "file"),
   tar_target(datafp, "state_data", format = "file"),  # Load state data file
   tar_target(existingCrosswalks, "DataCrosswalks/StateDataCrosswalks", format = "file"),  # Load existing state crosswalks
   tar_target(NationalDataCrosswalks, "DataCrosswalks/NationalDataCrosswalks", format = "file"), # Load national crosswalks
@@ -48,15 +56,23 @@ list(
                readandrename_columns(datafp, updatedCrosswalks, existingCrosswalks, data = "State") # Read and rename columns in the data
   ),
   tar_target(reformatted_data, command = 
-               reformat_data(renamed_rawdat, updatedCrosswalks, existingCrosswalks, data = "State") # Reformat the data based on crosswalks
+               reformat_data(renamed_rawdat, updatedCrosswalks, existingCrosswalks) # Reformat the data based on crosswalks
   ),
+  tar_target(NonSWUDSdata, command = merge_formatteddata(reformatted_data,
+                                                         updatedCrosswalks,
+                                                         data = "State")),
   tar_target(combined_dat, command = 
-               merge_nationaldata(nonSWUDS = reformatted_data, 
+               merge_nationaldata(nonSWUDS = NonSWUDSdata, 
                                   national_Xwalks = NationalDataCrosswalks, 
                                   datacodes_Xwalks = updatedCrosswalks$DataCodesCrosswalk,
                                   natdata = list(NAICSworkup, SWUDS, SWUDS_workup))), # Combine state data with national data
-  tar_target(AllStates, command = write_allstates(combined_dat), format = "file"),  # Write combined data for all states to a file
-  tar_target(QAQCupdate, command = checkQAQCstatus(combined_dat, QAQCstatus),
+  tar_target(augmented_data, command = 
+               augment_data(
+                 data = combined_dat, national_Xwalks = NationalDataCrosswalks, 
+                 extradata = list(FIPSdata)
+               )),
+  tar_target(AllStates, command = write_allstates(augmented_data), format = "file"),  # Write combined data for all states to a file
+  tar_target(QAQCupdate, command = checkQAQCstatus(augmented_data, QAQCstatus),
              cue = tar_cue(mode = "always")) # Look for any changes in number of duplicates and missing data rows introduced
   )
 
