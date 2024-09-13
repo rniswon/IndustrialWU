@@ -7,19 +7,30 @@ ValueType,RL,RL
 ValueType,DL,TR
 ValueType,PR,TR
 ValueType,AB,NA_character_
-SourceType,SW,SW
-SourceType,SW-SALINE,SW
-SourceType,Surface Water,SW
 SourceType,GW,GW
 SourceType,Groundwater,GW
-SourceType,TW,PS
-SourceType,DC,NA_character_
-SourceType,FW,NA_character_
+SourceType,GROUNDWATER,GW
+SourceType,CAP WATER STORED,GW
+SourceType,Ground,GW
+SourceType,Spring,GW
+SourceType,"Groundwater, SS",GW
+SourceType,GROUND,GW
 Category,AG,AG
-Category,Agricultural Irrigation,IR
 Category,Agriculture,AG
+Category,FACILITY CATTLE FEEDLOT,AG
+Category,FACILITY DAIRY,AG
+Category,Livestock,AG
+Category,LV20,AG
+Category,LV10,AG
+Category,LV20 or CO99,AG
+Category,LV13,AG
+Category,LV15,AG
+Category,LV20 or CO99,AG
+Category,well serving people and animals,AG
+Category,"LV20 or CO99, well serving people and animals",AG
 Category,AQ,AQ
 Category,AQ10,AQ
+Category,Aquaculture,AQ
 Category,CO,CO
 Category,CO21,CO
 Category,CO22,CO
@@ -28,67 +39,56 @@ Category,CO99,CO
 Category,COM,CO
 Category,COMM,CO
 Category,Commercial,CO
-Category,DS11,NA
-Category,EG21,TE
-Category,EG22,TE
-Category,EG31,TE
 Category,EG99,CO
-Category,Exempt Not Reported,NA_character_
-Category,FACILITY CATTLE FEEDLOT,AG
-Category,FACILITY DAIRY,AG
+Category,CO-OT,CO
+Category,CO-State Hospital,CO
+Category,HVAC,CO
+Category,Snow Making,CO
+Category,Splash Pad,CO
 Category,FACILITY INDUSTRIAL USE,IN
-Category,FACILITY METAL MINING,MI
-Category,FACILITY POWER GENERATION,TE
-Category,FACILITY SAND AND GRAVEL,MI
-Category,Heating/Cooling,NA_character_
 Category,IN,IN
-Category,IN or MI,NA_character_
 Category,IN10,IN
 Category,IN31,IN
 Category,IN51,IN
-Category,IN61,MI
 Category,IN62,IN
 Category,IN63,IN
-Category,IN64,IN
-Category,Mining: Coal,MI
-Category,Mining: Non-Coal,MI
 Saline,SW-SALINE,TRUE
 Saline,Saline,TRUE
 Saline,Fresh,FALSE
 Saline,Unknown,NA
+SourceType,UG,GW
+SourceType,GEO,GW
+SourceType,OGW,GW
+SourceType,(GW),GW
+SourceType,WELL,GW
+SourceType,DC,NA_character_
+SourceType,FW,NA_character_
 SourceType,NA,NA_character_
-SourceType,GROUNDWATER,GW
-SourceType,EFFLUENT,WW
 SourceType,OTHER OR UNKNOWN,NA_character_
 SourceType,OTHER,NA_character_
-SourceType,RECYCLED WASTEWATER,WW
-SourceType,COMMINGLED WATER,WW
-SourceType,GENERATED WASTEWATER,WW
-SourceType,EFFLUENT (DIRECT USE),WW
+SourceType,Underground Mine,NA_character_
+SourceType,AT,NA_character_
+SourceType,Surface and ground,NA_character_
+SourceType,IND,NA_character_
+SourceType,INDOTH,NA_character_
+SourceType,INDFP,NA_character_
+SourceType, ,NA_character_
+SourceType,UN,NA_character_
+SourceType,GW;ISW,NA_character_
+SourceType,GLCW;GW,NA_character_
+SourceType,GLCW;ISW,NA_character_
+SourceType,GLCW;GW;ISW,NA_character_
+SourceType,TW,PS
+SourceType,"Surface Water, Pur",PS
+SourceType,"Groundwater, Pur",PS
+SourceType,FN,PS
+SourceType,SW,SW
+SourceType,SW-SALINE,SW
+SourceType,Surface Water,SW
 SourceType,SRP SURFACE WATER,SW
 SourceType,CAP/CONTRACT,SW
 SourceType,DECREED/APPROPRIATIVE SURFACE WATER,SW
-SourceType,SPILLWATER,SW
-SourceType,IN-LIEU WATER  (CAP),SW
-SourceType,CAP,SW
-SourceType,EXCHANGE WATER - SURFACE WATER,SW
-SourceType,EFFLUENT RECOVERED OUTSIDE THE AOI,WW
-SourceType,EFFLUENT RECLAIMED SYSTEM,WW
-SourceType,CAP WATER RECOVERED,WW
-SourceType,SALT RIVER,SW
-SourceType,OTHER SURFACE WATER,SW
-SourceType,NORMAL FLOW,SW
-SourceType,CAP WATER STORED,GW
-SourceType,IN-LIEU WATER,SW
-SourceType,Stream,SW
-SourceType,Underground Mine,NA_character_
-SourceType,Lake,SW
-SourceType,Pond,SW
-SourceType,Ground,GW
-SourceType,COE Impoundment,SW
-SourceType,Slurry Impoundment,WW
-SourceType,Spring,GW
-Category,IN65,IN
+Category,IN64,IN
 Saline,NA,NA
 Saline,SW,FALSE
 Saline,GW,FALSE
@@ -114,10 +114,10 @@ Units_annual_reported,Mgal/d,mgd
 Method_annual_reported,CTDEEP_2021_Est,Estimated
 Method_annual_reported,CTDEEP_Estimated,Estimated
 Method_annual_reported,Estimated,Estimated
-Method_annual_reported,CTDEEP_Reported,Metered
-Method_annual_reported,PA 02-102,Metered
-Method_annual_reported,Reported,Metered
-Method_annual_reported,Unknown,NA_character_
+Method_annual_reported,COTH,Estimated
+Method_annual_reported,OTH,Estimated
+Method_annual_reported,LER,Estimated
+Method_annual_reported,LED,Estimated
 Units_monthly,NA,NA_character_
 Units_annual_reported,NA,NA_character_
 Units_monthly,MG,mgal
@@ -132,21 +132,21 @@ Method_monthly,permited,Permitted
 Method_monthly,authorized,Permitted
 Method_monthly,reported,Metered
 Method_monthly,submitted,Metered
-Method_annual_reported,application,Permitted
-Method_annual_reported,permitted,Permitted
-Method_annual_reported,permited,Permitted
-Method_annual_reported,authorized,Permitted
-Method_annual_reported,reported,Metered
-Method_annual_reported,submitted,Metered
+Method_annual_reported,LERD,Estimated
+Method_annual_reported,LEC,Estimated
+Method_annual_reported,LEO,Estimated
+Method_annual_reported,LET,Estimated
+Method_annual_reported,LEW,Estimated
+Method_annual_reported,LEP,Estimated
 DataProtected,No further distribution,TRUE
 DataProtected,expressed written approval,TRUE
 Method_monthly,Unknown,NA_character_
-Method_annual_reported,Unknown,NA_character_
+Method_annual_reported,CTDEEP_Reported,Metered
 Units_monthly,mg,mgal
 Units_annual_reported,mg,mgal
 ValueType,RT,RL
 ValueType,WL,WD
-SourceType,AT,NA_character_
+SourceType,SPILLWATER,SW
 Description,AF,Agriculture (Field)
 Description,AG,Agriculture (Greenhouse)
 Description,AL,Agriculture (Livestock)
@@ -200,37 +200,37 @@ Description,WS,Water Supplier
 ValueType,Pur,TR
 ValueType,SS,WD
 ValueType,Ss,WD
+Category,IN65,IN
 Category,IN98,IN
 Category,IN99,IN
-Category,IND,IN
 Saline,N,FALSE
 Saline,Y,TRUE
-SourceType,"Surface Water, Pur",PS
-SourceType,"Groundwater, SS",GW
-SourceType,"Surface Water, Ss",SW
-SourceType,"Groundwater, Pur",PS
+SourceType,IN-LIEU WATER  (CAP),SW
+SourceType,CAP,SW
+SourceType,EXCHANGE WATER - SURFACE WATER,SW
+SourceType,SALT RIVER,SW
+Category,IND,IN
 Category,INDUST,IN
 Category,INDUSTRIAL,IN
 Category,Industrial,IN
 Category,Industrial Processing,IN
-Category,IR,IR
-Category,IR10,IR
-SourceType,GROUND,GW
-SourceType,SURFACE,SW
-Category,IR21,IR
-Category,IR22,IR
-Category,IR23,IR
+Category,IN32,IN
+SourceType,OTHER SURFACE WATER,SW
+SourceType,NORMAL FLOW,SW
+Category,IN41,IN
+Category,IN42,IN
+Category,IN53,IN
 Method_monthly,Metered,Metered
 ValueType,Gallons per year,WD
 Units_annual_reported,Gallons per year,gal
 Units_monthly,Gallons per month,gal
-SourceType,GL,SW
-Category,IR24,IR
-Category,IR25,IR
-Category,IR31,IR
-Category,IR32,IR
-Category,IR99,IR
-Category,Irrigation,IR
+SourceType,IN-LIEU WATER,SW
+Category,IN (special EG case),IN
+Category,Bottled Water,IN
+Category,Agricultural Irrigation,IR
+Category,IR,IR
+Category,IR10,IR
+Category,IR21,IR
 Method_monthly,TFM,Metered
 Method_monthly,THM,Metered
 Method_monthly,MHP,Metered
@@ -246,61 +246,76 @@ Method_monthly,LEO,Estimated
 Method_monthly,LET,Estimated
 Method_monthly,LEW,Estimated
 Method_monthly,LEP,Estimated
+Method_annual_reported,PA 02-102,Metered
+Method_annual_reported,Reported,Metered
+Method_annual_reported,reported,Metered
+Method_annual_reported,submitted,Metered
 Method_annual_reported,TFM,Metered
 Method_annual_reported,THM,Metered
 Method_annual_reported,MHP,Metered
-Method_annual_reported,COTH,Estimated
-Method_annual_reported,OTH,Estimated
 Method_annual_reported,MRW,Metered
 Method_annual_reported,MHP,Metered
-Method_annual_reported,LER,Estimated
-Method_annual_reported,LED,Estimated
-Method_annual_reported,LERD,Estimated
-Method_annual_reported,LEC,Estimated
-Method_annual_reported,LEO,Estimated
-Method_annual_reported,LET,Estimated
-Method_annual_reported,LEW,Estimated
-Method_annual_reported,LEP,Estimated
+Method_annual_reported,Metered Type Unknown,Metered
+Method_annual_reported,Flowmeter Cumulative,Metered
+Method_annual_reported,Unknown,NA_character_
+Method_annual_reported,Unknown,NA_character_
 Method_annual_reported,NA,NA_character_
+Method_annual_reported,UNSP,NA_character_
+Method_annual_reported,UNKN,NA_character_
 Method_monthly,NA,NA_character_
-Category,Livestock,AG
-Category,LV20,AG
-Category,MF,MF
-Category,MFG,MF
+Category,IR22,IR
+Category,IR23,IR
+Category,IR24,IR
+Category,IR25,IR
+Category,IR31,IR
+Category,IR32,IR
+Category,IR99,IR
+Category,Irrigation,IR
+Category,Non-Crop Irrigation,IR
+Category,IR-crop,IR
+Category,IR-golf,IR
+Category,IR-other,IR
+Category,IR22 & CO99,IR
+Category,MF,IN
+Category,MFG,IN
+Category,FACILITY METAL MINING,MI
+Category,FACILITY SAND AND GRAVEL,MI
+Category,IN61,MI
+Category,Mining: Coal,MI
+Category,Mining: Non-Coal,MI
 Category,MI,MI
 Category,MIN,MI
 Category,Mining,MI
+Category,DS11,NA
+Category,Exempt Not Reported,NA_character_
+Category,Heating/Cooling,NA_character_
+Category,IN or MI,NA_character_
 Category,NA,NA_character_
-Category,Non-Crop Irrigation,IR
 Category,OT01,NA_character_
-Category,OT11,RM
-Category,OT12,RM
 Category,OT13,NA_character_
 Category,OT98,NA_character_
 Category,OT99,NA_character_
 Category,OTH,NA_character_
 Category,Other,NA_character_
 Category,Other Total,NA_character_
-Category,Power,TE
-Category,Power Generation,TE
+Category,PT,NA_character_
+Category,Recreation Fish & Wildlife,NA_character_
+Category,Special Categories,NA_character_
+Category,Total,NA_character_
+Category,Water Level Maintenance,NA_character_
+Category,DS12,NA_character_
+Category,OT14,NA_character_
+Category,OT13 or OT99,NA_character_
+Category,Fire Protection,NA_character_
+Category,Lake Augmentation,NA_character_
+Category,Dewatering,NA_character_
 Category,PS,PS
 Category,PS11,PS
 Category,PS22,PS
 Category,PS41,PS
 Category,PS44,PS
-Category,PT,NA_character_
 Category,Public,PS
 Category,Public Supply,PS
-Category,PWR,TE
-Category,Recreation Fish & Wildlife,NA_character_
-Category,Remediation,RM
-Category,RM,RM
-Category,Special Categories,NA_character_
-Category,TE,TE
-Category,Thermo Once Thru,TE
-Category,Thermo Recirc,TE
-Category,Total,NA_character_
-Category,Water Level Maintenance,NA_character_
 Category,Water Supply,PS
 Category,WS,PS
 Category,PS23,PS
@@ -308,71 +323,56 @@ Category,PS21,PS
 Category,PS13,PS
 Category,PS42,PS
 Category,PS12,PS
-Category,DS12,NA_character_
 Category,PS43,PS
 Category,PS31,PS
-Category,LV10,AG
-Category,IN32,IN
-Category,IN41,IN
-Category,IN42,IN
 Category,PS50,PS
 Category,PS32,PS
-Category,IN53,IN
 Category,PS45,PS
-Category,OT14,NA_character_
-Category,CO-OT,CO
-Category,IN (special EG case),IN
-Category,IR-crop,IR
-Category,IR-golf,IR
-Category,IR-other,IR
 Category,PS-CO,PS
 Category,PS-MUNI,PS
-Category,CO-State Hospital,CO
 Category,PS-OTM,PS
-Category,IR22 & CO99,IR
-Category,LV20 or CO99,AG
-Category,LV13,AG
-Category,LV15,AG
-Category,OT13 or OT99,NA_character_
 Category,PS25,PS
 Category,PS47,PS
-Category,LV20 or CO99,AG
-Category,well serving people and animals,AG
 Category,PS26,PS
-Category,"LV20 or CO99, well serving people and animals",AG
+Category,Public Water Supply,PS
+Category,OT11,RM
+Category,OT12,RM
+Category,Remediation,RM
+Category,RM,RM
+Category,EG21,TE
 Method_monthly,UNSP,NA_character_
 Method_monthly,UNKN,NA_character_
-Method_annual_reported,UNSP,NA_character_
-Method_annual_reported,UNKN,NA_character_
-Category,Aquaculture,AQ
-Category,Thermoelectric,TE
+Method_annual_reported,Unspecified,NA_character_
+Method_annual_reported,application,Permitted
+Category,EG22,TE
+Category,EG31,TE
 Units_annual_reported,Gallons per Year,gal
 Units_monthly,Gallons per Month,gal
-SourceType,UG,GW
-SourceType,GEO,GW
-SourceType,EFF,WW
+SourceType,Stream,SW
+SourceType,Lake,SW
+SourceType,Pond,SW
+SourceType,COE Impoundment,SW
+SourceType,"Surface Water, Ss",SW
+SourceType,SURFACE,SW
+SourceType,GL,SW
 SourceType,SPR,SW
 SourceType,STR,SW
-SourceType,OSW,SW
-SourceType,OGW,GW
-SourceType,(SW),SW
-SourceType,(GW),GW
 Units_monthly,All values in AF,acft
 Units_annual_reported,All values in AF,acft
+SourceType,OSW,SW
+SourceType,(SW),SW
 SourceType,Surface,SW
-SourceType,Surface and ground,NA_character_
-SourceType,IND,NA_character_
-SourceType,INDOTH,NA_character_
-SourceType,INDFP,NA_character_
-SourceType, ,NA_character_
-SourceType,WELL,GW
 SourceType,SURFACE INTAKE,SW
+SourceType,ISW,SW
+SourceType,GLCW,SW
+SourceType,EFFLUENT,WW
+SourceType,RECYCLED WASTEWATER,WW
 ValueType,UD,TR
 ValueType,UR,RL
-SourceType,WW,WW
-SourceType,TR,WW
-SourceType,FN,PS
-SourceType,UN,NA_character_
+SourceType,COMMINGLED WATER,WW
+SourceType,GENERATED WASTEWATER,WW
+SourceType,EFFLUENT (DIRECT USE),WW
+SourceType,EFFLUENT RECOVERED OUTSIDE THE AOI,WW
 Saline,Unspecified,NA
 Units_monthly,Tgal/m,Tgal
 Units_monthly,gal/m,gal
@@ -380,9 +380,9 @@ Units_monthly,Mgal/m,mgal
 Units_monthly,acre-feet/m,acft
 Units_annual_reported,Mgal/yr,mgal
 Units_annual_reported,gal/yr,gal
-Method_annual_reported,Unspecified,NA_character_
-Method_annual_reported,Metered Type Unknown,Metered
-Method_annual_reported,Flowmeter Cumulative,Metered
+Method_annual_reported,permitted,Permitted
+Method_annual_reported,permited,Permitted
+Method_annual_reported,authorized,Permitted
 Method_monthly,Unspecified,NA_character_
 Method_monthly,Metered Type Unknown,Metered
 Method_monthly,Flowmeter Cumulative,Metered
@@ -395,18 +395,18 @@ Units_monthly,gal/yr,NA_character_
 ValueType,"total withdrawal, in gallons per year",WD
 Units_monthly,"total withdrawal, in gallons per month",gal
 Units_annual_reported,"total withdrawal, in gallons per year",gal
-SourceType,ISW,SW
-SourceType,GLCW,SW
-SourceType,GW;ISW,NA_character_
-SourceType,GLCW;GW,NA_character_
-SourceType,GLCW;ISW,NA_character_
-SourceType,GLCW;GW;ISW,NA_character_
-Category,Bottled Water,IN
-Category,Public Water Supply,PS
-Category,Fire Protection,NA_character_
-Category,Lake Augmentation,NA_character_
-Category,HVAC,CO
-Category,Dewatering,NA_character_
-Category,Snow Making,CO
-Category,Splash Pad,CO
+SourceType,EFFLUENT RECLAIMED SYSTEM,WW
+SourceType,CAP WATER RECOVERED,WW
+SourceType,Slurry Impoundment,WW
+SourceType,EFF,WW
+SourceType,WW,WW
+SourceType,TR,WW
+Category,FACILITY POWER GENERATION,TE
+Category,Power,TE
+Category,Power Generation,TE
+Category,PWR,TE
+Category,TE,TE
+Category,Thermo Once Thru,TE
+Category,Thermo Recirc,TE
+Category,Thermoelectric,TE
 Units_monthly,"withdrawal for January, in gallons per month",gal

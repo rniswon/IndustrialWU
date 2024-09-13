@@ -36,7 +36,7 @@ read_in_datafile <- function(datafp, fp) {
   } else if(
     grepl(".csv|.txt|.rdb", fp)) {
     # Read CSV or text files 
-    read.csv(file.path(datafp, fp), fill = TRUE, header = TRUE)
+    data.table::fread(file.path(datafp, fp), fill = TRUE, header = TRUE, data.table = FALSE)
   } else if(grepl(".xlsx|.xls", fp)) {
     # Read Excel files
     workbook_fp <- stringr::str_extract(fp, ".*(?=\\$)")  # Extract workbook filename
@@ -464,7 +464,7 @@ applyPIVOTrules <- function(dat, headercrosswalk, updatedCrosswalks) {
   
   if(nrow(pivot_instr) > 0) {
     
-    instructions <- map(transpose(pivot_instr), ~{
+    instructions <- map(purrr::transpose(pivot_instr), ~{
       # Create mutate code for the specified transformations
       mutatecode <- paste0(
         ifelse(grepl("=", .x$names_tofrom), paste0('dplyr::mutate(., ', .x$names_tofrom, ')'), "{.}"),

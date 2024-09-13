@@ -47,8 +47,8 @@ file,Header,Value,Notes
 /MN/read_me.docx,ValueType,WD,
 /NH/read_me.docx,Units_monthly,thousand gallons,Discussion with Laura Medalie
 /NH/read_me.docx,Method_monthly,Metered,
-/TX/read_me.docx,Method_monthly,Metered,
-/TX/read_me.docx,Method_annual_reported,Metered,
+/TX/read_me.docx,Method_monthly,Estimated,
+/TX/read_me.docx,Method_annual_reported,Estimated,
 /TX/TX_IN_WU.xlsx$Texas_IndustrialWithdrawals_200,Units_monthly,gallons,
 /TX/TX_IN_WU.xlsx$Texas_IndustrialWithdrawals_200,Units_annual_reported,gallons,
 /VT/2008_2019_ Vermont_Yearly_Large_GW_Withdrawal.xlsx$GW Withdrawal Yearly,ValueType,WD,NA

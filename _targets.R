@@ -8,7 +8,7 @@
 
 # Specify the packages required for the pipeline
 packages <- c("tibble", "stringr", "purrr", "readxl", "svDialogs", "dplyr", "archive",
-              "tidyr", "readr", "lubridate", "magrittr",
+              "tidyr", "readr", "lubridate", "magrittr", "furrr", "data.table",
               "sf", "rquery", "officer", "pdftools", "rqdatatable",
               "fedmatch", "janitor", "zoo", "varhandle", "targets", "tarchetypes")
 
@@ -47,6 +47,7 @@ list(
   tar_target(NAICSworkup, "Industrial model/Industrial_DataSummary_By_LEE.xlsx", format = "file"), # Load NAICS summary
   tar_target(SWUDS, "Industrial model/SWUDS_records/natprod_CN_QNTY_industrial_2024-07-12.xlsx", format = "file"), # Load SWUDS records
   tar_target(SWUDS_workup, "Industrial model/SWUDS_records/From_To_Sites missing lat lng.xlsx"), # Load added lat/lon
+  tar_target(SiteSelection, "Industrial model/INWU_task_folders/Site_selection/Industrial_site_list/facility_v3_NAICS_SIC.csv"), # load list of sites from the Site Selection group
   tar_target(QAQCstatus, "FormattedDataOutputs/DataQAQCstatus.csv", format = "file"), # Load QAQC status from previous pipeline runs
   tar_target(dat, command = get_all_dat(datafp)),  # List all data from the state data file
   tar_target(updatedCrosswalks, 
@@ -62,14 +63,20 @@ list(
                                                          updatedCrosswalks,
                                                          data = "State")),
   tar_target(combined_dat, command = 
-               merge_nationaldata(nonSWUDS = NonSWUDSdata, 
-                                  national_Xwalks = NationalDataCrosswalks, 
-                                  datacodes_Xwalks = updatedCrosswalks$DataCodesCrosswalk,
-                                  natdata = list(NAICSworkup, SWUDS, SWUDS_workup))), # Combine state data with national data
+               merge_nationaldata(nonSWUDS = NonSWUDSdata,
+                                  natData = FormattedNationaldata$natData_merge, 
+                                  natHeaders = FormattedNationaldata$natHeaders)), # Combine state data with national data
+  tar_target(FormattedNationaldata, command = prep_nationaldata(
+    national_Xwalks = NationalDataCrosswalks, 
+    datacodes_Xwalks = updatedCrosswalks$DataCodesCrosswalk,
+    natdata = list(NAICSworkup, SWUDS, SWUDS_workup),
+    extradata = list(FIPSdata, SiteSelection)
+  )),
   tar_target(augmented_data, command = 
                augment_data(
-                 data = combined_dat, national_Xwalks = NationalDataCrosswalks, 
-                 extradata = list(FIPSdata)
+                 data = combined_dat, 
+                 data_to_add = FormattedNationaldata$augmentData,
+                 natHeaders = FormattedNationaldata$natHeaders
                )),
   tar_target(AllStates, command = write_allstates(augmented_data), format = "file"),  # Write combined data for all states to a file
   tar_target(QAQCupdate, command = checkQAQCstatus(augmented_data, QAQCstatus),

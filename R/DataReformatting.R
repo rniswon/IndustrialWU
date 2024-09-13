@@ -182,6 +182,7 @@ merge_andreplaceNA <- function(x, y, yname = NULL, merge_vars = NULL, jointype =
 #'   }
 #'
 add_state <- function(renamed_rawdat) {
+
   # Iterate through each data frame in renamed_rawdat and add state information
   purrr::imap(renamed_rawdat, ~{
     # Extract the state abbreviation from the string using a regex pattern
@@ -564,7 +565,7 @@ standard_idtreatment <- function(data, header) {
   if(sum(names(data) == header) == 1) {
     tmp <- data %>%
       dplyr::mutate(!!header := as.character(.[[header]]))
-  } else if(length(grep(paste0(header, ".."), names(data))) > 1) {
+  } else if(length(grep(paste0(header, "\\.\\."), names(data))) > 1) {
     # Handle multiple variants of the specified header
     tmp <- concat_columns(data, header) %>% 
       dplyr::mutate(!!header := as.character(.[[header]]))
@@ -602,6 +603,74 @@ standard_HUCtreatment <- function(data, header) {
   return(tmp)
 }
 
+pull_address <- function(x, zipindex, stateindex) {
+  non_address <- unique(na.omit(c(zipindex, stateindex)))
+  tmp <- ifelse(length(x) == 0, NA_character_,
+                ifelse(length(x) == 1, x,
+                       ifelse(length(non_address) == 0, paste(x, collapse = ", "), 
+                              ifelse(sum(grepl("[[:digit:]]", x[-c(non_address)])) == 1, 
+                                     x[-c(non_address)][grep("[[:digit:]]", x[-c(non_address)])],
+                                     x[-c(non_address)][1]))))
+  adr <- str_to_title(tmp)
+  return(adr)
+}
+
+pull_city <- function(x, zipindex, stateindex) {
+  non_address <- unique(na.omit(c(zipindex, stateindex)))
+  tmp <- ifelse(length(x) == 0, NA_character_,
+                ifelse(length(x) == 1, x,
+                       ifelse(length(non_address) == 0, paste(x, collapse = ", "), 
+                              ifelse(sum(grepl("[[:digit:]]", x[-c(non_address)])) == 1, 
+                                     x[-c(non_address)][!grep("[[:digit:]]", x[-c(non_address)])],
+                                     x[-c(non_address)][2]))))
+  cty <- str_to_title(tmp)
+  return(cty)
+}
+
+pull_state <- function(x, stateindex, state_regex) {
+  tmp <- ifelse(length(x) == 0, NA_character_, 
+                ifelse(length(x) == 1, stringr::str_extract(x, state_regex),
+                       ifelse(!is.na(stateindex), stringr::str_extract(x[stateindex], state_regex),
+                              stringr::str_extract(paste(x, collapse = ", "), state_regex))))
+  st <- ifelse(str_to_upper(tmp) %in% fedmatch::State_FIPS$Abbreviation, str_to_upper(tmp), 
+               fedmatch::State_FIPS$Abbreviation[fedmatch::State_FIPS$State == str_to_sentence(tmp)])
+  return(st)
+}
+
+pull_zip <- function(x, zipindex, zip_regex) {
+  tmp <- ifelse(length(x) == 0, NA_character_, 
+                ifelse(length(x) == 1, stringr::str_extract(x, zip_regex),
+                       ifelse(!is.na(zip_regex), stringr::str_extract(x[zipindex], zip_regex),
+                              stringr::str_extract(paste(x, collapse = ", "), zip_regex))))
+  zip <- tmp
+  return(zip)
+}
+
+pull_county <- function(x) {
+  tmp <- ifelse(length(x) == 0, NA_character_, 
+         ifelse(length(x) == 1, x,
+                paste(x, collapse = " ")))
+  cnty <- str_trim(str_replace_all(str_to_upper(tmp), "COUNTY", ""))
+  return(cnty)
+}
+
+pull_necessaryaddressdata <- function(x, type, zipindex, stateindex, state_regex, zip_regex) {
+  list(pull_address, pull_city, pull_state, pull_zip, pull_county) # call for targets package
+  tmp_code <- ifelse(type == "Address", "pmap_chr(list(x, zipindex, stateindex), ~pull_address(..1, ..2, ..3))",
+                ifelse(type == "City", "pmap_chr(list(x, zipindex, stateindex), ~pull_city(..1, ..2, ..3))",
+                       ifelse(type == "State", "map2_chr(x, stateindex, ~pull_state(.x, .y, state_regex))",
+                              ifelse(type == "Zip", "map2_chr(x, zipindex, ~pull_zip(.x, .y, zip_regex))",
+                                     "map_chr(x, ~pull_county(.x))"))))
+  if(all(map_dbl(x, ~length(.x)) == 1)) {
+    if(type %in% c("Address", "City")) {tmp <- str_to_title(unlist(x))
+    } else if(type == "State") {tmp <- stringr::str_extract(x, state_regex)
+    if(!all(str_to_upper(tmp) %in% fedmatch::State_FIPS$Abbreviation)) {tmp <- eval(parse(text = tmp_code))}
+    } else if(type == "Zip") {tmp <- stringr::str_extract(x, zip_regex)
+    } else {tmp <- str_trim(str_replace_all(str_to_upper(x), "COUNTY", ""))}} else {
+      tmp <- eval(parse(text = tmp_code))}
+  return(tmp)
+}
+
 #' Standard Address Treatment
 #'
 #' This function standardizes the treatment of address-related fields in a specified 
@@ -618,83 +687,68 @@ standard_HUCtreatment <- function(data, header) {
 #'   result <- standard_Addresstreatment(data_frame, "AddressHeader")
 #'   }
 #'
+#'
+#'
 standard_Addresstreatment <- function(data, header) {
   # Check if the header exists in the data
   if(length(grep(header, names(data))) > 0 ) {
-    entrylines <- concat_columns(data[which(str_detect(names(data), header))], header) |> 
+    rawentrylines <- concat_columns(data[which(str_detect(names(data), header))], header) |> 
       pull(header) |>
-      stringr::str_split(",") |> purrr::map(~stringr::str_trim(.x))
+      stringr::str_split(",") 
+    
+    if(any(str_detect(rawentrylines, "\r|\n"), na.rm = TRUE)) {
+      entrylines <- stringr::str_trim(rawentrylines) |> purrr::map(~{
+        x_clean <- subset(unique(unlist(stringr::str_split(.x, "\r|\n"))), 
+                          unique(unlist(stringr::str_split(.x, "\r|\n"))) != "")
+        x_clean
+      }) 
+    } else {entrylines <- stringr::str_trim(rawentrylines)}
+
     type <- stringr::str_extract(header, "Address|City|State|Zip|County")
     
+    state_list <- c(fedmatch::State_FIPS$Abbreviation, fedmatch::State_FIPS$State)
     state_regex <- paste0(
-      "(", paste(fedmatch::State_FIPS$State, fedmatch::State_FIPS$Abbreviation, stringr::str_to_title(fedmatch::State_FIPS$Abbreviation), 
+      "(", paste(state_list, stringr::str_to_title(fedmatch::State_FIPS$Abbreviation), 
                  stringr::str_to_upper(fedmatch::State_FIPS$State), sep = "|", collapse = "|"), ")(?!-|[[:alpha:]])")
     zip_regex <- "[[:digit:]]{5}(-[[:digit:]]{4})?( - [[:digit:]]{4})?$"
     
-    tmpvals <- purrr::map_chr(entrylines, ~{
-      
-      x_clean <- subset(unique(unlist(stringr::str_split(.x, "\r|\n"))), 
-                        unique(unlist(stringr::str_split(.x, "\r|\n"))) != "")
-      index_zip <- stringr::str_which(x_clean, zip_regex)
-      index_state <- stringr::str_which(x_clean, state_regex)
-      
-      if(length(index_state) > 1) {
-        if(any(index_state %in% index_zip)) {
-          if(sum(index_state %in% index_zip) == 1) {
-            index_state <- subset(index_state, index_state %in% index_zip)
-          } else {index_state <- integer(0)}
-        } else if(any(x_clean %in% c(fedmatch::State_FIPS$Abbreviation, fedmatch::State_FIPS$State))) {
-          index_state <- which(x_clean %in% c(fedmatch::State_FIPS$Abbreviation, fedmatch::State_FIPS$State))
-        }
-        if(length(index_zip) > 1) {
-          if(any(index_zip %in% index_state)) {
-            index_zip <- subset(index_zip, index_zip %in% index_state)
-          } else {index_zip <- integer(0)}
-        }
-      }
-      
-      if(length(x_clean) == 0) {
-        address <- city <- state <- zip <- county <- NA_character_
-      } else if(length(x_clean) == 1) {
-        address <- x_clean
-        city <- x_clean
-        state <- stringr::str_extract(x_clean, state_regex)
-        zip <- stringr::str_extract(x_clean, zip_regex)
-        county <- x_clean
-      } else if(length(x_clean) > 1) {
-        if(length(c(index_zip, index_state)) > 0) {
-          address <- x_clean[-c(index_state, index_zip)][grep("[[:digit:]]", x_clean[-c(index_state, index_zip)])]
-          city <- x_clean[-c(index_state, index_zip)][which(!grepl("[[:digit:]]", x_clean[-c(index_state, index_zip)]))]
-          if(length(city) > 1) {
-            address <- city[1]
-            city <- city[2]
-          }
-          state <- stringr::str_extract(x_clean[index_state], state_regex)
-          zip <- stringr::str_extract(x_clean[index_zip], zip_regex)
-          county <- paste(x_clean, collapse = " ")
-        } else {
-          address <- paste(x_clean, collapse = ", ")
-          city <- paste(x_clean, collapse = ", ")
-          state <- stringr::str_extract(paste(x_clean, collapse = ", "), state_regex)
-          zip <- stringr::str_extract(paste(x_clean, collapse = ", "), zip_regex)
-          county <- paste(x_clean, collapse = " ")
-        }}
-      
-      if(type == "Address") {tmp <- str_to_title(address)} else if(
-        type == "City") {tmp <- str_to_title(city)} else if(
-          type == "State") {
-            if(!str_to_upper(state) %in% fedmatch::State_FIPS$Abbreviation) {
-              state <- fedmatch::State_FIPS$Abbreviation[fedmatch::State_FIPS$State == str_to_sentence(state)]
-          }
-          tmp <- state
-          } else if(
-            type == "Zip") {tmp <- zip} else if(
-              type == "County") {tmp <- str_trim(gsub("COUNTY", "", str_to_upper(county)))}
-      if(length(tmp) == 0) {tmp <- NA_character_}
-      if(length(tmp) > 1) {tmp <- paste(tmp, collapse = ", ")}
-      tmp
+    if(type %in% c("Address", "City", "State")) {
+      indices_state <- map_dbl(entrylines, ~{
+        ifelse(length(.x) == 1, ifelse(stringr::str_detect(.x, state_regex), 
+                                                    stringr::str_which(.x, state_regex),
+                                                    NA_integer_), NA_integer_)
+        })
+    } else {indices_state <- NA}
+    
+    if(type %in% c("Address", "City", "Zip")) {
+      indices_zip <-  map_dbl(entrylines, ~{
+        ifelse(length(.x) == 1, ifelse(stringr::str_detect(.x, zip_regex), 
+                                       stringr::str_which(.x, zip_regex),
+                                       NA_integer_), NA_integer_)
+        })
+    } else {indices_zip <- NA}
+    
+    if(type %in% c("Address", "City")) {
+      indices <- pmap_dfr(list(indices_state, indices_zip, entrylines), 
+                          ~{
+                            i_state <- ifelse(length(..1) == 0, NA_integer_, 
+                                              ifelse(length(..1) == 1, ..1, 
+                                                     ifelse(any(..3 %in% state_list), which(..3 %in% state_list),
+                                                            ifelse(sum(..1 %in% ..2) == 1, subset(..1, ..1 %in% ..2), NA_integer_))))
+                            i_zip <- ifelse(length(..2) == 0, NA_integer_, 
+                                            ifelse(length(..2) == 1, ..2, 
+                                                   ifelse(sum(..1 %in% ..2) == 1, subset(..2, ..2 %in% ..1), NA_integer_)))
+                            data.frame(i_state = i_state, i_zip = i_zip)
+                          })
+    } else {
+      indices <- data.frame(i_state = indices_state, i_zip = indices_zip)
     }
-    )
+   
+    tmpvals <- pull_necessaryaddressdata(x = entrylines, type = type, 
+                                         zipindex = indices$i_zip, 
+                                         stateindex = indices$i_state, 
+                                         state_regex = state_regex, 
+                                         zip_regex = zip_regex)
     
     tmp <- data |>
       dplyr::select(-contains(header)) |>
@@ -820,7 +874,7 @@ standard_datatreatment <- function(data, header) {
 #'   result <- reformat_data(data_frame, updated_crosswalks, existing_crosswalks, "State")
 #'   }
 #'
-reformat_data <- function(x, updatedCrosswalks, existingCrosswalks) {
+reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, parallel = FALSE) {
   list(standard_datacodestreatment, standard_nametreatment, standard_idtreatment, 
        standard_HUCtreatment, standard_Addresstreatment, standard_coordinatetreatment,
        standard_Yeartreatment, standard_datatreatment) # call these to let the targets package know that they are used in this function
@@ -845,36 +899,37 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks) {
                    "Sep", "Oct", "Nov", "Dec", "Annual_reported")
   
   # Create treatment code strings for each column type
+  package_call <- ifelse(parallel, "furrr::future_", "purrr::")
   datacodes_f_code <- paste0(
-    "purrr::imap(., ~standard_datacodestreatment(.x, .y, '", datacodecolumns_force, 
-    "', updatedCrosswalks, existingCrosswalks, force = TRUE))", collapse = " %>% "
+    package_call, "imap(., ~standard_datacodestreatment(.x, .y, '", datacodecolumns_force, 
+    "', updatedCrosswalks, existingCrosswalks, force = TRUE), .progress = TRUE)", collapse = " %>% "
   )
   datacodes_u_code <- paste0(
-    "purrr::imap(., ~standard_datacodestreatment(.x, .y, '", datacodecolumns_unforce, 
-    "', updatedCrosswalks, existingCrosswalks, force = FALSE))", collapse = " %>% "
+    package_call, "imap(., ~standard_datacodestreatment(.x, .y, '", datacodecolumns_unforce, 
+    "', updatedCrosswalks, existingCrosswalks, force = FALSE), .progress = TRUE)", collapse = " %>% "
   )
   names_code <- paste0(
-    "purrr::imap(., ~standard_nametreatment(.x, .y, '", namecolumns, 
-    "', updatedCrosswalks, existingCrosswalks))", collapse = " %>% ")
-  ids_code <- paste0("purrr::map(., ~standard_idtreatment(.x, '", idcolumns, "'))", collapse = " %>% ")
-  HUCs_code <- paste0("purrr::map(., ~standard_HUCtreatment(.x, '", HUCcolumns, "'))", collapse = " %>% ")
-  Addresses_code <- paste0("purrr::map(., ~standard_Addresstreatment(.x, '", Addresscolumns, "'))", collapse = " %>% ")
-  coordinates_code <- paste0("purrr::map(., ~standard_coordinatetreatment(.x, '", coordinatecolumns, "'))", collapse = " %>% ")
-  years_code <- paste0("purrr::map(., ~standard_Yeartreatment(.x, '", Yearcolumns, "'))", collapse = " %>% ")
-  data_code <- paste0("purrr::map(., ~standard_datatreatment(.x, '", datacolumns, "'))", collapse = " %>% ")
+    package_call, "imap(., ~standard_nametreatment(.x, .y, '", namecolumns, 
+    "', updatedCrosswalks, existingCrosswalks), .progress = TRUE)", collapse = " %>% ")
+  ids_code <- paste0(package_call, "map(., ~standard_idtreatment(.x, '", idcolumns, "'), .progress = TRUE)", collapse = " %>% ")
+  HUCs_code <- paste0(package_call, "map(., ~standard_HUCtreatment(.x, '", HUCcolumns, "'), .progress = TRUE)", collapse = " %>% ")
+  Addresses_code <- paste0(package_call, "map(., ~standard_Addresstreatment(.x, '", Addresscolumns, "'), .progress = TRUE)", collapse = " %>% ")
+  coordinates_code <- paste0(package_call, "map(., ~standard_coordinatetreatment(.x, '", coordinatecolumns, "'), .progress = TRUE)", collapse = " %>% ")
+  years_code <- paste0(package_call, "map(., ~standard_Yeartreatment(.x, '", Yearcolumns, "'), .progress = TRUE)", collapse = " %>% ")
+  data_code <- paste0(package_call, "map(., ~standard_datatreatment(.x, '", datacolumns, "'), .progress = TRUE)", collapse = " %>% ")
   # As noted in `manual_updates`, `|>` is the base R pipe function
   # In the next block of code, I've used `|>` where possible, but I had to use `%>%` for the lines that parse the written code
   # The reason, I think, is that the `%>%` operator from dplyr allows you to pass an object (here a list) along using the `.` syntax while the `|>` operator does not.
   # Because the expressions being parsed are a little wonky, and because I used the `.` notation to pass along the object in the code, I had to use `%>%` here and `|>` didn't work.
   x_munged <- x %>%
-    {eval(parse(text = datacodes_u_code))} %>% # ~0 seconds
-    {eval(parse(text = HUCs_code))} %>% # ~0 seconds
-    {eval(parse(text = years_code))} %>% # ~ 1 second
-    {eval(parse(text = ids_code))} %>% # ~3 seconds
-    {eval(parse(text = datacodes_f_code))} %>% # ~12 seconds
-    {eval(parse(text = names_code))} %>% # ~17 seconds
-    {eval(parse(text = coordinates_code))} %>% # ~ 22 seconds
-    {eval(parse(text = Addresses_code))} %>% # ~60 seconds
+    {eval(parse(text = datacodes_u_code))} %>% 
+    {eval(parse(text = HUCs_code))} %>% 
+    {eval(parse(text = years_code))} %>% 
+    {eval(parse(text = ids_code))} %>% 
+    {eval(parse(text = datacodes_f_code))} %>% 
+    {eval(parse(text = names_code))} %>% 
+    {eval(parse(text = coordinates_code))} %>%
+    {eval(parse(text = Addresses_code))} %>%
     {eval(parse(text = data_code))} |>
     purrr::map(~janitor::remove_empty(.x, which = c("rows", "cols"))) |>
     add_state() |>
