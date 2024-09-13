@@ -73,7 +73,7 @@ listSTdata <- function(stDatadir) {
 #' @return A character vector of the found state data directories.
 #' @export
 listdatadirs <- function(fp) {
-  states <- state.abb
+  states <- fedmatch::State_FIPS$Abbreviation
   subdirs <- subset(list.dirs(fp), stringr::str_extract(list.dirs(fp), "(?<=state_data/).*") %in% states)
   return(subdirs)
 }
