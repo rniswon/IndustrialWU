@@ -1,0 +1,98 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This R Markdown document explores the employee and facility counts for various 
+data sources for the Industrial WU Model. 
+
+```{r}
+
+library(tidyverse)
+library(ggplot2)
+library(sf)
+library(viridis)
+library(readxl)
+library(dplyr)
+library(plotly)
+
+options(scipen=999)
+```
+
+Getting User Inputs
+```{r}
+
+# Path to INWU model folder on local machine
+inwu_model_folder <- "D:/DOI/GS-W-WaterUse - Industrial model"
+
+
+
+```
+
+# Getting INWU Facilities List
+
+```{r}
+inwu_facility_csv <- paste0(inwu_model_folder,
+                            "/INWU_task_folders/Site_selection/Industrial_site_list/USEPA_HIFLD_EIA_PPP_facility_v4.csv")
+
+inwu_facility_df <- read_csv(inwu_facility_csv)
+
+# Rename the fields
+inwu_facility_df <- inwu_facility_df %>%
+  rename(
+    emp_PinPointers = EMP,
+    emp_Dun_Bradstreet = TotPerson,
+    emp_PPP = JobsReported
+  )
+
+# Calculate sums and averages for each unique NAICS
+summary_df <- inwu_facility_df %>%
+  group_by(NAICS) %>%
+  summarise(
+    sum_emp_PinPointers = sum(emp_PinPointers, na.rm = TRUE),
+    avg_emp_PinPointers = mean(emp_PinPointers, na.rm = TRUE),
+    sum_emp_Dun_Bradstreet = sum(emp_Dun_Bradstreet, na.rm = TRUE),
+    avg_emp_Dun_Bradstreet = mean(emp_Dun_Bradstreet, na.rm = TRUE),
+    sum_emp_PPP = sum(emp_PPP, na.rm = TRUE),
+    avg_emp_PPP = mean(emp_PPP, na.rm = TRUE)
+  ) 
+
+# Define the prefixes to filter by
+prefixes <- c("321")#, "327", "311", "313", "315", "322", "323", "324", "325", "326")
+
+# Create a regular expression pattern
+pattern <- paste0("^(", paste(prefixes, collapse = "|"), ")")
+
+# Filter the summary_df
+summary_df <- summary_df %>%
+  filter(str_detect(NAICS, pattern) & nchar(NAICS) >= 6)
+
+# View the summary dataframe
+print(summary_df)
+
+
+```
+
+
+```{r}
+
+# Reshape the summary_df for plotting
+summary_long <- summary_df %>%
+  pivot_longer(cols = starts_with("sum_emp"), 
+               names_to = c("emp_type"), 
+               values_to = "sum_emp")
+
+# Create a dot plot with different shapes for each employee type
+nationwide_summary_plot <- ggplot(summary_long, aes(x = NAICS, y = sum_emp, shape = emp_type)) +
+  geom_point(size = 3) +
+  labs(title = "Dot Plot of Sum of Employees by NAICS",
+       x = "NAICS",
+       y = "Sum of Employees") +
+  theme_bw() +  # Black and white theme
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_shape_manual(values = c(1, 2, 3))  # Different shapes for each type
+
+ggplotly(nationwide_summary_plot) %>%
+  layout(xaxis = list(tickangle = -45))
+
+```
