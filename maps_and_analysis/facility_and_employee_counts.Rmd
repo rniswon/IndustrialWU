@@ -15,7 +15,7 @@ library(viridis)
 library(readxl)
 library(dplyr)
 library(plotly)
-
+library(sp)
 options(scipen=999)
 ```
 
@@ -43,32 +43,232 @@ inwu_facility_df <- inwu_facility_df %>%
     emp_PinPointers = EMP,
     emp_Dun_Bradstreet = TotPerson,
     emp_PPP = JobsReported
-  )
+  ) %>%
+  mutate(
+    NAICS3 = substr(NAICS, 1, 3)
+  ) %>%
+  filter(LATITUDE > 0)
 
 # Calculate sums and averages for each unique NAICS
-summary_df <- inwu_facility_df %>%
-  group_by(NAICS) %>%
+summary_inwu_df_naics3 <- inwu_facility_df %>%
+  group_by(NAICS3) %>%
   summarise(
     sum_emp_PinPointers = sum(emp_PinPointers, na.rm = TRUE),
     avg_emp_PinPointers = mean(emp_PinPointers, na.rm = TRUE),
+    sum_estab_PinPointers = sum(emp_PinPointers > 0, na.rm = TRUE),
     sum_emp_Dun_Bradstreet = sum(emp_Dun_Bradstreet, na.rm = TRUE),
     avg_emp_Dun_Bradstreet = mean(emp_Dun_Bradstreet, na.rm = TRUE),
+    sum_estab_Dun_Bradstreet = sum(emp_Dun_Bradstreet > 0, na.rm = TRUE),
     sum_emp_PPP = sum(emp_PPP, na.rm = TRUE),
-    avg_emp_PPP = mean(emp_PPP, na.rm = TRUE)
-  ) 
+    avg_emp_PPP = mean(emp_PPP, na.rm = TRUE),
+    sum_estab_PPP = sum(emp_PPP > 0, na.rm = TRUE)
+  )
+```
 
+# Getting CBP Data 
+
+```{r}
+
+cbp_csv <- "D:\\water_use\\water_use_industrial\\IndustrialWU\\data\\CBP2021.CB2100CBP_2024-10-02T171441\\CBP2021.CB2100CBP-Data.csv"
+
+cbp_df <- read_csv(cbp_csv)
+
+cbp_df <- cbp_df %>%
+  mutate(
+    ESTAB = as.numeric(na_if(as.character(ESTAB), 'N')),
+    PAYANN = as.numeric(na_if(as.character(PAYANN), 'N')),
+    EMP = as.numeric(na_if(as.character(EMP), 'N')),
+    NAICS3 = substr(NAICS2017, 1, 3),
+    NAICS = as.character(NAICS2017)
+  ) %>%
+  filter(EMPSZES == '001')
+  
+summary_cbp_df_naics3 <- cbp_df %>%
+  group_by(NAICS3) %>%
+  summarise(
+    sum_emp_CBP = sum(EMP, na.rm = TRUE),
+    avg_emp_CBP = mean(EMP, na.rm = TRUE),
+    sum_estab_CBP = sum(ESTAB, na.rm = TRUE),
+    avg_estab_CBP = mean(ESTAB, na.rm = TRUE),
+    sum_payann_CBP = sum(PAYANN, na.rm = TRUE),
+    avg_payann_CBP = mean(PAYANN, na.rm = TRUE))
+
+```
+
+
+```{r}
+
+summary_df_naics3 <- summary_inwu_df_naics3 %>%
+  left_join(
+    summary_cbp_df_naics3 %>%
+      select(NAICS3, sum_emp_CBP, avg_emp_CBP, sum_estab_CBP, avg_estab_CBP, sum_payann_CBP, avg_payann_CBP),
+    by = "NAICS3"
+  )
+
+```
+
+
+Comparing Employee Counts
+
+```{r}
 # Define the prefixes to filter by
-prefixes <- c("321")#, "327", "311", "313", "315", "322", "323", "324", "325", "326")
+prefixes <- c("321", "327", "311", "313", "315", "322", "323", "324", "325", "326")
 
 # Create a regular expression pattern
 pattern <- paste0("^(", paste(prefixes, collapse = "|"), ")")
 
-# Filter the summary_df
-summary_df <- summary_df %>%
-  filter(str_detect(NAICS, pattern) & nchar(NAICS) >= 6)
+# Filter the summary_df_naics3 and agregate to 3 digit NAICS
+summary_df_naics3 <- summary_df_naics3 %>%
+  filter(NAICS3 %in% prefixes)
+
+# summary_df_naics3 <- summary_df_naics3 %>%
+#   filter(str_detect(NAICS, pattern) & nchar(NAICS) >= 6)
 
 # View the summary dataframe
-print(summary_df)
+print(summary_df_naics3)
+
+
+# Reshape the summary_df_naics3 for plotting
+summary_emp_long <- summary_df_naics3 %>%
+  pivot_longer(cols = starts_with("sum_emp"), 
+               names_to = c("emp_type"), 
+               values_to = "sum_emp")
+
+# Create a dot plot with different shapes for each employee type
+nationwide_emp_summary_plot <- ggplot(summary_emp_long, aes(x = NAICS3, y = sum_emp, shape = emp_type)) +
+  geom_point(size = 3) +
+  labs(title = "Dot Plot of Sum of Employees by NAICS",
+       x = "NAICS",
+       y = "Sum of Employees") +
+  theme_bw() +  # Black and white theme
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_shape_manual(values = c(1, 2, 3, 4))  # Different shapes for each type
+
+# ggplotly(nationwide_emp_summary_plot) %>%
+#   layout(xaxis = list(tickangle = -45))
+nationwide_emp_summary_plot
+```
+
+Comparing Establishment Counts
+
+
+```{r}
+
+summary_estab_long <- summary_df_naics3 %>%
+  pivot_longer(cols = starts_with("sum_estab"), 
+               names_to = c("estab_type"), 
+               values_to = "sum_estab")
+
+# Create a dot plot with different shapes for each employee type
+nationwide_estab_summary_plot <- ggplot(summary_estab_long, aes(x = NAICS3, y = sum_estab, shape = estab_type)) +
+  geom_point(size = 3) +
+  labs(title = "Dot Plot of Sum of Establishments by NAICS",
+       x = "NAICS",
+       y = "Sum of Establishments") +
+  theme_bw() +  # Black and white theme
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_shape_manual(values = c(1, 2, 3, 4))  # Different shapes for each type
+
+# ggplotly(nationwide_estab_summary_plot) %>%
+#   layout(xaxis = list(tickangle = -45))
+nationwide_estab_summary_plot
+
+```
+
+
+
+```{r}
+counties_shapefile_path <- "D:\\water_use\\water_use_industrial\\IndustrialWU\\data\\cb_2018_us_county_500k.shp"
+
+# Load shapefile
+counties_sf <- st_read(counties_shapefile_path)
+
+# Formating CBP dat by county
+
+
+cbp_df <- cbp_df %>%
+  mutate(
+    ESTAB = as.numeric(ESTAB),
+    sum_estab_cbp = sum(ESTAB, na.rm = FALSE)) %>%
+  filter(NAICS3 %in% prefixes) %>%
+  group_by(GEO_ID) 
+
+summary_cbp_df_county <- cbp_df %>%
+  group_by(NAICS3, GEO_ID) %>%
+  summarise(
+    sum_emp_CBP = sum(EMP, na.rm = TRUE),
+    avg_emp_CBP = mean(EMP, na.rm = TRUE),
+    sum_estab_CBP = sum(ESTAB, na.rm = TRUE),
+    avg_estab_CBP = mean(ESTAB, na.rm = TRUE),
+    sum_payann_CBP = sum(PAYANN, na.rm = TRUE),
+    avg_payann_CBP = mean(PAYANN, na.rm = TRUE))
+
+
+  
+# Appending GEOID to inwu_facility_df 
+#coordinates(inwu_facility_df) <- ~LONGITUDE + LATITUDE
+
+# If you want to convert it to an sf object
+inwu_facility_sf <- st_as_sf(inwu_facility_df, coords = c("LONGITUDE", "LATITUDE"), crs = 4326)
+
+st_crs(inwu_facility_sf) <- st_crs(counties_sf)
+
+inwu_facility_sf <- st_join(inwu_facility_sf, counties_sf %>% select(AFFGEOID), join = st_intersects)
+
+
+summary_inwu_sf_county <- inwu_facility_sf %>%
+  group_by(NAICS3, AFFGEOID) %>%
+  summarise(
+    sum_emp_PinPointers = sum(emp_PinPointers, na.rm = TRUE),
+    avg_emp_PinPointers = mean(emp_PinPointers, na.rm = TRUE),
+    sum_estab_PinPointers = sum(emp_PinPointers > 0, na.rm = TRUE),
+    sum_emp_Dun_Bradstreet = sum(emp_Dun_Bradstreet, na.rm = TRUE),
+    avg_emp_Dun_Bradstreet = mean(emp_Dun_Bradstreet, na.rm = TRUE),
+    sum_estab_Dun_Bradstreet = sum(emp_Dun_Bradstreet > 0, na.rm = TRUE),
+    sum_emp_PPP = sum(emp_PPP, na.rm = TRUE),
+    avg_emp_PPP = mean(emp_PPP, na.rm = TRUE),
+    sum_estab_PPP = sum(emp_PPP > 0, na.rm = TRUE)
+  )
+```
+
+```{r}
+# Merging CBP data into facility data 
+summary_inwu_sf_county <- summary_inwu_sf_county %>%
+  inner_join(summary_cbp_df_county, 
+             by = c("NAICS3" = "NAICS3", "AFFGEOID" = "GEO_ID")) %>%
+  select(NAICS3, 
+         AFFGEOID,
+         sum_emp_CBP, 
+         sum_estab_CBP, 
+         sum_payann_CBP, 
+         sum_emp_PinPointers,
+         sum_estab_PinPointers,
+         sum_emp_Dun_Bradstreet,
+         sum_estab_Dun_Bradstreet,
+         sum_emp_PPP,
+         sum_estab_PPP)
+
+# # Formatting shapefile geoid 
+# counties_sf$GEOID <- paste0('0500000US', counties_sf$GEOID)
+# 
+# facilities_map <- merge(counties_sf, cbp_df, by.x = 'AFFGEOID', by.y = 'GEO_ID')
+```
+
+
+```{r}
+
+summary_inwu_emp_county_long <- summary_inwu_sf_county %>%
+  pivot_longer(cols = starts_with("sum_emp"),
+               names_to = c("emp_type"),
+               values_to = "sum_emp")
+
+summary_emp_county_boxplot <- ggplot(summary_inwu_emp_county_long, aes(x = emp_type, y = sum_emp)) +
+  geom_boxplot() +
+  scale_y_log10() +
+  labs(title = "Comparisone county employment from  of employment values by dataset",
+       x = "Variables",
+       y = "Values") +
+  theme_minimal()
 
 
 ```
@@ -76,23 +276,63 @@ print(summary_df)
 
 ```{r}
 
-# Reshape the summary_df for plotting
-summary_long <- summary_df %>%
-  pivot_longer(cols = starts_with("sum_emp"), 
-               names_to = c("emp_type"), 
-               values_to = "sum_emp")
 
-# Create a dot plot with different shapes for each employee type
-nationwide_summary_plot <- ggplot(summary_long, aes(x = NAICS, y = sum_emp, shape = emp_type)) +
-  geom_point(size = 3) +
-  labs(title = "Dot Plot of Sum of Employees by NAICS",
-       x = "NAICS",
-       y = "Sum of Employees") +
-  theme_bw() +  # Black and white theme
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  scale_shape_manual(values = c(1, 2, 3))  # Different shapes for each type
+summary_inwu_estab_county_long <- summary_df_naics3 %>%
+  pivot_longer(cols = starts_with("sum_estab"),
+               names_to = c("estab_type"),
+               values_to = "sum_estab")
 
-ggplotly(nationwide_summary_plot) %>%
-  layout(xaxis = list(tickangle = -45))
+summary_estab_county_boxplot <- ggplot(summary_inwu_estab_county_long, aes(x = estab_type, y = sum_estab)) +
+  geom_boxplot() +
+  scale_y_log10() +
+  labs(title = "Comparisone county establishments from  of establishment values by dataset",
+       x = "Variables",
+       y = "Values") +
+  theme_minimal()
+
+
+summary_estab_county_boxplot
+
 
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+# test_facilities <- inwu_facility_sf %>%
+#   slice_head(n = 100)
+#   
+# facilities_map <- ggplot() +
+#   geom_sf(data = counties_sf, fill = "lightgrey", color = "black") +  # Plot counties
+#   geom_sf(data = test_facilities, color = "red", size = 2) +         # Plot points
+#   theme_minimal() +                                                    # Use a minimal theme
+#   labs(title = "Facilities Over Counties",
+#        x = "LONGITUDE",
+#        y = "LATTITUDE") +
+#   coord_sf()
+# 
+# ggplotly(facilities_map)
+
+# Ensures the correct projection is used
+```
+
