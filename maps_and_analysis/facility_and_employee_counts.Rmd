@@ -35,10 +35,24 @@ inwu_model_folder <- "D:/DOI/GS-W-WaterUse - Industrial model"
 inwu_facility_csv <- paste0(inwu_model_folder,
                             "/INWU_task_folders/Site_selection/Industrial_site_list/USEPA_HIFLD_EIA_PPP_facility_v4.csv")
 
-inwu_facility_df <- read_csv(inwu_facility_csv)
+inwu_facility_df <- inwu_facility_df <- read_csv(inwu_facility_csv,
+                                                 col_types = cols(
+                                                   LATITUDE = col_double(),
+                                                   LONGTITUDE = col_double(),
+                                                   NAICS = col_character(),
+                                                   EMP = col_integer(),
+                                                   TotPerson = col_integer(),
+                                                   JobsReported = col_integer(),
+                                                 ))
 
 # Rename the fields
 inwu_facility_df <- inwu_facility_df %>%
+  select(LATITUDE, 
+         LONGITUDE, 
+         NAICS, 
+         EMP, 
+         TotPerson, 
+         JobsReported) %>%
   rename(
     emp_PinPointers = EMP,
     emp_Dun_Bradstreet = TotPerson,
@@ -71,9 +85,25 @@ summary_inwu_df_naics3 <- inwu_facility_df %>%
 
 cbp_csv <- "D:\\water_use\\water_use_industrial\\IndustrialWU\\data\\CBP2021.CB2100CBP_2024-10-02T171441\\CBP2021.CB2100CBP-Data.csv"
 
-cbp_df <- read_csv(cbp_csv)
+cbp_df <- read_csv(cbp_csv,
+                   col_types = cols(
+                     GEO_ID = col_character(),
+                     NAICS2017 = col_character(),
+                     EMPSZES = col_character(),
+                     ESTAB = col_integer(),
+                     PAYANN = col_integer(),
+                     EMP = col_integer()
+                     ))
 
 cbp_df <- cbp_df %>%
+  select(
+    GEO_ID,
+    NAICS2017,
+    EMPSZES,
+    ESTAB,
+    PAYANN,
+    EMP
+  ) %>%
   mutate(
     ESTAB = as.numeric(na_if(as.character(ESTAB), 'N')),
     PAYANN = as.numeric(na_if(as.character(PAYANN), 'N')),
@@ -300,12 +330,53 @@ summary_estab_county_boxplot
 
 
 
+```{r}
+summary_inwu_sf_county <- summary_inwu_sf_county %>%
+  filter(NAICS3 == '321')
+output_dir = 'outputs'
+estab_columns <- names(summary_inwu_sf_county)[grepl("^sum_estab", names(summary_inwu_sf_county))]
+
+# Create maps for each 'sum_estab' field
+map_files <- purrr::map(estab_columns, function(estab_col) {
+  ggplot(data = summary_inwu_sf_county) +
+    geom_sf(aes(fill = estab_col)) +
+    scale_fill_viridis_c() +  # Use a color scale suitable for continuous data
+    labs(title = paste("Establishments by NAICS3 for", estab_col),
+         fill = "Number of Establishments") +
+    theme_minimal() +
+    theme(legend.position = "right")
+
+  # Save the plot
+  ggsave(filename = file.path(output_dir, paste0(estab_col, "_map.png")),
+         plot = last_plot(),
+         width = 10, height = 8, dpi = 300)
+})
 
 
 
 
 
 
+```
+
+
+
+
+```{r}
+
+
+establishments_map <- ggplot(data = summary_inwu_sf_county) + 
+  geom_sf(aes(fill = sum_estab_CBP)) +
+  scale_fill_viridis_c(trans = 'log') +
+  theme_minimal() + 
+  labs(fill = "Number of Establishments",
+       title = "Number of Establishments by County")
+
+plotly_map <- ggplotly(establishments_map)
+
+plotly_map
+
+```
 
 
 
