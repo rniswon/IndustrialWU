@@ -1,10 +1,23 @@
 ---
-title: "R Notebook"
-output: html_notebook
+title: "Facility and Employee Counts"
+output:
+  html_document:
+    df_print: paged
 ---
 
-This R Markdown document explores the employee and facility counts for various 
-data sources for the Industrial WU Model. 
+# Introduction
+
+This R Markdown document compares some sources of employment and facilities throughout the united states. These datasets include
+
+[U.S Census Buerau's County Business Patterns Dataset](https://www.census.gov/programs-surveys/cbp.html)
+
+PPP Loans
+
+Pin Pointers
+
+Dunn and Bradstreet
+
+## First let's load the required packages
 
 ```{r}
 
@@ -19,30 +32,49 @@ library(sp)
 options(scipen=999)
 ```
 
-Getting User Inputs
+## Now we need some inputs from the user
+
+*inwu_model_folder* - Here provide the path to the team sharepoint **GS-W-WaterUse - Industrial model**
+
 ```{r}
 
 # Path to INWU model folder on local machine
 inwu_model_folder <- "D:/DOI/GS-W-WaterUse - Industrial model"
 
+```
 
+## Notes on this assessment
 
+The facility counts used in this assessment are to the 3 digit naics level. The decision to use 3 digit naics was made because at high number naics censoring of the data resulted in an undercount of facilities.
+
+here are notes from Jon Haynes:
+
+![](images/haynes_cbp_naics_figure.png)
+
+```         
+    · Evaluating the US Census County Business Practice establishment counts
+        · Prior to 2017, all business establishment counts for each NAICS digit level are the same. 
+        · Starting in 2017, they implemented a rule where if a FIPS-NAICS has less than 3 establishments in a given year, then they are not reported in order to "comply with disclosure avoidance guidelines".  At the 2-digit NAICS most counties have more than 2 establishments so very few are not reported. But as you increase to 4 & 6-digit NAICS you also increase the likelihood of less than 3 establishments. The result is 4-digit NAICS establishment counts are only ~80% of 2-digit counts nationally. And 6-digit counts are only ~60% of 2-digit counts.
 ```
 
 # Getting INWU Facilities List
+
+Here we find the path to the Industrial WU Team's facility list v4. This will be our source for data from the PinPointers Dun and Bradstreet and PPP Loans employment and facility data.
+
+Once loaded and formatted summaries are made of the nationwide dataset by 2 digit naics code.
 
 ```{r}
 inwu_facility_csv <- paste0(inwu_model_folder,
                             "/INWU_task_folders/Site_selection/Industrial_site_list/USEPA_HIFLD_EIA_PPP_facility_v4.csv")
 
-inwu_facility_df <- inwu_facility_df <- read_csv(inwu_facility_csv,
-                                                 col_types = cols(
-                                                   LATITUDE = col_double(),
-                                                   LONGTITUDE = col_double(),
-                                                   NAICS = col_character(),
-                                                   EMP = col_integer(),
-                                                   TotPerson = col_integer(),
-                                                   JobsReported = col_integer(),
+inwu_facility_df <- read_csv(inwu_facility_csv,
+                             col_types = cols(
+                               LATITUDE = col_double(),
+                               LONGTITUDE = col_double(),
+                               NAICS = col_character(),
+                               EMP = col_integer(),
+                               TotPerson = col_integer(),
+                               JobsReported = col_integer(),
                                                  ))
 
 # Rename the fields
@@ -79,7 +111,11 @@ summary_inwu_df_naics3 <- inwu_facility_df %>%
   )
 ```
 
-# Getting CBP Data 
+# Getting CBP Data
+
+Here we upload the Industrial WU Team's copy of the cbp data at the 3 digit naics code.
+
+Once loaded and formatted summaries are made of the nationwide dataset by 2 digit naics code.
 
 ```{r}
 
@@ -125,6 +161,11 @@ summary_cbp_df_naics3 <- cbp_df %>%
 
 ```
 
+# Assessing the datasets at a nationwide scale
+
+## Merging The Summary Datasets
+
+Here we merge the summary datasets to create a dataframe that contains the count of employees and establishments for naics 3 nation wide for all the datasets. We will use this to compare the datasets
 
 ```{r}
 
@@ -137,8 +178,29 @@ summary_df_naics3 <- summary_inwu_df_naics3 %>%
 
 ```
 
+## Comparing Employee Counts
 
-Comparing Employee Counts
+Here employee counts are compared by 3 digit naics. Here we only consider the top water using naics codes as determined by Boreo and Pasqualini. These categories are
+
+-   321 Wood Products
+
+-   327 Nonmetalic mineral products
+
+-   311 Food and berage and tobacco products
+
+-   313 Textile mills and textile product mills
+
+-   315 Apparel and leather and allied products
+
+-   322 Paper Products
+
+-   323 Printing and related support activities
+
+-   324 Petroleum and coal products
+
+-   325 Chemical products
+
+-   326 Plastics and rubber products
 
 ```{r}
 # Define the prefixes to filter by
@@ -167,20 +229,19 @@ summary_emp_long <- summary_df_naics3 %>%
 # Create a dot plot with different shapes for each employee type
 nationwide_emp_summary_plot <- ggplot(summary_emp_long, aes(x = NAICS3, y = sum_emp, shape = emp_type)) +
   geom_point(size = 3) +
-  labs(title = "Dot Plot of Sum of Employees by NAICS",
+  labs(title = "Sum of Employees Nationwide by Top Water Using NAICS",
        x = "NAICS",
        y = "Sum of Employees") +
   theme_bw() +  # Black and white theme
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  scale_shape_manual(values = c(1, 2, 3, 4))  # Different shapes for each type
+  scale_shape_manual(values = c(1, 2, 3, 4)) 
 
 # ggplotly(nationwide_emp_summary_plot) %>%
 #   layout(xaxis = list(tickangle = -45))
 nationwide_emp_summary_plot
 ```
 
-Comparing Establishment Counts
-
+## Comparing Establishment Counts
 
 ```{r}
 
@@ -192,7 +253,7 @@ summary_estab_long <- summary_df_naics3 %>%
 # Create a dot plot with different shapes for each employee type
 nationwide_estab_summary_plot <- ggplot(summary_estab_long, aes(x = NAICS3, y = sum_estab, shape = estab_type)) +
   geom_point(size = 3) +
-  labs(title = "Dot Plot of Sum of Establishments by NAICS",
+  labs(title = "Sum of Establishments Nationwide by Top Water Using NAICS",
        x = "NAICS",
        y = "Sum of Establishments") +
   theme_bw() +  # Black and white theme
@@ -205,7 +266,11 @@ nationwide_estab_summary_plot
 
 ```
 
+# Assessing the datasets by-county
 
+First we load a shapefile of US counties and join it to our facilities list
+
+\# If you want to convert it to an sf object
 
 ```{r}
 counties_shapefile_path <- "D:\\water_use\\water_use_industrial\\IndustrialWU\\data\\cb_2018_us_county_500k.shp"
@@ -238,7 +303,6 @@ summary_cbp_df_county <- cbp_df %>%
 # Appending GEOID to inwu_facility_df 
 #coordinates(inwu_facility_df) <- ~LONGITUDE + LATITUDE
 
-# If you want to convert it to an sf object
 inwu_facility_sf <- st_as_sf(inwu_facility_df, coords = c("LONGITUDE", "LATITUDE"), crs = 4326)
 
 st_crs(inwu_facility_sf) <- st_crs(counties_sf)
@@ -257,11 +321,10 @@ summary_inwu_sf_county <- inwu_facility_sf %>%
     sum_estab_Dun_Bradstreet = sum(emp_Dun_Bradstreet > 0, na.rm = TRUE),
     sum_emp_PPP = sum(emp_PPP, na.rm = TRUE),
     avg_emp_PPP = mean(emp_PPP, na.rm = TRUE),
-    sum_estab_PPP = sum(emp_PPP > 0, na.rm = TRUE)
+    sum_estab_PPP = sum(emp_PPP > 0, na.rm = TRUE),
+    .groups = 'drop'
   )
-```
 
-```{r}
 # Merging CBP data into facility data 
 summary_inwu_sf_county <- summary_inwu_sf_county %>%
   inner_join(summary_cbp_df_county, 
@@ -284,83 +347,89 @@ summary_inwu_sf_county <- summary_inwu_sf_county %>%
 # facilities_map <- merge(counties_sf, cbp_df, by.x = 'AFFGEOID', by.y = 'GEO_ID')
 ```
 
+```{r, fig.width=14}
 
-```{r}
-
+# summary_inwu_emp_county_long <- summary_inwu_sf_county %>%
+#   pivot_longer(cols = starts_with("sum_emp"),
+#                names_to = c("emp_type"),
+#                values_to = "sum_emp")
+# 
+# summary_emp_county_boxplot <- ggplot(summary_inwu_emp_county_long, aes(x = emp_type, y = sum_emp)) +
+#   geom_boxplot() +
+#   scale_y_log10() +
+#   labs(title = "Comparison county employment from  of employment values by dataset",
+#        x = "Variables",
+#        y = "Values") +
+#   theme_minimal()
+# 
+# summary_emp_county_boxplot
 summary_inwu_emp_county_long <- summary_inwu_sf_county %>%
   pivot_longer(cols = starts_with("sum_emp"),
                names_to = c("emp_type"),
                values_to = "sum_emp")
 
-summary_emp_county_boxplot <- ggplot(summary_inwu_emp_county_long, aes(x = emp_type, y = sum_emp)) +
+summary_emp_county_boxplot <- ggplot(summary_inwu_emp_county_long, aes(x = NAICS3, y = sum_emp, fill = emp_type)) +
   geom_boxplot() +
   scale_y_log10() +
-  labs(title = "Comparisone county employment from  of employment values by dataset",
-       x = "Variables",
+  scale_fill_viridis(option = 'cividis',discrete = TRUE) +
+  labs(title = "Comparison of County Employment Values by NAICS3 and Dataset",
+       x = "NAICS3 Code",
        y = "Values") +
   theme_minimal()
 
-
+summary_emp_county_boxplot
 ```
 
+```{r, fig.width=14}
 
-```{r}
 
-
-summary_inwu_estab_county_long <- summary_df_naics3 %>%
+summary_inwu_estab_county_long <- summary_inwu_sf_county %>%
   pivot_longer(cols = starts_with("sum_estab"),
                names_to = c("estab_type"),
                values_to = "sum_estab")
 
-summary_estab_county_boxplot <- ggplot(summary_inwu_estab_county_long, aes(x = estab_type, y = sum_estab)) +
+summary_estab_county_boxplot <- ggplot(summary_inwu_estab_county_long, aes(x = NAICS3, y = sum_estab, fill = estab_type)) +
   geom_boxplot() +
   scale_y_log10() +
-  labs(title = "Comparisone county establishments from  of establishment values by dataset",
-       x = "Variables",
-       y = "Values") +
-  theme_minimal()
-
+  scale_fill_viridis(option = 'cividis',discrete = TRUE) +
+  labs(title = "Comparison of County Establishment Values by NAICS3 and Dataset",
+       x = "NAICS3 Code",
+       y = "Values") 
 
 summary_estab_county_boxplot
 
-
 ```
-
-
-
-
 
 ```{r}
 summary_inwu_sf_county <- summary_inwu_sf_county %>%
   filter(NAICS3 == '321')
+
 output_dir = 'outputs'
 estab_columns <- names(summary_inwu_sf_county)[grepl("^sum_estab", names(summary_inwu_sf_county))]
 
-# Create maps for each 'sum_estab' field
-map_files <- purrr::map(estab_columns, function(estab_col) {
-  ggplot(data = summary_inwu_sf_county) +
-    geom_sf(aes(fill = estab_col)) +
-    scale_fill_viridis_c() +  # Use a color scale suitable for continuous data
-    labs(title = paste("Establishments by NAICS3 for", estab_col),
-         fill = "Number of Establishments") +
-    theme_minimal() +
-    theme(legend.position = "right")
+# # Create maps for each 'sum_estab' field
+# map_files <- purrr::map(estab_columns, function(estab_col) {
+#   ggplot(data = summary_inwu_sf_county) +
+#     geom_sf(aes(fill = estab_col)) +
+#     scale_fill_viridis_c() +  # Use a color scale suitable for continuous data
+#     labs(title = paste("Establishments by NAICS3 for", estab_col),
+#          fill = "Number of Establishments") +
+#     theme_minimal() +
+#     theme(legend.position = "right")
+#   
+#   # Save the plot
+#   ggsave(filename = file.path(output_dir, paste0(estab_col, "_map.png")),
+#          plot = last_plot())
+# })
 
-  # Save the plot
-  ggsave(filename = file.path(output_dir, paste0(estab_col, "_map.png")),
-         plot = last_plot(),
-         width = 10, height = 8, dpi = 300)
-})
-
-
+test_estab_map <- ggplot(data = summary_inwu_sf_county) + 
+  geom_sf(aes(fill = sum_estab_CBP)) + 
+  scale_fill_viridis(option = 'cividis')
 
 
 
 
 ```
-
-
-
 
 ```{r}
 
@@ -377,17 +446,6 @@ plotly_map <- ggplotly(establishments_map)
 plotly_map
 
 ```
-
-
-
-
-
-
-
-
-
-
-
 
 ```{r}
 # test_facilities <- inwu_facility_sf %>%
@@ -406,4 +464,3 @@ plotly_map
 
 # Ensures the correct projection is used
 ```
-
