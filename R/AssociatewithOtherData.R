@@ -22,13 +22,31 @@
 #'   }
 #'
 merge_nationaldata <- function(nonSWUDS, natData, natHeaders) {
-
- 
+  
+  
  nonSWUDSwNat <- merge_andreplaceNA(mutate(nonSWUDS, Source = "NonSWUDS"), natData) |> 
    dplyr::select(State, any_of(names(natHeaders$HeaderCrosswalk)), DataSource)
  
  return(nonSWUDSwNat)
 
+}
+
+prep_siteselection <- function(national_Xwalks, datacodes_Xwalks, siteselection = list()) {
+  natHeaders <- list(
+    HeaderCrosswalk = get_filledcsv(file.path(national_Xwalks, "HeaderCrosswalk.csv")),
+    DataCodesCrosswalk = datacodes_Xwalks
+  )
+  siteSelectionDat <- readandrename_columns(siteselection, natHeaders, national_Xwalks, data = "National") |>
+    pluck(1) |>
+    dplyr::mutate(
+      FacilityName = fedmatch::clean_strings(
+        as.character(FacilityName), common_words = fedmatch::corporate_words)
+      ) |>
+    dplyr::mutate(across(c("Address1", "City1", "County1"), ~str_to_title(.))) |>
+    dplyr::mutate(State = State1) |>
+    unique()
+    
+  return(siteSelectionDat)
 }
 
 prep_nationaldata <- function(national_Xwalks, datacodes_Xwalks, natdata = list(), extradata = list()) {
@@ -61,13 +79,6 @@ augment_data <- function(data, data_to_add, natHeaders) {
                    .init = data) |> 
       dplyr::select(State, any_of(names(natHeaders$HeaderCrosswalk)), DataSource)
   
-  sites_wo_data <- data_to_add$facility_v3_NAICS_SIC.csv %>% 
-    filter(!SITESELECTION_FACILITYID %in% augmentedData$SITESELECTION_FACILITYID)
-  n_sites_nodata <- nrow(sites_wo_data)
-  n_sites_data <- nrow(data_to_add$facility_v3_NAICS_SIC.csv) - n_sites_nodata
-  m <- paste(n_sites_data, "sites from the site selection team have merged with data and", n_sites_nodata, "have not.")
-  message(m)
-  
   return(augmentedData)
 }
 
@@ -75,3 +86,72 @@ merge_withaugmentation <- function(x, y, yname) {
   merge_vars <- names(y)[names(y) %in% names(x)]
   merge_andreplaceNA(x = x, y = y, yname = yname, merge_vars = merge_vars, jointype = "LEFT")
 }
+
+iterative_merge_siteselection <- function(WUdata, siteselectiondata, mergevars) {
+  siteselection_subset <- filter(siteselectiondata, !!sym(mergevars[[1]]) %in% 
+                                   unique(WUdata[[mergevars[[1]]]]))
+  merge_dat <- rquery::natural_join(WUdata, siteselection_subset, by = mergevars, jointype = "LEFT") 
+  if(nrow(merge_dat) != nrow(WUdata)) {
+    nadd <- nrow(merge_dat) - nrow(WUdata)
+    m <- paste("Warning:", nadd,"Duplicates added")
+    message(m) 
+    } # something went wrong
+  merge_success <- merge_dat %>% filter(!is.na(SITESELECTION_FACILITYID)) %>% 
+    group_by(across(all_of(names(WUdata)))) %>% 
+    summarise(across(contains("SITESELECTION"), ~paste(unique(.), collapse = " _OR_ ")),
+              .groups = "drop") 
+  merge_fail <- merge_dat %>% filter(is.na(SITESELECTION_FACILITYID)) %>% 
+    select(all_of(names(WUdata)))
+  
+  return(list(merge_success = merge_success, merge_fail = merge_fail))
+}
+
+merge_siteselection <- function(data, siteselection, siteselectionfilename) {
+  
+
+  mergevars <- list(
+    merge1 = c("FacilityName", "Address1", "City1", "County1", "State1"),
+    merge2 = c("FacilityName", "City1", "County1", "State1"),
+    merge3 = c("Address1", "City1", "County1", "State1"),
+    merge4 = c("Address1", "City1", "State1"),
+    merge5 = c("Address1", "County1", "State1"),
+    merge6 = c("FacilityName", "City1", "State1"),
+    merge7 = c("FacilityName", "County1", "State1"),
+    merge8 = c("FacilityName", "Address1", "State1"),
+    merge9 = c("FacilityName", "State1"),
+    merge10 = c("Address1", "State1")
+  )
+  
+  merge_success <- list()
+  merge_fail <- list()
+  
+  for(i in 1:length(mergevars)) {
+    if(i == 1) {
+      merge_tmp <- iterative_merge_siteselection(data, siteselection, mergevars[[i]])
+    } else {
+      merge_tmp <- iterative_merge_siteselection(merge_fail[[i-1]], siteselection, mergevars[[i]])
+    }
+    merge_success[[i]] <- merge_tmp$merge_success
+    merge_fail[[i]] <- merge_tmp$merge_fail
+  }
+  merge_success_all <- reduce(merge_success, bind_rows) |>
+    dplyr::mutate(DataSource = paste0(DataSource, ", ", basename(siteselectionfilename))) 
+  merge_fail_all <- merge_fail[[length(merge_fail)]]
+  alldat <- bind_rows(merge_success_all, merge_fail_all) %>%
+    arrange(State, FacilityName, SourceName, Year) %>%
+    select(all_of(names(data)), all_of(names(siteselection)), DataSource) |>
+    dplyr::relocate(DataSource, .after = last_col())
+  
+  sites_wo_data <- siteselection %>% 
+    filter(!SITESELECTION_FACILITYID %in% alldat$SITESELECTION_FACILITYID)
+  n_sites_nodata <- nrow(sites_wo_data)
+  n_sites_data <- length(unique(merge_success_all$SITESELECTION_FACILITYID))
+  n_datapoints <- nrow(merge_success_all)
+  m <- paste(n_sites_data, 
+             "sites from the site selection team have merged with data, for", 
+             n_datapoints, "total data points, and", n_sites_nodata, 
+             "sites have not merged with data.")
+  message(m)
+  
+  return(alldat)
+  }

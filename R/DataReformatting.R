@@ -157,8 +157,10 @@ merge_andreplaceNA <- function(x, y, yname = NULL, merge_vars = NULL, jointype =
     mutate(DataSource = map2_chr(DataSource, DataSource_new, ~{
       paste(unique(str_split_1(paste(na.omit(c(.x, .y)), collapse = ", "), ", ")), collapse = ", ")
     })) %>% 
-    select(-DataSource_new)
+    select(-DataSource_new) %>%
+    unique()
   
+  # if(sum(duplicated(merge)) > 0) {browser()} # fix problems now to keep them from propagating
   # Return the merged data frame
   return(merge)
 }
@@ -743,12 +745,13 @@ standard_Addresstreatment <- function(data, header) {
     } else {
       indices <- data.frame(i_state = indices_state, i_zip = indices_zip)
     }
-   
+    
     tmpvals <- pull_necessaryaddressdata(x = entrylines, type = type, 
                                          zipindex = indices$i_zip, 
                                          stateindex = indices$i_state, 
                                          state_regex = state_regex, 
-                                         zip_regex = zip_regex)
+                                         zip_regex = zip_regex) %>%
+      {if(type == "State") {.} else {str_to_title(.)}}
     
     tmp <- data |>
       dplyr::select(-contains(header)) |>
@@ -804,13 +807,18 @@ standard_coordinatetreatment <- function(data, header) {
 #'   result <- standard_Yeartreatment(data_frame, "YearHeader")
 #'   }
 #'
-standard_Yeartreatment <- function(data, header) {
+standard_Yeartreatment <- function(data, filename, header, updatedCrosswalks, existingCrosswalks) {
   # Check if the header exists in the data
   if(length(grep(header, names(data))) > 0) {
     if(length(grep(header, names(data))) == 1) {
-      tmp <- data |> 
-        dplyr::mutate(!!header := as.numeric(readr::parse_number(as.character(data[[header]])))) |>
-        dplyr::filter(if_any(.cols = any_of(header), ~!is.na(.)))
+      if(is.infinite(max(nchar(readr::parse_number(as.character(data[[header]]))), na.rm = TRUE))) {
+        tmp <- handle_headers(data, filename, header, updatedCrosswalks, existingCrosswalks) %>%
+          mutate(!!header := as.numeric(.[[header]]))
+      } else {
+        tmp <- data |> 
+          dplyr::mutate(!!header := as.numeric(readr::parse_number(as.character(data[[header]])))) |>
+          dplyr::filter(if_any(.cols = any_of(header), ~!is.na(.)))
+      }
     } else if(length(grep(header, names(data))) > 1) {
       stop("Is there more than one Year column?")
     }
@@ -915,7 +923,7 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, parallel = F
   HUCs_code <- paste0(package_call, "map(., ~standard_HUCtreatment(.x, '", HUCcolumns, "'), .progress = TRUE)", collapse = " %>% ")
   Addresses_code <- paste0(package_call, "map(., ~standard_Addresstreatment(.x, '", Addresscolumns, "'), .progress = TRUE)", collapse = " %>% ")
   coordinates_code <- paste0(package_call, "map(., ~standard_coordinatetreatment(.x, '", coordinatecolumns, "'), .progress = TRUE)", collapse = " %>% ")
-  years_code <- paste0(package_call, "map(., ~standard_Yeartreatment(.x, '", Yearcolumns, "'), .progress = TRUE)", collapse = " %>% ")
+  years_code <- paste0(package_call, "imap(., ~standard_Yeartreatment(.x, .y, '", Yearcolumns, "', updatedCrosswalks, existingCrosswalks), .progress = TRUE)", collapse = " %>% ")
   data_code <- paste0(package_call, "map(., ~standard_datatreatment(.x, '", datacolumns, "'), .progress = TRUE)", collapse = " %>% ")
   # As noted in `manual_updates`, `|>` is the base R pipe function
   # In the next block of code, I've used `|>` where possible, but I had to use `%>%` for the lines that parse the written code
