@@ -70,7 +70,12 @@ list(
     national_Xwalks = NationalDataCrosswalks, 
     datacodes_Xwalks = updatedCrosswalks$DataCodesCrosswalk,
     natdata = list(NAICSworkup, SWUDS, SWUDS_workup),
-    extradata = list(FIPSdata, SiteSelection)
+    extradata = list(FIPSdata)
+  )),
+  tar_target(FormattedSiteSelectiondata, command = prep_siteselection(
+    national_Xwalks = NationalDataCrosswalks, 
+    datacodes_Xwalks = updatedCrosswalks$DataCodesCrosswalk,
+    siteselection = list(SiteSelection)
   )),
   tar_target(augmented_data, command = 
                augment_data(
@@ -78,8 +83,12 @@ list(
                  data_to_add = FormattedNationaldata$augmentData,
                  natHeaders = FormattedNationaldata$natHeaders
                )),
-  tar_target(AllStates, command = write_allstates(augmented_data), format = "file"),  # Write combined data for all states to a file
-  tar_target(QAQCupdate, command = checkQAQCstatus(augmented_data, QAQCstatus),
+  tar_target(siteselectionmerged, 
+             command = merge_siteselection(data = augmented_data, 
+                                           siteselection = FormattedSiteSelectiondata,
+                                           siteselectionfilename = SiteSelection)),
+  tar_target(AllStates, command = write_allstates(siteselectionmerged), format = "file"),  # Write combined data for all states to a file
+  tar_target(QAQCupdate, command = checkQAQCstatus(siteselectionmerged, QAQCstatus),
              cue = tar_cue(mode = "always")) # Look for any changes in number of duplicates and missing data rows introduced
   )
 

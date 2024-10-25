@@ -560,3 +560,7 @@ file,Header,Value,Notes
 "/NV/withdrawal_reports/BREAK-A-HEART, LLC.xlsx$2016",SourceName,,Cell is left blank in source 
 /NV/withdrawal_reports/ATOMIC LIQUOR.xlsx$2015,BasinName1,,Cell is left blank in source 
 "/NV/withdrawal_reports/BREAK-A-HEART, LLC.xlsx$2016",BasinName1,,Cell is left blank in source 
+/MI/Michigan monthly water use by facility and source.xlsx$2019,Year,2019,Year comes from the excel sheet name
+/MI/Michigan monthly water use by facility and source.xlsx$2020,Year,2020,Year comes from the excel sheet name
+/MI/Michigan monthly water use by facility and source.xlsx$2021,Year,2021,Year comes from the excel sheet name
+/MI/Michigan monthly water use by facility and source.xlsx$2022,Year,2022,Year comes from the excel sheet name
