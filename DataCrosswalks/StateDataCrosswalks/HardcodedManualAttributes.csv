@@ -47,8 +47,8 @@ file,Header,Value,Notes
 /MN/read_me.docx,ValueType,WD,
 /NH/read_me.docx,Units_monthly,thousand gallons,Discussion with Laura Medalie
 /NH/read_me.docx,Method_monthly,Metered,
-/TX/read_me.docx,Method_monthly,Metered,
-/TX/read_me.docx,Method_annual_reported,Metered,
+/TX/read_me.docx,Method_monthly,Estimated,
+/TX/read_me.docx,Method_annual_reported,Estimated,
 /TX/TX_IN_WU.xlsx$Texas_IndustrialWithdrawals_200,Units_monthly,gallons,
 /TX/TX_IN_WU.xlsx$Texas_IndustrialWithdrawals_200,Units_annual_reported,gallons,
 /VT/2008_2019_ Vermont_Yearly_Large_GW_Withdrawal.xlsx$GW Withdrawal Yearly,ValueType,WD,NA
@@ -560,3 +560,7 @@ file,Header,Value,Notes
 "/NV/withdrawal_reports/BREAK-A-HEART, LLC.xlsx$2016",SourceName,,Cell is left blank in source 
 /NV/withdrawal_reports/ATOMIC LIQUOR.xlsx$2015,BasinName1,,Cell is left blank in source 
 "/NV/withdrawal_reports/BREAK-A-HEART, LLC.xlsx$2016",BasinName1,,Cell is left blank in source 
+/MI/Michigan monthly water use by facility and source.xlsx$2019,Year,2019,Year comes from the excel sheet name
+/MI/Michigan monthly water use by facility and source.xlsx$2020,Year,2020,Year comes from the excel sheet name
+/MI/Michigan monthly water use by facility and source.xlsx$2021,Year,2021,Year comes from the excel sheet name
+/MI/Michigan monthly water use by facility and source.xlsx$2022,Year,2022,Year comes from the excel sheet name
