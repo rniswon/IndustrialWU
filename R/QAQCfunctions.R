@@ -39,7 +39,7 @@ describe_duplicateproblems <- function(df, cols) {
     dplyr::group_by(pick(any_of(c("Jan", "Feb", "Mar", "Apr", "May", "Jun", 
                                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", 
                              "Annual_reported")))) |>
-    dplyr::filter(n() > 1) |> ungroup() |> 
+    dplyr::filter(dplyr::n() > 1) |> ungroup() |>
     filter(if_any(.cols = any_of(c("Jan", "Feb", "Mar", "Apr", "May", "Jun", 
                                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", 
                                    "Annual_reported")),
