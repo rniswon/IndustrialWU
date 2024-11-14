@@ -4,7 +4,8 @@
 #
 # Purpose:
 # This script updates the geographical coordinates (latitude and longitude) 
-# of industrial facilities based on additional geocoding data. It reads a 
+# of industrial facilities based on outputs from Judy's  
+# `Geo_code_Add_lat_Long.R`Script. It reads a 
 # list of facilities, merges it with geocoded data, and updates the 
 # coordinates where applicable.
 #
@@ -14,21 +15,13 @@
 #
 # User Inputs:
 # - inwu_model_folder: Path to the Industrial model folder.
-# - output_directory: Directory for output files (currently set to a specific path).
+# - output_directory: Directory for output files
 #
 # Data Sources:
 # 1. Industrial Facilities List (v4):
 #    - File: USEPA_HIFLD_EIA_PPP_facility_v4.csv
 #    - Location: D:/DOI/GS-W-WaterUse - Industrial model/INWU_task_folders/
 #      Site_selection/Industrial_site_list/
-#    - Columns:
-#      - LATITUDE: Double (geographical latitude)
-#      - LONGITUDE: Double (geographical longitude)
-#      - NAICS: Character (North American Industry Classification System code)
-#      - EMP: Integer (number of employees)
-#      - TotPerson: Integer (total number of persons)
-#      - JobsReported: Integer (number of jobs reported)
-#
 # 2. Geocoding Outputs:
 #    - Location: ~/GS-W-WaterUse - Industrial model/INWU_task_folders/
 #      Site_selection/Data/_CLEANUP/Find_Lats_Longs/NAICS_Address
