@@ -52,7 +52,7 @@ manufacturing_map <- ggplot(data = cbp_map) +
   scale_fill_viridis_c(option = 'plasma', trans = 'log') + 
   theme_minimal() + 
   labs(fill = "Number of Establishments",
-       title = "Number of Manufacturing Establishments by County")
+       title = "Number of Establishments by County")
 
 plotly_map <- ggplotly(manufacturing_map)
 

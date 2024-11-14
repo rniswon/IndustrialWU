@@ -433,12 +433,15 @@ for (naics in naics_list){
     
     estab_map <- ggplot(data = naics_map_df) + 
       geom_sf(aes_string(fill = estab_col)) +
-      scale_fill_viridis_c(option = 'cividis', trans = 'log') + 
+      scale_fill_viridis_c(option = 'cividis', trans = 'log', na.value = "white") + 
       labs(title = paste(naics, estab_col),
            fill = "Number of Establishments") +
       theme_minimal()
       
     print(estab_map)
+  
+    
+    
   }
   
   
