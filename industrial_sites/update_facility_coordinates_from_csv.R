@@ -45,13 +45,19 @@
 # Output:
 # - Prints the number of coordinates that were updated.
 
-
+library(tidyverse)
 source("utility_functions/update_facility_coordinates.R")
 
 ### Getting User Inputs ###
 inwu_model_folder <- "D:/DOI/GS-W-WaterUse - Industrial model"
-output_directory <- ''
-  
+output_directory <- 'outputs/update_facility_coordinates_from_csv'
+
+### Creating Output Directory if it doesn't exist ###
+if (!dir.exists(output_directory)) {
+  dir.create(output_directory, recursive = TRUE)  # Use recursive = TRUE if you want to create parent directories as well
+  cat("Directory created:", output_directory, "\n")
+} 
+
 
 ### Reading v4 of the Industrial Facilities List ### 
 inwu_facility_csv <- paste0(inwu_model_folder,
@@ -87,27 +93,56 @@ for (csv in csv_files){
   csv_name <- basename(csv)
   source <- strsplit(csv_name, "_")[[1]][4]
   
-  # `Geo_code_Add_lat_Long.R` has a source of 'No' for her null values 
-  # the census source currently has multiple lat long fields, skipping for now
-  ## skipping those
-  skip_list <- c('No', 'census')
+  # `Geo_code_Add_lat_Long.R` has a source of 'No' for her null values skipping those
+  skip_list <- c('No')
   if (!(source %in% skip_list)){
     
     geocode_df <- read_csv(csv)
-    names <- names(geocode_df)
     print(csv_name)
-    print(names)
     
     updated_inwu_facility_df <- update_facility_coordinates(geocode_df, 
                                                              updated_inwu_facility_df, 
                                                              source)
-    
   }
   
 }
+
+### Handling Duplicate Facility Entries ###
+
+# Getting a dataframe of duplicate faciliites
+duplicate_facilities<-
+  inwu_facility_df %>%
+  group_by(FACILITYID) %>%
+  summarise(count = n()) %>%
+  filter(count > 1)
+
+duplicate_facilities_list <- duplicate_facilities$FACILITYID
+
+duplicate_facilities_df <- inwu_facility_df %>%
+  filter(FACILITYID %in% duplicate_facilities_list)
+
+# Removing Duplicate Facilities to keep the first FACILITYID
+updated_inwu_facility_df <- updated_inwu_facility_df %>%
+  distinct(FACILITYID, .keep_all = TRUE)
+
+### Getting Counts of Updates ###
 
 updated_na_count <- sum(is.na(updated_inwu_facility_df$LATITUDE))
 
 updated_record_count <- na_count - updated_na_count
 
 print(paste0(updated_record_count, ' coordinates updated'))
+
+coordinate_sources <-
+  updated_inwu_facility_df %>%
+  group_by(LL_Src) %>%
+  summarise(count = n())
+
+# Outputting 
+
+output_path <- paste0(output_directory, '/USEPA_HIFLD_EIA_PPP_facility_v5.csv')
+duplicates_path <- paste0(output_directory, '/duplicate_facility_ids_v4_20241114.csv')
+
+
+write.csv(updated_inwu_facility_df, output_path, row.names = FALSE)
+write.csv(duplicate_facilities_df, duplicates_path, row.names = FALSE)
