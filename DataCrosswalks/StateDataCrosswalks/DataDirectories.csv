@@ -1,36 +1,36 @@
 "file","SiteDescriptions","LocationInfo","MonthlyData","AnnualData","Metadata","Duplicate","NotRelevant"
-"/FL/Combined_INDWaterUse_FL_2020_ldm.xlsx$NWFWMD_2020",NA,NA,NA,NA,NA,NA,NA
-"/FL/Combined_INDWaterUse_FL_2020_ldm.xlsx$SFWMD_2020_Pumpage",NA,NA,NA,NA,NA,NA,NA
-"/FL/Combined_INDWaterUse_FL_2020_ldm.xlsx$SRWMD_2020_CII",NA,NA,NA,NA,NA,NA,NA
-"/FL/Combined_INDWaterUse_FL_2020_ldm.xlsx$SWFWMD_2020_CountySums",NA,NA,NA,NA,NA,NA,NA
-"/FL/CountyLevel_IndWaterUse_FL_2020_ldm.xlsx$SWFWMD_2020_CountySums",NA,NA,NA,NA,NA,NA,NA
-"/FL/NWFWMD_2020 Water Use_original.xlsx$Public Supply",NA,NA,NA,NA,NA,NA,NA
-"/FL/NWFWMD_2020 Water Use_original.xlsx$Agricultural",NA,NA,NA,NA,NA,NA,NA
-"/FL/NWFWMD_2020 Water Use_original.xlsx$Recreational",NA,NA,NA,NA,NA,NA,NA
-"/FL/NWFWMD_2020 Water Use_original.xlsx$ICI",NA,NA,NA,NA,NA,NA,NA
-"/FL/NWFWMD_2020 Water Use_original.xlsx$Power",NA,NA,NA,NA,NA,NA,NA
-"/FL/SFWMD_2020 WATER USAGE (PUMPAGE)_20210810.xlsx$FINAL",NA,NA,NA,NA,NA,NA,NA
-"/FL/SFWMD_2020 WATER USAGE (PUMPAGE)_20210810.xlsx$Disclaimer",NA,NA,NA,NA,NA,NA,NA
-"/FL/SiteSpecific_IndWaterUse_FL_2020_ldm.xlsx$FL_SiteSpecificWithdrawals",NA,NA,NA,NA,NA,NA,NA
-"/FL/SiteSpecific_IndWaterUse_FL_2020_ldm.xlsx$SRWMD_2020_CII",NA,NA,NA,NA,NA,NA,NA
-"/FL/SJRWMD_AWUS_CII2021-04-05_tbb.xlsx$Data",NA,NA,NA,NA,NA,NA,NA
-"/FL/SJRWMD_AWUS_CII2021-04-05_tbb.xlsx$Reported_By_County",NA,NA,NA,NA,NA,NA,NA
-"/FL/SJRWMD_AWUS_CII2021-04-05_tbb.xlsx$ForReport",NA,NA,NA,NA,NA,NA,NA
-"/FL/SJRWMD_AWUS_CII2021-04-05_tbb.xlsx$Compare2019_2020",NA,NA,NA,NA,NA,NA,NA
-"/FL/SRWMD_2020_MonthlyWU_USGS_20220311_original.xlsx$Sheet1",NA,NA,NA,NA,NA,NA,NA
-"/FL/SWFWMD_EWUR 2020 Table A11 A12 Industrial Commercial.xlsx$Table_A-11",NA,NA,NA,NA,NA,NA,NA
-"/FL/SWFWMD_EWUR 2020 Table A11 A12 Industrial Commercial.xlsx$Table_A-12",NA,NA,NA,NA,NA,NA,NA
 "/NV/NV_IND_2020_ldm.xlsx$IN_Withdawals2000_2020",NA,NA,NA,NA,NA,NA,NA
 "/NV/NV_IND_2020_ldm.xlsx$NV_IND",NA,NA,NA,NA,NA,NA,NA
 "/NV/NV_IND_2020_ldm.xlsx$NV_IND_culled",NA,NA,NA,NA,NA,NA,NA
 "/NV/NV_IND_2020_ldm.xlsx$Hoovers_2010",NA,NA,NA,NA,NA,NA,NA
 "/NV/NV_IND_2020_ldm.xlsx$notes",NA,NA,NA,NA,NA,NA,NA
-"/SD/SD_IN_WU_2010_2019_LDM.xlsx$SD_IN_WU_2010_2019",NA,NA,NA,NA,NA,NA,NA
-"/SD/SD_IN_WU_edt_LDM.xlsx$_H20",NA,NA,NA,NA,NA,NA,NA
-"/SD/SD_IN_WU_edt_LDM.xlsx$SD_IN_WU_facility_list",NA,NA,NA,NA,NA,NA,NA
-"/SD/SD_IN_WU_edt_LDM.xlsx$withdrawals",NA,NA,NA,NA,NA,NA,NA
-"/SD/SD_IN_WU_edt_LDM.xlsx$hoovers_2010",NA,NA,NA,NA,NA,NA,NA
-"/SD/SD_IN_WU_edt_LDM.xlsx$notes",NA,NA,NA,NA,NA,NA,NA
+"/FL/Combined_INDWaterUse_FL_2020_ldm.xlsx$NWFWMD_2020","0","0","0","0","0","1","0"
+"/FL/Combined_INDWaterUse_FL_2020_ldm.xlsx$SFWMD_2020_Pumpage","0","0","0","0","0","1","0"
+"/FL/Combined_INDWaterUse_FL_2020_ldm.xlsx$SRWMD_2020_CII","0","0","0","0","0","1","0"
+"/FL/Combined_INDWaterUse_FL_2020_ldm.xlsx$SWFWMD_2020_CountySums","0","0","0","0","0","1","0"
+"/FL/CountyLevel_IndWaterUse_FL_2020_ldm.xlsx$SWFWMD_2020_CountySums","0","0","0","0","0","0","1"
+"/FL/NWFWMD_2020 Water Use_original.xlsx$Public Supply","0","0","0","0","0","1","0"
+"/FL/NWFWMD_2020 Water Use_original.xlsx$Agricultural","0","0","0","0","0","1","0"
+"/FL/NWFWMD_2020 Water Use_original.xlsx$Recreational","0","0","0","0","0","1","0"
+"/FL/NWFWMD_2020 Water Use_original.xlsx$ICI","0","0","0","0","0","1","0"
+"/FL/NWFWMD_2020 Water Use_original.xlsx$Power","0","0","0","0","0","1","0"
+"/FL/SFWMD_2020 WATER USAGE (PUMPAGE)_20210810.xlsx$FINAL","0","0","0","0","0","1","0"
+"/FL/SFWMD_2020 WATER USAGE (PUMPAGE)_20210810.xlsx$Disclaimer","0","0","0","0","0","1","0"
+"/FL/SiteSpecific_IndWaterUse_FL_2020_ldm.xlsx$FL_SiteSpecificWithdrawals","0","1","1","1","1","0","0"
+"/FL/SiteSpecific_IndWaterUse_FL_2020_ldm.xlsx$SRWMD_2020_CII","0","0","0","0","0","1","0"
+"/FL/SJRWMD_AWUS_CII2021-04-05_tbb.xlsx$Data","0","0","0","0","0","1","0"
+"/FL/SJRWMD_AWUS_CII2021-04-05_tbb.xlsx$Reported_By_County","0","0","0","0","0","1","0"
+"/FL/SJRWMD_AWUS_CII2021-04-05_tbb.xlsx$ForReport","0","0","0","0","0","1","0"
+"/FL/SJRWMD_AWUS_CII2021-04-05_tbb.xlsx$Compare2019_2020","0","0","0","0","0","1","0"
+"/FL/SRWMD_2020_MonthlyWU_USGS_20220311_original.xlsx$Sheet1","0","0","0","0","0","1","0"
+"/FL/SWFWMD_EWUR 2020 Table A11 A12 Industrial Commercial.xlsx$Table_A-11","0","0","0","0","0","1","0"
+"/FL/SWFWMD_EWUR 2020 Table A11 A12 Industrial Commercial.xlsx$Table_A-12","0","0","0","0","0","1","0"
+"/SD/SD_IN_WU_2010_2019_LDM.xlsx$SD_IN_WU_2010_2019","1","1","1","1","0","0","0"
+"/SD/SD_IN_WU_edt_LDM.xlsx$_H20","0","0","0","0","0","1","0"
+"/SD/SD_IN_WU_edt_LDM.xlsx$SD_IN_WU_facility_list","0","0","0","0","0","1","0"
+"/SD/SD_IN_WU_edt_LDM.xlsx$withdrawals","0","0","0","0","0","1","0"
+"/SD/SD_IN_WU_edt_LDM.xlsx$hoovers_2010","0","0","0","0","0","1","0"
+"/SD/SD_IN_WU_edt_LDM.xlsx$notes","0","0","0","0","0","1","0"
 "/NV/NV_IND_2020_ldm.xlsx$IN_fac_rept",NA,NA,NA,NA,NA,NA,NA
 "/OH/OH_Water_quantity_20230811.xlsx$Sheet1","1","1","1","1","1","0","0"
 "/OH/OH_Water_quantity_20230811.xlsx$Control File","0","0","0","0","0","0","1"
@@ -42,22 +42,22 @@
 "/DE/IndustrialWaterUse_USGS_Lovelace.xlsx$Addresses","1","1","0","0","1","0","0"
 "/DE/read_me_072220.docx","1","1","0","0","1","0","0"
 "/DE/WaterUse_2004-2019_all_categories.xlsx$Sheet1","1","1","1","1","1","0","0"
-"/FL/Mail_Dixon_INwu_FL.pdf","1","1","0","0","1","0","0"
+"/FL/Mail_Dixon_INwu_FL.pdf","0","0","0","0","0","0","1"
 "/FL/WU_Request_IndustrialWU.zip","0","0","0","0","0","1","0"
-"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/NWFWMD_2020 Water Use_original.xlsx$Public Supply","1","1","0","1","1","0","0"
-"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/NWFWMD_2020 Water Use_original.xlsx$Agricultural","1","1","0","1","1","0","0"
-"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/NWFWMD_2020 Water Use_original.xlsx$Recreational","1","1","1","0","1","0","0"
-"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/NWFWMD_2020 Water Use_original.xlsx$ICI","1","1","0","1","1","0","0"
-"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/NWFWMD_2020 Water Use_original.xlsx$Power","1","1","0","1","1","0","0"
-"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/SFWMD_2020 WATER USAGE (PUMPAGE)_20210810.xlsx$FINAL","1","1","1","1","1","0","0"
-"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/SFWMD_2020 WATER USAGE (PUMPAGE)_20210810.xlsx$Disclaimer","1","1","0","0","1","0","0"
-"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/SJRWMD_AWUS_CII2021-04-05_tbb.xlsx$Data","0","1","1","1","0","0","0"
-"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/SJRWMD_AWUS_CII2021-04-05_tbb.xlsx$Reported_By_County","1","1","1","1","0","0","0"
-"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/SJRWMD_AWUS_CII2021-04-05_tbb.xlsx$ForReport","1","1","0","1","1","0","0"
-"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/SJRWMD_AWUS_CII2021-04-05_tbb.xlsx$Compare2019_2020","1","1","0","1","1","0","0"
-"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/SRWMD_2020_MonthlyWU_USGS_20220311_original.xlsx$Sheet1","1","1","1","0","1","0","0"
-"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/SWFWMD_EWUR 2020 Table A11 A12 Industrial Commercial.xlsx$Table_A-11","1","1","0","1","1","0","0"
-"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/SWFWMD_EWUR 2020 Table A11 A12 Industrial Commercial.xlsx$Table_A-12","1","1","1","1","1","0","0"
+"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/NWFWMD_2020 Water Use_original.xlsx$Public Supply","0","0","0","0","0","1","0"
+"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/NWFWMD_2020 Water Use_original.xlsx$Agricultural","0","0","0","0","0","1","0"
+"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/NWFWMD_2020 Water Use_original.xlsx$Recreational","0","0","0","0","0","1","0"
+"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/NWFWMD_2020 Water Use_original.xlsx$ICI","0","0","0","0","0","1","0"
+"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/NWFWMD_2020 Water Use_original.xlsx$Power","0","0","0","0","0","1","0"
+"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/SFWMD_2020 WATER USAGE (PUMPAGE)_20210810.xlsx$FINAL","0","0","0","0","0","1","0"
+"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/SFWMD_2020 WATER USAGE (PUMPAGE)_20210810.xlsx$Disclaimer","0","0","0","0","0","1","0"
+"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/SJRWMD_AWUS_CII2021-04-05_tbb.xlsx$Data","0","0","0","0","0","1","0"
+"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/SJRWMD_AWUS_CII2021-04-05_tbb.xlsx$Reported_By_County","0","0","0","0","0","1","0"
+"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/SJRWMD_AWUS_CII2021-04-05_tbb.xlsx$ForReport","0","0","0","0","0","1","0"
+"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/SJRWMD_AWUS_CII2021-04-05_tbb.xlsx$Compare2019_2020","0","0","0","0","0","1","0"
+"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/SRWMD_2020_MonthlyWU_USGS_20220311_original.xlsx$Sheet1","0","0","0","0","0","1","0"
+"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/SWFWMD_EWUR 2020 Table A11 A12 Industrial Commercial.xlsx$Table_A-11","0","0","0","0","0","1","0"
+"/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/SWFWMD_EWUR 2020 Table A11 A12 Industrial Commercial.xlsx$Table_A-12","0","0","0","0","0","1","0"
 "/HI/Fw__[EXTERNAL]_FW__industrial_water-use_data_for_Hawaii_(Groundwater).zip","0","0","0","0","0","1","0"
 "/HI/Fw__[EXTERNAL]_FW__industrial_water-use_data_for_Hawaii_(Groundwater)/Industrial Wells - Lists.xlsx$Public Well Index 2007201137","1","1","0","0","1","0","0"
 "/HI/Fw__[EXTERNAL]_FW__industrial_water-use_data_for_Hawaii_(Groundwater)/Industrial Wells - Quantity Pumped (2000 - 2019).xlsx$Sheet1","1","1","1","0","1","0","0"
@@ -279,8 +279,8 @@
 "/SC/qry_DHEC_surfacewater_POR.xlsx$Documentation","1","1","1","1","1","0","0"
 "/SC/qry_DHEC_wateruse_GW_POR.xlsx$qry_DHEC_wateruse_GW_POR","0","0","0","0","1","0","0"
 "/SC/qry_DHEC_wateruse_GW_POR.xlsx$Documentation","1","1","1","1","1","0","0"
-"/SD/1994-2019.pdf","0","0","0","0","1","0","0"
-"/SD/1994.pdf","1","1","1","1","1","0","0"
+"/SD/1994-2019.pdf","0","0","0","0","0","1","0"
+"/SD/1994.pdf","0","0","0","0","0","1","0"
 "/SD/1995.pdf","0","0","0","0","0","1","0"
 "/SD/1996.pdf","0","0","0","0","0","1","0"
 "/SD/1997.pdf","0","0","0","0","0","1","0"
@@ -442,13 +442,13 @@
 "/CO/CFIandMolsonCoors_Copy.xlsx$CF&I and MolsonCoors","0","0","0","0","0","1","0"
 "/CO/CFIandMolsonCoors_Copy.xlsx$ReadMe","0","0","0","0","0","0","1"
 "/CO/CFIandMolsonCoors_Copy.xlsx$CFI_MC_reformat","1","0","1","0","0","0","0"
-"/NV/4-G PROPERTIES,LTD.xls$2016","1","0","1","0","0","0","0"
-"/NV/4-G PROPERTIES,LTD.xls$2015","1","0","1","0","0","0","0"
-"/NV/4-G PROPERTIES,LTD.xls$2014","1","0","1","0","0","0","0"
-"/NV/4-G PROPERTIES,LTD.xls$2013","1","0","1","0","0","0","0"
-"/NV/4-G PROPERTIES,LTD.xls$2012","1","0","1","0","0","0","0"
-"/NV/4-G PROPERTIES,LTD.xls$2011","1","0","1","0","0","0","0"
-"/NV/4-G PROPERTIES,LTD.xls$2010","1","0","1","0","0","0","0"
+"/NV/4-G PROPERTIES,LTD.xls$2016","0","0","0","0","0","1","0"
+"/NV/4-G PROPERTIES,LTD.xls$2015","0","0","0","0","0","1","0"
+"/NV/4-G PROPERTIES,LTD.xls$2014","0","0","0","0","0","1","0"
+"/NV/4-G PROPERTIES,LTD.xls$2013","0","0","0","0","0","1","0"
+"/NV/4-G PROPERTIES,LTD.xls$2012","0","0","0","0","0","1","0"
+"/NV/4-G PROPERTIES,LTD.xls$2011","0","0","0","0","0","1","0"
+"/NV/4-G PROPERTIES,LTD.xls$2010","0","0","0","0","0","1","0"
 "/NV/Hoovers_2010_NV.xlsx$NV","0","0","0","0","0","1","0"
 "/NV/NPDES_073120.csv","0","0","0","0","0","1","0"
 "/NV/NV_IND.xlsx$NV_IND","1","1","0","0","0","0","0"

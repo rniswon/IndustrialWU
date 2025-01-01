@@ -66,7 +66,7 @@ read_in_datafile <- function(datafp, fp) {
   }
   # Clean up data by replacing empty strings with NA
   tmp <- data %>% 
-    mutate(across(everything(), 
+    dplyr::mutate(dplyr::across(everything(), 
                   .fns = ~str_replace_all(str_trim(.), "^$", NA_character_)))
   return(tmp)  # Return the cleaned data
 }
@@ -102,6 +102,7 @@ read_in_datafile <- function(datafp, fp) {
 #'
 #' @export
 split_forms <- function(data, form_df) {
+  # This function splits the data frames into smaller data frames based on entries into the form templates
   # Align data column names to those in the form data frame
   names(data) <- names(form_df)
   # Identify useful rows in the form data that are not marked for ignoring
@@ -112,20 +113,20 @@ split_forms <- function(data, form_df) {
   # Split form data based on useful rows and their grouping
   forms_vsplit <- form_df %>% dplyr::slice(usefulrows) %>%
     dplyr::mutate(group = rowsplits) %>%
-    group_by(group) %>%
+    dplyr::group_by(group) %>%
     dplyr::group_split(.keep = FALSE) 
  
    # Split the data based on the same useful rows and groupings
   data_vsplit <- data %>% dplyr::slice(usefulrows) %>%
     dplyr::mutate(group = rowsplits) %>%
-    group_by(group) %>%
+    dplyr::group_by(group) %>%
     dplyr::group_split(.keep = FALSE)
   
   # Check for forms that don't contain the header marker
   if(any(map_lgl(forms_vsplit, ~!"~HEADER~" %in% unlist(.x)))) {
-    vindex <- map(forms_vsplit, ~mutate(
+    vindex <- map(forms_vsplit, ~dplyr::mutate(
       .x, 
-      across(.cols = everything(), 
+      dplyr::across(.cols = everything(), 
              .fns = ~case_when(. == "~IGNORE~" ~ NA_character_, TRUE ~ .)))) %>%
       map(., ~!is.na(.x)) %>%
       map(., ~{
@@ -145,13 +146,13 @@ split_forms <- function(data, form_df) {
     # Combine matched and orphaned forms
     forms_vsplit <- list(
       forms_vsplit[-c(matchdata, orphandata)], 
-      bind_rows(forms_vsplit[[matchdata]], forms_vsplit[[orphandata]])) %>% 
+      dplyr::bind_rows(forms_vsplit[[matchdata]], forms_vsplit[[orphandata]])) %>% 
       list_flatten()
     
     # Combine corresponding data as well
     data_vsplit <- list(
       data_vsplit[-c(matchdata, orphandata)], 
-      bind_rows(data_vsplit[[matchdata]], data_vsplit[[orphandata]])) %>% 
+      dplyr::bind_rows(data_vsplit[[matchdata]], data_vsplit[[orphandata]])) %>% 
       list_flatten()
   }
   
@@ -175,11 +176,11 @@ split_forms <- function(data, form_df) {
   
   # Drop any remaining ~IGNORE~ columns 
   keepcols <- map(forms_vhsplit, 
-      ~(which(unlist(summarize(.x, across(.cols = everything(), 
+      ~(which(unlist(dplyr::summarize(.x, dplyr::across(.cols = everything(), 
                                     .fns = ~(!all(. == "~IGNORE~")))), use.names = FALSE))))
   
-  forms_split <- map2(forms_vhsplit, keepcols, ~(.x %>% select(all_of(.y))))
-  dat_split <- map2(data_vhsplit, keepcols, ~(.x %>% select(all_of(.y))))
+  forms_split <- map2(forms_vhsplit, keepcols, ~(.x %>% dplyr::select(all_of(.y))))
+  dat_split <- map2(data_vhsplit, keepcols, ~(.x %>% dplyr::select(all_of(.y))))
   
   # Determine which splits contain useful data
   usefulsplits <- map_lgl(forms_split, ~{any(c("~HEADER~", "~DATA~") %in% unique(unlist(.x)))})
@@ -274,7 +275,7 @@ munge_forms <- function(dataformlist, filename) {
 checkformtype <- function(form) {
   
   # Remove columns where all elements are NA
-  form2 <- form %>% select_if(~!all(is.na(.))) 
+  form2 <- form %>% dplyr::select_if(~!all(is.na(.))) 
   
   # Determine the type of form based on specific conditions
   type <- ifelse(janitor::find_header(form2) == 1 & (!"~DATA~" %in% unlist(form2[1,])) & 
@@ -322,11 +323,12 @@ checkformtype <- function(form) {
 #' @export
 applyFORMrules <- function(dat, headercrosswalk, updatedCrosswalks, existingCrosswalks) {
   # Convert all columns to character type
-  dat_chr <- dat %>% mutate(across(everything(), ~as.character(.)))
+  # headercrosswalk$file gives the name of the file that may have failed
+  dat_chr <- dat %>% dplyr::mutate(dplyr::across(everything(), ~as.character(.)))
   # Add column names as the first row and clean the data
   dat1 <- rbind(names(dat_chr), dat_chr) %>%
-    dplyr::mutate(across(everything(), ~gsub("\\.\\.\\.[[:digit:]]+", NA_character_, .))) %>%
-    dplyr::mutate(across(everything(), ~gsub("^$", NA_character_, .)))
+    dplyr::mutate(dplyr::across(everything(), ~gsub("\\.\\.\\.[[:digit:]]+", NA_character_, .))) %>%
+    dplyr::mutate(dplyr::across(everything(), ~gsub("^$", NA_character_, .)))
   
   # Create a filename based on state and dimensions of the data
   filename <- paste(unique(headercrosswalk$State),
@@ -427,7 +429,7 @@ applyFILLrules <- function(dat, headercrosswalk) {
                                                  headercrosswalk$OldName)])
   # Fill missing values in the identified columns using last observation carried forward
   dat2 <- dat %>%
-    mutate(across(all_of(fillcols), ~zoo::na.locf(., na.rm = FALSE)))
+    dplyr::mutate(dplyr::across(all_of(fillcols), ~zoo::na.locf(., na.rm = FALSE)))
   # Update the header crosswalk to remove the "~FILL~" tag
   headercrosswalk2 <- headercrosswalk |> dplyr::mutate(OldName = str_trim(gsub("~FILL~", "", OldName)))
   # Return the edited data and updated header crosswalk
@@ -461,10 +463,11 @@ applyFILLrules <- function(dat, headercrosswalk) {
 applyPIVOTrules <- function(dat, headercrosswalk, updatedCrosswalks) {
   # Get the pivot instructions for the relevant file from the updated crosswalks
   pivot_instr <- updatedCrosswalks$DataPivots |> dplyr::filter(file %in% headercrosswalk$file)
-  
+  # pivot_instr$file gives the name of the file that may have caused a failure
   if(nrow(pivot_instr) > 0) {
     
     instructions <- map(purrr::transpose(pivot_instr), ~{
+
       # Create mutate code for the specified transformations
       mutatecode <- paste0(
         ifelse(grepl("=", .x$names_tofrom), paste0('dplyr::mutate(., ', .x$names_tofrom, ')'), "{.}"),
@@ -583,7 +586,7 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks,
     headers_classified <- filledheader |> na.omit() |> dplyr::filter(State %in% fedmatch::State_FIPS$Abbreviation)
   } else if(data == "National") {
     headers_classified <- filledheader |> na.omit() |> 
-      filter(gsub("\\$.*", "", file) %in% basename(unlist(datafp)))
+      dplyr::filter(gsub("\\$.*", "", file) %in% basename(unlist(datafp)))
   }
   
   dat <- purrr::imap(headers_classified$file, ~{

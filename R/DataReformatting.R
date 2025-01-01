@@ -22,7 +22,7 @@
 #'
 detect_readme <- function(filename, updatedCrosswalks) {
   # Extract the README entry corresponding to the provided filename from the crosswalks
-  ReadMeentry <- updatedCrosswalks$HeaderCrosswalk %>% filter(file == filename) %>%  # Filter for the specific file
+  ReadMeentry <- updatedCrosswalks$HeaderCrosswalk %>% dplyr::filter(file == filename) %>%  # Filter for the specific file
     pull(IsReadMe)  # Extract the IsReadMe column
   # Check if the README entry is not empty and return the result as a logical value
   ReadMeentry != ""
@@ -148,18 +148,18 @@ merge_andreplaceNA <- function(x, y, yname = NULL, merge_vars = NULL, jointype =
   } else {y_unique <- y} # If  maximum row count from grouped y does not exceed the number of merge variables, keep y as is
   
   if(is.null(yname)) {
-    y_named <- rename(y_unique, DataSource_new = DataSource)
+    y_named <- dplyr::rename(y_unique, DataSource_new = DataSource)
   } else {
-    y_named <- mutate(y_unique, DataSource_new = yname)
+    y_named <- dplyr::mutate(y_unique, DataSource_new = yname)
   }
   # Perform a full natural join on x and the unique version of y
   merge <- rquery::natural_join(x, y_named, by = merge_vars, jointype = jointype) %>%
-    mutate(DataSource = map2_chr(DataSource, DataSource_new, ~{
+    dplyr::mutate(DataSource = map2_chr(DataSource, DataSource_new, ~{
       paste(unique(str_split_1(paste(na.omit(c(.x, .y)), collapse = ", "), ", ")), collapse = ", ")
     })) %>% 
-    select(-DataSource_new) %>%
+    dplyr::select(-DataSource_new) %>%
     unique()
-  
+  if(any(class(merge) == "data.table")) {browser(); stop()}
   # if(sum(duplicated(merge)) > 0) {browser()} # fix problems now to keep them from propagating
   # Return the merged data frame
   return(merge)
@@ -243,7 +243,7 @@ concat_columns <- function(data, Column) {
   # Select specified columns and concatenate them using pastecomma
   tmp <- data |>
     dplyr::select(contains(Column)) |> 
-    dplyr::mutate(tmp = reduce(across(contains(Column)), .f = pastecomma)) |>
+    dplyr::mutate(tmp = reduce(dplyr::across(contains(Column)), .f = pastecomma)) |>
     dplyr::pull(tmp)
   # Remove original columns and add the concatenated column
   tmp2 <- data |>
@@ -451,7 +451,7 @@ crosswalk_codes <- function(data, fp, header, codescrosswalk, forceupdate = TRUE
       
       if(exists("datacodes_append", envir = .GlobalEnv)) {
         datacodes_append <- get("datacodes_append", envir = .GlobalEnv) %>%
-          bind_rows(.,
+          dplyr::bind_rows(.,
                     data.frame(
                       header = header,
                       original_value = unique(data[[header]])[!unique(data[[header]]) %in% codecrosswalk$original_value],
@@ -858,7 +858,7 @@ standard_Yeartreatment <- function(data, filename, header, updatedCrosswalks, ex
       tf_tmp <- suppressWarnings(is.infinite(max(nchar(yr_tmp), na.rm = TRUE)))
       if(tf_tmp) {
         tmp <- handle_headers(data, filename, header, updatedCrosswalks, existingCrosswalks) %>%
-          mutate(!!header := as.numeric(.[[header]]))
+          dplyr::mutate(!!header := as.numeric(.[[header]]))
       } else {
         tmp <- data |> 
           dplyr::mutate(!!header := as.numeric(readr::parse_number(as.character(data[[header]])))) |>
@@ -1003,6 +1003,9 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, parallel = F
 }
 
 merge_formatteddata <- function(x_munged = list(), updatedCrosswalks, data = c("State", "National")) {
+  # This function merges the data that was reformatted together. 
+  # State data is merged by state and then combined with row_bind
+  # National data is merged together for each data set
   x_munged_indices_bysize <- unlist(purrr::map(x_munged, ~length(.x))) |> sort(decreasing = TRUE)
   x_merge_ready <- x_munged[names(x_munged_indices_bysize)] |> purrr::keep(~{nrow(.) > 0}) 
   if(data == "State") {
@@ -1013,7 +1016,7 @@ merge_formatteddata <- function(x_munged = list(), updatedCrosswalks, data = c("
         datacodes_append <- get("datacodes_append", envir = .GlobalEnv) %>% unique()
         
         datacodes_asis <- updatedCrosswalks$DataCodesCrosswalk
-        datacodes_write <- bind_rows(datacodes_asis, datacodes_append) %>% unique()
+        datacodes_write <- dplyr::bind_rows(datacodes_asis, datacodes_append) %>% unique()
         write.csv(datacodes_write, 
                   file = file.path(existingCrosswalks, "DataCodesCrosswalk.csv"), 
                   row.names = FALSE)
@@ -1032,14 +1035,15 @@ merge_formatteddata <- function(x_munged = list(), updatedCrosswalks, data = c("
     x_readystates <- purrr::keep(x_bystate, ~length(.) > 0)
     x_simplestates <- purrr::map(x_readystates, ~{
       purrr::reduce2(.x = .x, .y = names(.x), .f = merge_andreplaceNA, 
-                     .init = mutate(.x[[1]], DataSource = names(.x)[1]))})
-    x_all <- do.call("bind_rows", x_simplestates) %>% 
+                     .init = dplyr::mutate(.x[[1]], DataSource = names(.x)[1]))})
+    dplyr_bind_rows <- dplyr::bind_rows
+    x_all <- do.call("dplyr_bind_rows", x_simplestates) %>% 
       plugFacilityName(drop = FALSE)
   } else if(data == "National") {
     if(length(x_merge_ready) > 1) {
       x_all <- purrr::map(x_merge_ready, ~plugFacilityName(.x, drop = TRUE)) %>%
         purrr::reduce2(.x = ., .y = names(.), .f = merge_andreplaceNA, 
-                       .init = mutate(.[[1]], DataSource = names(.)[1]))
+                       .init = dplyr::mutate(.[[1]], DataSource = names(.)[1]))
     } else {x_all <- pluck(x_merge_ready, 1)}
     
   }
@@ -1075,7 +1079,7 @@ plugFacilityName <- function(x, drop = TRUE) {
       !is.na(FacilityName) ~ FacilityName))
   } else {tmp <- x}
   
-  if (drop == TRUE) {tmp <- filter(tmp, !is.na(FacilityName))}
+  if (drop == TRUE) {tmp <- dplyr::filter(tmp, !is.na(FacilityName))}
   return(tmp)
 }
 
@@ -1103,7 +1107,7 @@ write_allstates <- function(x) {
                }
                stname <- unique(.x$State)
                if(nrow(.x) > 100000) {
-                 purrr::map(group_split(.x, .by = Year, .keep = FALSE),
+                 purrr::map(dplyr::group_split(.x, .by = Year, .keep = FALSE),
                             ~{
                               yr <- unique(.x$Year)
                               write.csv(.x, file.path(statedir, 
