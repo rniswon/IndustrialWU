@@ -373,7 +373,9 @@ manual_update <- function(data, fp, header, updatedCrosswalks, existingCrosswalk
   } else {
     # if the header isn't entered manual entry is needed
     # Generate the error message
-    message = paste("Enter suspected", header, "value based on", fp, ". Suggested options are", paste(inputoptions, collapse = ", "))
+    message = paste("Enter suspected", header, "value based on", fp, 
+                    ". Enter these into the file HardcodedManualAttributes.csv.",
+                    "Suggested options are", paste(inputoptions, collapse = ", "))
     # Add the line to the hardcoded parameters data frame that needs to be filled out by the user
     hardparams_update <- hardparams |> add_row(file = fp, Header = header, Value = '')
     
@@ -427,11 +429,43 @@ crosswalk_codes <- function(data, fp, header, codescrosswalk, forceupdate = TRUE
   if(forceupdate) {
     # Check for any new codes not present in the crosswalk
     if(any(!unique(data[[header]]) %in% codecrosswalk$original_value)) {
-      message(paste("New codes", 
-                 paste(unique(data[[header]])[!unique(data[[header]]) %in% codecrosswalk$original_value], collapse = ", "), 
-                 "detected for", header, "in", fp))
+      m <- paste("New codes", 
+                 paste(
+                   unique(data[[header]])[!unique(data[[header]]) %in% 
+                                            codecrosswalk$original_value], 
+                   collapse = ", "), 
+                 "detected for", header, "in", fp)
+      # The stop flag and message logs are intended to allow the code to run until all new codes have been identified.
+      # This reduces the number of times the code will be run and stopped with errors.
       stopflag <- TRUE
       assign("stopflag", stopflag, envir = .GlobalEnv)
+    
+      if(exists("messagelog", envir = .GlobalEnv)) {
+        messagelog <- get("messagelog", envir = .GlobalEnv) %>%
+          append(m)
+        assign("messagelog", messagelog, envir = .GlobalEnv)
+      } else {
+        messagelog <- list(m)
+        assign("messagelog", messagelog, envir = .GlobalEnv)
+      }
+      
+      if(exists("datacodes_append", envir = .GlobalEnv)) {
+        datacodes_append <- get("datacodes_append", envir = .GlobalEnv) %>%
+          bind_rows(.,
+                    data.frame(
+                      header = header,
+                      original_value = unique(data[[header]])[!unique(data[[header]]) %in% codecrosswalk$original_value],
+                      new_value = ""
+                    ))
+        assign("datacodes_append", datacodes_append, envir = .GlobalEnv)
+      } else {
+        datacodes_append <- data.frame(
+          header = header,
+          original_value = unique(data[[header]])[!unique(data[[header]]) %in% codecrosswalk$original_value],
+          new_value = ""
+        )
+        assign("datacodes_append", datacodes_append, envir = .GlobalEnv)
+      }
     }
   }
   
@@ -606,6 +640,7 @@ standard_HUCtreatment <- function(data, header) {
 }
 
 pull_address <- function(x, zipindex, stateindex) {
+  # Addresses are assumed to come from parts of the cell entry that do not include state abbreviations or zip codes
   non_address <- unique(na.omit(c(zipindex, stateindex)))
   tmp <- ifelse(length(x) == 0, NA_character_,
                 ifelse(length(x) == 1, x,
@@ -658,6 +693,7 @@ pull_county <- function(x) {
 
 pull_necessaryaddressdata <- function(x, type, zipindex, stateindex, state_regex, zip_regex) {
   list(pull_address, pull_city, pull_state, pull_zip, pull_county) # call for targets package
+  # if there is more than 1 entry in a cell separated by commas (e.g. Puelbo, CO is 2 entries), this code will try to pull the part of the entry that corresponds to the data needed.
   tmp_code <- ifelse(type == "Address", "pmap_chr(list(x, zipindex, stateindex), ~pull_address(..1, ..2, ..3))",
                 ifelse(type == "City", "pmap_chr(list(x, zipindex, stateindex), ~pull_city(..1, ..2, ..3))",
                        ifelse(type == "State", "map2_chr(x, stateindex, ~pull_state(.x, .y, state_regex))",
@@ -693,18 +729,23 @@ pull_necessaryaddressdata <- function(x, type, zipindex, stateindex, state_regex
 #'
 standard_Addresstreatment <- function(data, header) {
   # Check if the header exists in the data
-  if(length(grep(header, names(data))) > 0 ) {
+  if(length(grep(header, names(data))) > 0) {
+    # This step is one of the most complicated data cleaning steps, and has already needed to be debugged extensively
+    # The raw entry lines (i.e. what is in the original data), is split at commas. This helps parse if an entire address (including city, state, and zip) are included as one entry
+    # There are regular expressions that search for state codes and zip codes
+    # Identifying state and zip codes helps the code assign different parts of the entered data to different types of information (address, city, state, etc)
     rawentrylines <- concat_columns(data[which(str_detect(names(data), header))], header) |> 
       pull(header) |>
       stringr::str_split(",") 
     
-    if(any(str_detect(rawentrylines, "\r|\n"), na.rm = TRUE)) {
+    if(any(str_detect(unlist(rawentrylines), "\r|\n"), na.rm = TRUE)) {
       entrylines <- stringr::str_trim(rawentrylines) |> purrr::map(~{
         x_clean <- subset(unique(unlist(stringr::str_split(.x, "\r|\n"))), 
                           unique(unlist(stringr::str_split(.x, "\r|\n"))) != "")
         x_clean
       }) 
-    } else {entrylines <- stringr::str_trim(rawentrylines)}
+    } else {entrylines <- map(rawentrylines, ~stringr::str_trim(.x)) #stringr::str_trim(unlist(rawentrylines))
+    }
 
     type <- stringr::str_extract(header, "Address|City|State|Zip|County")
     
@@ -716,7 +757,8 @@ standard_Addresstreatment <- function(data, header) {
     
     if(type %in% c("Address", "City", "State")) {
       indices_state <- map_dbl(entrylines, ~{
-        ifelse(length(.x) == 1, ifelse(stringr::str_detect(.x, state_regex), 
+        # If there are more than one entries in a line, search if any of them include a state code.
+        ifelse(length(.x) != 1, ifelse(any(stringr::str_detect(.x, state_regex)), 
                                                     stringr::str_which(.x, state_regex),
                                                     NA_integer_), NA_integer_)
         })
@@ -724,7 +766,8 @@ standard_Addresstreatment <- function(data, header) {
     
     if(type %in% c("Address", "City", "Zip")) {
       indices_zip <-  map_dbl(entrylines, ~{
-        ifelse(length(.x) == 1, ifelse(stringr::str_detect(.x, zip_regex), 
+        # If there are more than one entries in a line, search if any of them include a zip code.
+        ifelse(length(.x) != 1, ifelse(any(stringr::str_detect(.x, zip_regex)), 
                                        stringr::str_which(.x, zip_regex),
                                        NA_integer_), NA_integer_)
         })
@@ -811,7 +854,9 @@ standard_Yeartreatment <- function(data, filename, header, updatedCrosswalks, ex
   # Check if the header exists in the data
   if(length(grep(header, names(data))) > 0) {
     if(length(grep(header, names(data))) == 1) {
-      if(is.infinite(max(nchar(readr::parse_number(as.character(data[[header]]))), na.rm = TRUE))) {
+      yr_tmp <- suppressWarnings(readr::parse_number(as.character(data[[header]])))
+      tf_tmp <- suppressWarnings(is.infinite(max(nchar(yr_tmp), na.rm = TRUE)))
+      if(tf_tmp) {
         tmp <- handle_headers(data, filename, header, updatedCrosswalks, existingCrosswalks) %>%
           mutate(!!header := as.numeric(.[[header]]))
       } else {
@@ -846,8 +891,9 @@ data_NAcodes <- c("", "n/a", "N/A", "NA", "NAN", "na", "nan",
 #'   result <- standard_datatreatment(data_frame, "DataHeader")
 #'   }
 #'
-standard_datatreatment <- function(data, header) {
+standard_datatreatment <- function(data, filename, header) {
   # Check if the header exists in the data
+  # file name is not currently used in this function, but it is passed along because it is helpful in debugging
   if(length(grep(header, names(data))) > 0) {
     if(!is.numeric(data[[header]])) { 
       if(!all(unique(gsub("[[:digit:]]*|.", "", data[[header]])) %in% data_NAcodes)) {
@@ -883,6 +929,7 @@ standard_datatreatment <- function(data, header) {
 #'   }
 #'
 reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, parallel = FALSE) {
+  # if names of columns have changed in input data on the disk, this function may error, and the HeaderCrosswalk.csv will need to be updated to match the changes made to the data
   list(standard_datacodestreatment, standard_nametreatment, standard_idtreatment, 
        standard_HUCtreatment, standard_Addresstreatment, standard_coordinatetreatment,
        standard_Yeartreatment, standard_datatreatment) # call these to let the targets package know that they are used in this function
@@ -924,11 +971,14 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, parallel = F
   Addresses_code <- paste0(package_call, "map(., ~standard_Addresstreatment(.x, '", Addresscolumns, "'), .progress = TRUE)", collapse = " %>% ")
   coordinates_code <- paste0(package_call, "map(., ~standard_coordinatetreatment(.x, '", coordinatecolumns, "'), .progress = TRUE)", collapse = " %>% ")
   years_code <- paste0(package_call, "imap(., ~standard_Yeartreatment(.x, .y, '", Yearcolumns, "', updatedCrosswalks, existingCrosswalks), .progress = TRUE)", collapse = " %>% ")
-  data_code <- paste0(package_call, "map(., ~standard_datatreatment(.x, '", datacolumns, "'), .progress = TRUE)", collapse = " %>% ")
+  data_code <- paste0(package_call, "imap(., ~standard_datatreatment(.x, .y,'", datacolumns, "'), .progress = TRUE)", collapse = " %>% ")
   # As noted in `manual_updates`, `|>` is the base R pipe function
   # In the next block of code, I've used `|>` where possible, but I had to use `%>%` for the lines that parse the written code
   # The reason, I think, is that the `%>%` operator from dplyr allows you to pass an object (here a list) along using the `.` syntax while the `|>` operator does not.
   # Because the expressions being parsed are a little wonky, and because I used the `.` notation to pass along the object in the code, I had to use `%>%` here and `|>` didn't work.
+  # This line is a good place to use browser() if errors are coming up in this function.
+  # Errors in this function will likely be derived from errors in one of the lines of text below
+  # Suggest running the below lines one-by-one to identify location of the error
   x_munged <- x %>%
     {eval(parse(text = datacodes_u_code))} %>% 
     {eval(parse(text = HUCs_code))} %>% 
@@ -948,7 +998,6 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, parallel = F
       stringr::str_extract(unlist(purrr::map(x_munged, ~names(.x))), ".*(?=\\.\\.\\.)")))
     stop(paste0("New case(s) for ", paste(issue, collapse = ", ")))
   }
-  if(exists("stopflag", envir = .GlobalEnv)) {stop("Execution halted to edit data crosswalks")}
 
   return(x_munged)
 }
@@ -957,7 +1006,29 @@ merge_formatteddata <- function(x_munged = list(), updatedCrosswalks, data = c("
   x_munged_indices_bysize <- unlist(purrr::map(x_munged, ~length(.x))) |> sort(decreasing = TRUE)
   x_merge_ready <- x_munged[names(x_munged_indices_bysize)] |> purrr::keep(~{nrow(.) > 0}) 
   if(data == "State") {
-    x_bystate <- purrr::map(fedmatch::State_FIPS$Abbreviation, ~{st <- .x; purrr::keep_at(x_merge_ready, ~grepl(paste0("/", st, "/"), .))}); names(x_bystate) <- fedmatch::State_FIPS$Abbreviation
+    if(exists("stopflag", envir = .GlobalEnv)) {
+      if(get("stopflag", envir = .GlobalEnv) == TRUE) {
+        browser()
+        messagelog <- get("messagelog", envir = .GlobalEnv)
+        datacodes_append <- get("datacodes_append", envir = .GlobalEnv) %>% unique()
+        
+        datacodes_asis <- updatedCrosswalks$DataCodesCrosswalk
+        datacodes_write <- bind_rows(datacodes_asis, datacodes_append) %>% unique()
+        write.csv(datacodes_write, 
+                  file = file.path(existingCrosswalks, "DataCodesCrosswalk.csv"), 
+                  row.names = FALSE)
+        m <- list("Execution halted to edit data crosswalks", "       ",
+                  messagelog)
+        walk(unlist(m), ~message(.x))
+        rm(list = c("stopflag", "messagelog", "datacodes_append"), envir = .GlobalEnv)
+        browser()
+        stop()
+      }
+    }
+    
+    x_bystate <- purrr::map(fedmatch::State_FIPS$Abbreviation, ~{
+      st <- .x; purrr::keep_at(x_merge_ready, ~grepl(paste0("/", st, "/"), .))
+      }); names(x_bystate) <- fedmatch::State_FIPS$Abbreviation
     x_readystates <- purrr::keep(x_bystate, ~length(.) > 0)
     x_simplestates <- purrr::map(x_readystates, ~{
       purrr::reduce2(.x = .x, .y = names(.x), .f = merge_andreplaceNA, 

@@ -1,4 +1,4 @@
-﻿header,original_value,new_value
+header,original_value,new_value
 ValueType,SW,WD
 ValueType,GW,WD
 ValueType,WD,WD
@@ -410,3 +410,67 @@ Category,Thermo Once Thru,TE
 Category,Thermo Recirc,TE
 Category,Thermoelectric,TE
 Units_monthly,"withdrawal for January, in gallons per month",gal
+Category,Farm,AG
+Category,CERCLA,RM
+Category,CLERCA,RM
+Category,community,PS
+Category,Containmen,RM
+Category,Creek,IR
+Category,cumminity,PS
+Category,Agricultural Ponds,AG
+Category,Comm.,CO
+Category,cummunity,PS
+Category,Golf Cours,IR
+Category,River,AG
+Category,"Farm, Ag",AG
+Category,Ag.,AG
+Category,Golf Course,IR
+Category,GolfCourse,IR
+Category,Gravel Min,MI
+Category,Groundeate,RM
+Category,Groundwat,RM
+Category,Groundwate,RM
+Category,Aqua,AQ
+Category,Instit.,PS
+Category,Aquacultur,AQ
+Category,IRRIG WELL,IR
+Category,IRRIG.,IR
+Category,IRRIG.WELL,IR
+Category,IRRIGATION,IR
+Category,Landfill,RM
+Category,Mixing,AG
+Category,Monitoring,PS
+Category,Municipal,PS
+Category,Non. Comm.,PS
+Category,Non/Comm,PS
+Category,Ag,AG
+Category,Agricultur,AG
+Category,Animal,AG
+Category,Animal Pro,AG
+Category,non-comm,PS
+Category,Non-Comm.,PS
+Category,OBS,PS
+Category,Observ.,PS
+Category,Observatio,PS
+Category,Pond,IR
+Category,Pond Fill,IR
+Category,PRIVATE,PS
+Category,private,PS
+Category,Recovery,RM
+Category,Reservoir,IR
+Category,Stream,IR
+Category,irrigation,AG
+Category,Thermoelectric Power,TE
+Units_monthly,gallons,gal
+Method_monthly,Elapsed-Time Meter,Metered
+Method_monthly,Water Meter,NA_character_
+Method_monthly,NULL,NA_character_
+Method_monthly,Flow Metered,Metered
+Method_monthly,Others,NA_character_
+Method_monthly,Calculated,Estimated
+Method_annual_reported,Elapsed-Time Meter,Metered
+Method_annual_reported,Water Meter,Metered
+Method_annual_reported,NULL,NA_character_
+Method_annual_reported,Flow Metered,Metered
+Method_annual_reported,Others,NA_character_
+Method_annual_reported,Calculated,Estimated

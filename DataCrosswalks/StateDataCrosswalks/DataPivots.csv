@@ -10,3 +10,6 @@
 /CO/CO_Manufacture_Demands_Water.xlsx$Western Sugar (Fort Morgan),long,"contains(c(""DivTotal""))","SourceNumber, Units_monthly","sep: "", DivTotal, """,Monthly_reported,
 /CO/CO_Manufacture_Demands_Water.xlsx$Western Sugar (Fort Morgan),wide,"Year = lubridate::year(lubridate::as_date(`DATE`, format = ""%Y-%m"")), SourceNumber, Units_monthly","Month = month.abb[lubridate::month(lubridate::as_date(`DATE`, format = ""%Y-%m""))]",,Monthly_reported,
 /CO/CFIandMolsonCoors_Copy.xlsx$CFI_MC_reformat,wide,Year = lubridate::year(lubridate::as_date(`Date`)),Month = month.abb[lubridate::month(lubridate::as_date(`Date`))],,Diversions,
+/DE/IndustrialWaterUse_modified.xlsx$Water Use,wide,,Month = month.abb[as.numeric(`Current Month`)],,"Monthly Water Use, gal.",Monthly_reported = parse_number
+/DE/IndustrialWaterUse_USGS_Lovelace.xlsx$Water Use,wide,,Month = month.abb[as.numeric(`Current Month`)],,"Monthly Water Use, gal.",Monthly_reported = parse_number
+/DE/WaterUse_2004-2019_all_categories.xlsx$Sheet1,wide,,Month = month.abb[as.numeric(`currentMonth`)],,wateruse,
