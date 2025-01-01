@@ -24,7 +24,8 @@
 merge_nationaldata <- function(nonSWUDS, natData, natHeaders) {
   
   
- nonSWUDSwNat <- merge_andreplaceNA(mutate(nonSWUDS, Source = "NonSWUDS"), natData) |> 
+  # this function merges the national-scale data with the non SWUDs data. This is done before adding site selection data.
+ nonSWUDSwNat <- merge_andreplaceNA(dplyr::mutate(nonSWUDS, Source = "NonSWUDS"), natData) |> 
    dplyr::select(State, any_of(names(natHeaders$HeaderCrosswalk)), DataSource)
  
  return(nonSWUDSwNat)
@@ -47,7 +48,7 @@ prep_siteselection <- function(national_Xwalks, datacodes_Xwalks, siteselection 
       FacilityName = fedmatch::clean_strings(
         as.character(FacilityName), common_words = fedmatch::corporate_words)
       ) |>
-    dplyr::mutate(across(c("Address1", "City1", "County1"), ~str_to_title(.))) |>
+    dplyr::mutate(dplyr::across(c("Address1", "City1", "County1"), ~str_to_title(.))) |>
     dplyr::mutate(State = State1) |>
     unique()
     
@@ -73,17 +74,18 @@ prep_nationaldata <- function(national_Xwalks, datacodes_Xwalks, natdata = list(
   natData <- readandrename_columns(natdata, natHeaders, national_Xwalks, data = "National") %>%
     reformat_data(., natHeaders, national_Xwalks) %>%
     merge_formatteddata(., natHeaders, data = "National") %>%
-    filter(!is.na(FacilityName)) %>%  mutate(State = State1) %>%
+    dplyr::filter(!is.na(FacilityName)) %>%  dplyr::mutate(State = State1) %>%
     standard_Addresstreatment(., "State")
   
   augmentData <- readandrename_columns(extradata, natHeaders, national_Xwalks, data = "National") |>
     reformat_data(natHeaders, national_Xwalks) %>%
-    map(., ~mutate(.x, across(any_of("State"), ~State1)))
+    map(., ~dplyr::mutate(.x, dplyr::across(any_of("State"), ~State1)))
   
   return(list(natData_merge = natData, natHeaders = natHeaders, augmentData = augmentData))
 }
 
 augment_data <- function(data, data_to_add, natHeaders) {
+  # this function prepares the data sets that will be used to augment the non SWUDS data
   augmentedData <- data_to_add %>%
     purrr::reduce2(.x = ., .y = names(.), .f = merge_withaugmentation, 
                    .init = data) |> 
@@ -98,7 +100,12 @@ merge_withaugmentation <- function(x, y, yname) {
 }
 
 iterative_merge_siteselection <- function(WUdata, siteselectiondata, mergevars) {
-  siteselection_subset <- filter(siteselectiondata, !!sym(mergevars[[1]]) %in% 
+  # this function does the merging of the site selection data into the WU data. 
+  # the merge is a left merge, so ideally no new lines will be added
+  # in practice, sometimes duplicates are created. 
+  # there is a warning produced that indicates when duplicates are created so that they can be addressed in future updates
+  # browser()
+  siteselection_subset <- dplyr::filter(siteselectiondata, !!sym(mergevars[[1]]) %in% 
                                    unique(WUdata[[mergevars[[1]]]]))
   merge_dat <- rquery::natural_join(WUdata, siteselection_subset, by = mergevars, jointype = "LEFT") 
   if(nrow(merge_dat) != nrow(WUdata)) {
@@ -106,19 +113,21 @@ iterative_merge_siteselection <- function(WUdata, siteselectiondata, mergevars) 
     m <- paste("Warning:", nadd,"Duplicates added")
     message(m) 
     } # something went wrong
-  merge_success <- merge_dat %>% filter(!is.na(SITESELECTION_FACILITYID)) %>% 
-    group_by(across(all_of(names(WUdata)))) %>% 
-    summarise(across(contains("SITESELECTION"), ~paste(unique(.), collapse = " _OR_ ")),
+  merge_success <- merge_dat %>% dplyr::filter(!is.na(SITESELECTION_FACILITYID)) %>% 
+    dplyr::group_by(dplyr::across(all_of(names(WUdata)))) %>% 
+    dplyr::summarise(dplyr::across(contains("SITESELECTION"), ~paste(unique(.), collapse = " _OR_ ")),
               .groups = "drop") 
-  merge_fail <- merge_dat %>% filter(is.na(SITESELECTION_FACILITYID)) %>% 
-    select(all_of(names(WUdata)))
+  merge_fail <- merge_dat %>% dplyr::filter(is.na(SITESELECTION_FACILITYID)) %>% 
+    dplyr::select(all_of(names(WUdata)))
   
   return(list(merge_success = merge_success, merge_fail = merge_fail))
 }
 
 merge_siteselection <- function(data, siteselection, siteselectionfilename) {
   
-
+  
+# the site selection data is merged several times by various characteristics
+  # this is intented to maximize the number of merged lines
   mergevars <- list(
     merge1 = c("FacilityName", "Address1", "City1", "County1", "State1"),
     merge2 = c("FacilityName", "City1", "County1", "State1"),
@@ -137,6 +146,7 @@ merge_siteselection <- function(data, siteselection, siteselectionfilename) {
   
   for(i in 1:length(mergevars)) {
     if(i == 1) {
+      # the first merge needs to take the WU data as the base
       merge_tmp <- iterative_merge_siteselection(data, siteselection, mergevars[[i]])
     } else {
       merge_tmp <- iterative_merge_siteselection(merge_fail[[i-1]], siteselection, mergevars[[i]])
@@ -144,16 +154,16 @@ merge_siteselection <- function(data, siteselection, siteselectionfilename) {
     merge_success[[i]] <- merge_tmp$merge_success
     merge_fail[[i]] <- merge_tmp$merge_fail
   }
-  merge_success_all <- reduce(merge_success, bind_rows) |>
+  merge_success_all <- reduce(merge_success, dplyr::bind_rows) |>
     dplyr::mutate(DataSource = paste0(DataSource, ", ", basename(siteselectionfilename))) 
   merge_fail_all <- merge_fail[[length(merge_fail)]]
-  alldat <- bind_rows(merge_success_all, merge_fail_all) %>%
+  alldat <- dplyr::bind_rows(merge_success_all, merge_fail_all) %>%
     arrange(State, FacilityName, SourceName, Year) %>%
-    select(all_of(names(data)), all_of(names(siteselection)), DataSource) |>
+    dplyr::select(all_of(names(data)), all_of(names(siteselection)), DataSource) |>
     dplyr::relocate(DataSource, .after = last_col())
   
   sites_wo_data <- siteselection %>% 
-    filter(!SITESELECTION_FACILITYID %in% alldat$SITESELECTION_FACILITYID)
+    dplyr::filter(!SITESELECTION_FACILITYID %in% alldat$SITESELECTION_FACILITYID)
   n_sites_nodata <- nrow(sites_wo_data)
   n_sites_data <- length(unique(merge_success_all$SITESELECTION_FACILITYID))
   n_datapoints <- nrow(merge_success_all)

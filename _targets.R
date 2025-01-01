@@ -7,10 +7,13 @@
 
 
 # Specify the packages required for the pipeline
-packages <- c("tibble", "stringr", "purrr", "readxl", "svDialogs", "dplyr", "archive",
-              "tidyr", "readr", "lubridate", "magrittr", "furrr", "data.table",
-              "sf", "rquery", "officer", "pdftools", "rqdatatable",
-              "fedmatch", "janitor", "zoo", "varhandle", "targets", "tarchetypes","tidytable")
+# Note that tidytable and dplyr have many functions named the same. 
+# Suggest specifying in the script dplyr:: or tidytable::
+# dplyr is loaded last so that it is the default
+packages <- c("tibble", "stringr", "purrr", "readxl", "svDialogs", "tidytable", 
+              "dplyr", "archive", "tidyr", "readr", "lubridate", "magrittr", 
+              "furrr", "data.table", "sf", "rquery", "officer", "pdftools", "rqdatatable",
+              "fedmatch", "janitor", "zoo", "varhandle", "targets", "tarchetypes")
 
 # Function to install missing packages
 optinstall <- function(x) {

@@ -16,8 +16,8 @@ make_fipsPaths <- function(fp, URLS) {
 compile_fips <- function(fps) {
   countyfips <- map_dfr(fps, ~read.table(.x, fill = TRUE, sep = "|", header = TRUE, 
                                         colClasses = "character")) |>
-    select(STATE, County1 = COUNTYNAME, STATEFP, COUNTYFP) |>
-    mutate(Full_CountyFP = paste0(STATEFP, COUNTYFP)) |>
+    dplyr::select(STATE, County1 = COUNTYNAME, STATEFP, COUNTYFP) |>
+    dplyr::mutate(Full_CountyFP = paste0(STATEFP, COUNTYFP)) |>
     standard_Addresstreatment("County1") |>
     unique()
   
