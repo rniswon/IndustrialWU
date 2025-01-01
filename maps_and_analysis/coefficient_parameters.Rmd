@@ -16,6 +16,8 @@ library(viridis)
 library(readxl)
 
 source("../utility_functions/download_shape_zip.R")
+
+options(scipen=999)
 ```
 
 ## Getting User Inputs

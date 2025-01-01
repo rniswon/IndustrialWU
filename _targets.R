@@ -10,7 +10,7 @@
 packages <- c("tibble", "stringr", "purrr", "readxl", "svDialogs", "dplyr", "archive",
               "tidyr", "readr", "lubridate", "magrittr", "furrr", "data.table",
               "sf", "rquery", "officer", "pdftools", "rqdatatable",
-              "fedmatch", "janitor", "zoo", "varhandle", "targets", "tarchetypes")
+              "fedmatch", "janitor", "zoo", "varhandle", "targets", "tarchetypes","tidytable")
 
 # Function to install missing packages
 optinstall <- function(x) {
