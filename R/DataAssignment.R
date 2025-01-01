@@ -470,6 +470,8 @@ applyPIVOTrules <- function(dat, headercrosswalk, updatedCrosswalks) {
         ifelse(grepl("=", .x$names_tofrom), paste0('dplyr::mutate(., ', .x$names_tofrom, ')'), "{.}"),
         "%>%", ifelse(grepl("=", .x$cols), paste0('dplyr::mutate(., ', .x$cols, ')'), "{.}"))
       # Create select code based on whether the pivot is to a wide or long format
+      # This code is based on the inputs from the pivot instructions crosswalk
+      # It can be rather finicky. If there are errors popping up in this function, the select code is a good place to check first.
       selectcode <- ifelse(.x$long_wide == "wide",
                            paste0('dplyr::select(., any_of(c("', paste(
                              ifelse(
@@ -514,8 +516,7 @@ applyPIVOTrules <- function(dat, headercrosswalk, updatedCrosswalks) {
     # Evaluate the constructed transformation instructions on the dataset
     dat2 <- suppressWarnings({dat %>% 
         {eval(parse(text = paste(unlist(instructions, use.names = FALSE), 
-                                 collapse = " %>% ")))}
-    })
+                                 collapse = " %>% unique(.) %>% ")))}})
     
     # Update the header crosswalk to remove "~PIVOT~"
     headercrosswalk2 <- headercrosswalk |> dplyr::mutate(OldName = dplyr::case_when(OldName == "~PIVOT~" ~ NewName,
@@ -574,6 +575,8 @@ applyFILENAMErules <- function(dat, headercrosswalk) {
 #'
 #' @export
 readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks, data = c("State", "National")) {
+  # If a file has been removed on disk, this function gives a NULL, which will cause errors further down the pipeline.
+  # Suggest introducing a check for this in future updates.
   filledheader <- updatedCrosswalks$HeaderCrosswalk
   
   if(data == "State") {
@@ -638,7 +641,11 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks,
     if(any(c("NewName", "OldName") %in% names(headercrosswalk))) {
       tmp <- suppressMessages(purrr::map2_dfc(headercrosswalk$NewName, headercrosswalk$OldName, ~{
         new <- .x
-        if(.y %in% names(dat_edit)) {old <- .y} else {
+        if(.y %in% names(dat_edit)) {old <- .y} else if(
+          gsub("`", "", .y) %in% names(dat_edit)) {
+          old <- gsub("`", "", .y) %in% names(dat_edit)} else if(
+            (str_count(.y, "`") > 0) & (str_count(.y, "`") %% 2 == 0)
+          ) {old <- gsub("`", "", .y)} else {
           old <- unlist(stringr::str_split(.y, ", "))}
         
         purrr::map(old, ~{
@@ -651,13 +658,37 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks,
               stop(paste0("Check entries ", old, " in HeaderCrosswalk.csv for file ",
               unique(headercrosswalk$file), " that they match the data exactly. Options include ", paste(names(dat_edit), collapse = ", ")))
             } else {
+              if(is.na(stringr::str_extract(flatten(
+                pivotapplied$pivotinstructions)$pivotcode, 
+                "(?<=cols = ).*(?=, names_to)"))) {
+                select_code <- "{.}"
+              } else {
+                select_code <- paste0(
+                  "dplyr::select(., ",
+                  stringr::str_extract(flatten(
+                    pivotapplied$pivotinstructions)$pivotcode, 
+                    "(?<=cols = ).*(?=, names_to)"), ")")
+              }
               names_check <- dat_raw %>%
-                {eval(parse(text = flatten(pivotapplied$pivotinstructions)$mutatecode))} %>%
-                {eval(parse(text = flatten(pivotapplied$pivotinstructions)$selectcode))} %>%
-                {eval(parse(text = paste0("dplyr::select(., ", stringr::str_extract(flatten(pivotapplied$pivotinstructions)$pivotcode, "(?<=cols = ).*(?=, names_to)"), ")")))} |>
+                {eval(parse(text = flatten(
+                  pivotapplied$pivotinstructions)$mutatecode))} %>%
+                {eval(parse(text = flatten(
+                  pivotapplied$pivotinstructions)$selectcode))} %>%
+                {eval(parse(text = select_code))} |>
                 names()
-              nm <- manual_update(data.frame(tmp = NA), unique(headercrosswalk$file), old_sub, updatedCrosswalks, existingCrosswalks, names_check)
-              tmp <- tibble::tibble(!!new := nm[[old_sub]])}}
+              if(old_sub %in% names_check) {
+                nm <- manual_update(data.frame(tmp = NA), 
+                                    unique(headercrosswalk$file), new, 
+                                    updatedCrosswalks, existingCrosswalks, 
+                                    names_check)
+                tmp <- tibble::tibble(!!new := nm[[new]])
+              } else {
+                nm <- manual_update(data.frame(tmp = NA), 
+                                    unique(headercrosswalk$file), old_sub, 
+                                    updatedCrosswalks, existingCrosswalks,
+                                    names_check)
+                tmp <- tibble::tibble(!!new := nm[[old_sub]])}}
+                }
             tmp
           }) |> purrr::list_cbind(name_repair = "unique")
       }))

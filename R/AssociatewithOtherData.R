@@ -32,6 +32,11 @@ merge_nationaldata <- function(nonSWUDS, natData, natHeaders) {
 }
 
 prep_siteselection <- function(national_Xwalks, datacodes_Xwalks, siteselection = list()) {
+  # The site selection data is formatted separately from the other national data
+  # The reason is that this file is so large, it is helpful to have a separate target for it
+  # The headers from the national Header Crosswalk are used to read and rename the data
+  # Then, the facility names are cleaned, and the address columns are formatted.
+  # These adjustments will help with later merging.
   natHeaders <- list(
     HeaderCrosswalk = get_filledcsv(file.path(national_Xwalks, "HeaderCrosswalk.csv")),
     DataCodesCrosswalk = datacodes_Xwalks
@@ -50,6 +55,11 @@ prep_siteselection <- function(national_Xwalks, datacodes_Xwalks, siteselection 
 }
 
 prep_nationaldata <- function(national_Xwalks, datacodes_Xwalks, natdata = list(), extradata = list()) {
+  # This function preps national scale data, such as the FIPS codes, Lauren's work with updated locations, etc
+  # The headers from the national crosswalk are used to read and rename the national files
+  # The national files are all merged together first before they are merged with the water use data.
+  # The difference between the "extra data" and the "national data", are that the national data may include extra sites.
+  # The extra data includes fields that may be used to augment the national data, but it won't include new sites.
   natHeaders <- list(
     HeaderCrosswalk = get_filledcsv(file.path(national_Xwalks, "HeaderCrosswalk.csv")),
     DataCodesCrosswalk = datacodes_Xwalks

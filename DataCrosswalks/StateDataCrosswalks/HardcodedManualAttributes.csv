@@ -564,3 +564,7 @@ file,Header,Value,Notes
 /MI/Michigan monthly water use by facility and source.xlsx$2020,Year,2020,Year comes from the excel sheet name
 /MI/Michigan monthly water use by facility and source.xlsx$2021,Year,2021,Year comes from the excel sheet name
 /MI/Michigan monthly water use by facility and source.xlsx$2022,Year,2022,Year comes from the excel sheet name
+/DE/IndustrialWaterUse_USGS_Lovelace.xlsx$Water Use,Units_monthly,gallons,"From ""Monthly Water Use, gal."""
+/DE/WaterUse_2004-2019_all_categories.xlsx$Sheet1,Units_monthly,gallons,Determined by comparison of overlapping entries with  /DE/IndustrialWaterUse_USGS_Lovelace.xlsx$Water Use
+/DE/IndustrialWaterUse_modified.xlsx$Water Use,Units_monthly,gallons,"From ""Monthly Water Use, gal."""
+/DE/read_me_072220.docx,ValueType,WD,NA
