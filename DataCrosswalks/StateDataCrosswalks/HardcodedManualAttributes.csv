@@ -567,4 +567,7 @@ file,Header,Value,Notes
 /DE/IndustrialWaterUse_USGS_Lovelace.xlsx$Water Use,Units_monthly,gallons,"From ""Monthly Water Use, gal."""
 /DE/WaterUse_2004-2019_all_categories.xlsx$Sheet1,Units_monthly,gallons,Determined by comparison of overlapping entries with  /DE/IndustrialWaterUse_USGS_Lovelace.xlsx$Water Use
 /DE/IndustrialWaterUse_modified.xlsx$Water Use,Units_monthly,gallons,"From ""Monthly Water Use, gal."""
-/DE/read_me_072220.docx,ValueType,WD,NA
+/DE/read_me_072220.docx,ValueType,WD,
+/FL/SFWMD_2020 WATER USAGE (PUMPAGE)_20210810.xlsx$Disclaimer,ValueType,WD,data are pumpage data
+/FL/SFWMD_2020 WATER USAGE (PUMPAGE)_20210810.xlsx$Disclaimer,Method_monthly,NA,data are self reported
+/FL/SFWMD_2020 WATER USAGE (PUMPAGE)_20210810.xlsx$Disclaimer,Method_annual_reported,NA,data are self reported

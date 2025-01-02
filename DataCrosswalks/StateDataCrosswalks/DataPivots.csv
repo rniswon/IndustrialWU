@@ -13,3 +13,4 @@
 /DE/IndustrialWaterUse_modified.xlsx$Water Use,wide,,Month = month.abb[as.numeric(`Current Month`)],,"Monthly Water Use, gal.",Monthly_reported = parse_number
 /DE/IndustrialWaterUse_USGS_Lovelace.xlsx$Water Use,wide,,Month = month.abb[as.numeric(`Current Month`)],,"Monthly Water Use, gal.",Monthly_reported = parse_number
 /DE/WaterUse_2004-2019_all_categories.xlsx$Sheet1,wide,,Month = month.abb[as.numeric(`currentMonth`)],,wateruse,
+/FL/SiteSpecific_IndWaterUse_FL_2020_ldm.xlsx$FL_SiteSpecificWithdrawals_Annu,long,"c(""TOT_GW_VA"", ""TOT_SW_VA"")",SourceType,,Annual_reported,Annual_reported = as.numeric

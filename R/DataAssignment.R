@@ -393,6 +393,12 @@ applyBLANKrules <- function(dat, headercrosswalk) {
   blanknames <- which(str_detect(names(dat), "[[:punct:]]{3}(?=[[:digit:]])"))
   # Rename those columns with a new format
   names(dat)[blanknames] <- paste0("V", blanknames)
+  # If dat is a completely empty data frame, which happens sometimes, e.g. when information is included in a picture of screenshotted text,
+  # Then create a blank data frame
+  if(all(dim(dat) == 0)) {
+    dat <- data.frame(V = integer())
+  }
+  
   # Update OldName in the header crosswalk for any that include "~BLANK~"
   headercrosswalk$OldName[which(grepl("~BLANK~", headercrosswalk$OldName))] <- paste0("V", blanknames)
   # Return the edited data and updated header crosswalk
@@ -475,6 +481,7 @@ applyPIVOTrules <- function(dat, headercrosswalk, updatedCrosswalks) {
       # Create select code based on whether the pivot is to a wide or long format
       # This code is based on the inputs from the pivot instructions crosswalk
       # It can be rather finicky. If there are errors popping up in this function, the select code is a good place to check first.
+      # browser()
       selectcode <- ifelse(.x$long_wide == "wide",
                            paste0('dplyr::select(., any_of(c("', paste(
                              ifelse(

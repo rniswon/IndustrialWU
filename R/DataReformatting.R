@@ -361,7 +361,7 @@ handle_oddformats <- function(data, fp, header, updatedCrosswalks, existingCross
 #'   result <- manual_update(data_frame, "file_path", "header_name", updated_crosswalk_data, existing_crosswalk_data, suggested_options)
 #'   }
 #'
-manual_update <- function(data, fp, header, updatedCrosswalks, existingCrosswalks, inputoptions) {
+manual_update <- function(data, fp, header, updatedCrosswalks, existingCrosswalks, inputoptions, forceupdate = TRUE) {
   
   # Take the hardcoded parameters that are already in the existing crosswalk
   hardparams <- updatedCrosswalks$HardcodedManualAttributes
@@ -370,31 +370,59 @@ manual_update <- function(data, fp, header, updatedCrosswalks, existingCrosswalk
     # `|>` is the baseR version of the dplyr pipe `%>%`. They mostly work the same, but have slight differences. I'll note those differences in the function `reformat_data`.
     # I tried to change as many instances of `%>%` to `|>` as I could to reduce the number of times a specific package is needed
     found_param_manual <- hardparams |> dplyr::filter(Header == header, file == fp) |> dplyr::pull(Value)
+    # Once the hardcoded parameters crosswalk is updated, the entered value will be stored as `found_param_manual`
+    # The column designated by the `header` string in this function will be assigned the value of `found_param_manual` in the data frame
+    # The following is written in dplyr-ese. 
+    # `|>` is the native pipe operator
+    # `!!` indicates to dplyr that it needs to find the variable outside of the dataframe `data`. 
+    # Without including `!!`, dplyr::mutate will complain that there is no column called "header" in data. 
+    # With `!!`, dplyr::mutate knows that it needs to use the value of header to look for a column in data.
+    # `:=` is used here instead of `=` because header is a variable. Again, without it, dplyr::mutate would add a new column called "header" with the values of found_param_manual
+    # With `:=`, the name of the column is the value of header
+    # This could be done in base R pretty easily as well, but it would require multiple lines and my personal preference is to use dplyr because the pipes execute everything together.
+    tmp <- data |> dplyr::mutate(!!header := found_param_manual)
   } else {
-    # if the header isn't entered manual entry is needed
-    # Generate the error message
-    message = paste("Enter suspected", header, "value based on", fp, 
-                    ". Enter these into the file HardcodedManualAttributes.csv.",
-                    "Suggested options are", paste(inputoptions, collapse = ", "))
-    # Add the line to the hardcoded parameters data frame that needs to be filled out by the user
-    hardparams_update <- hardparams |> add_row(file = fp, Header = header, Value = '')
-    
-    # Write the dataframe back to disk. The user can update it here. It will be tracked as a change by the targets package in the line `tar_target(existingCrosswalks, "DataCrosswalks", format = "file")` next time that tar_make() is run.
-    write.csv(hardparams_update, file = file.path(existingCrosswalks, "HardcodedManualAttributes.csv"), row.names = FALSE)
-    # Stopping the code here generates the message telling the user what to do, and also will send targets back to the existingCrosswalks target next time tar_make() is run.
-    stop(message)
-  }
-  # Once the hardcoded parameters crosswalk is updated, the entered value will be stored as `found_param_manual`
-  # The column designated by the `header` string in this function will be assigned the value of `found_param_manual` in the data frame
-  # The following is written in dplyr-ese. 
-  # `|>` is the native pipe operator
-  # `!!` indicates to dplyr that it needs to find the variable outside of the dataframe `data`. 
-  # Without including `!!`, dplyr::mutate will complain that there is no column called "header" in data. 
-  # With `!!`, dplyr::mutate knows that it needs to use the value of header to look for a column in data.
-  # `:=` is used here instead of `=` because header is a variable. Again, without it, dplyr::mutate would add a new column called "header" with the values of found_param_manual
-  # With `:=`, the name of the column is the value of header
-  # This could be done in base R pretty easily as well, but it would require multiple lines and my personal preference is to use dplyr because the pipes execute everything together.
-  tmp <- data |> dplyr::mutate(!!header := found_param_manual)
+    if(forceupdate) {
+      # manual entry is needed
+      # Generate the error message
+      m <- paste0("Enter suspected ", header, " value based on ", fp, 
+                      ". Enter these into the file HardcodedManualAttributes.csv.")
+        # The stop flag and message logs are intended to allow the code to run until all new codes have been identified.
+        # This reduces the number of times the code will be run and stopped with errors.
+        stopflag <- TRUE
+        assign("stopflag", stopflag, envir = .GlobalEnv)
+        
+        if(exists("messagelog", envir = .GlobalEnv)) {
+          messagelog <- get("messagelog", envir = .GlobalEnv) %>%
+            append(m)
+          assign("messagelog", messagelog, envir = .GlobalEnv)
+        } else {
+          messagelog <- list(m)
+          assign("messagelog", messagelog, envir = .GlobalEnv)
+        }
+        
+        if(exists("manualcodes_append", envir = .GlobalEnv)) {
+          manualcodes_append <- get("manualcodes_append", envir = .GlobalEnv) %>%
+            dplyr::bind_rows(.,
+                             data.frame(
+                               file = fp,
+                               Header = header,
+                               Value = "",
+                               Notes = NA
+                             ))
+          assign("manualcodes_append", manualcodes_append, envir = .GlobalEnv)
+        } else {
+          manualcodes_append <- data.frame(
+            file = fp,
+            Header = header,
+            Value = "",
+            Notes = NA
+          )
+          assign("manualcodes_append", manualcodes_append, envir = .GlobalEnv)
+        }
+    }
+    tmp <- data |> dplyr::mutate(!!header := NA_character_)
+    }
   
   return(tmp)
 }
@@ -1002,29 +1030,39 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, parallel = F
   return(x_munged)
 }
 
-merge_formatteddata <- function(x_munged = list(), updatedCrosswalks, data = c("State", "National")) {
+merge_formatteddata <- function(x_munged = list(), updatedCrosswalks, existingCrosswalks, data = c("State", "National")) {
   # This function merges the data that was reformatted together. 
   # State data is merged by state and then combined with row_bind
   # National data is merged together for each data set
+  # browser()
   x_munged_indices_bysize <- unlist(purrr::map(x_munged, ~length(.x))) |> sort(decreasing = TRUE)
   x_merge_ready <- x_munged[names(x_munged_indices_bysize)] |> purrr::keep(~{nrow(.) > 0}) 
+  
   if(data == "State") {
     if(exists("stopflag", envir = .GlobalEnv)) {
       if(get("stopflag", envir = .GlobalEnv) == TRUE) {
-        browser()
+        # browser()
         messagelog <- get("messagelog", envir = .GlobalEnv)
         datacodes_append <- get("datacodes_append", envir = .GlobalEnv) %>% unique()
+        manualcodes_append <- get("manualcodes_append", envir = .GlobalEnv) %>% unique()
         
         datacodes_asis <- updatedCrosswalks$DataCodesCrosswalk
         datacodes_write <- dplyr::bind_rows(datacodes_asis, datacodes_append) %>% unique()
         write.csv(datacodes_write, 
                   file = file.path(existingCrosswalks, "DataCodesCrosswalk.csv"), 
                   row.names = FALSE)
+        
+        manualcodes_asis <- updatedCrosswalks$HardcodedManualAttributes
+        manualcodes_write <- dplyr::bind_rows(manualcodes_asis, manualcodes_append) %>% unique()
+        write.csv(manualcodes_write, 
+                  file = file.path(existingCrosswalks, "HardcodedManualAttributes.csv"), 
+                  row.names = FALSE)
+        
         m <- list("Execution halted to edit data crosswalks", "       ",
                   messagelog)
         walk(unlist(m), ~message(.x))
-        rm(list = c("stopflag", "messagelog", "datacodes_append"), envir = .GlobalEnv)
-        browser()
+
+        rm(list = c("stopflag", "messagelog", "datacodes_append", "manualcodes_append"), envir = .GlobalEnv)
         stop()
       }
     }

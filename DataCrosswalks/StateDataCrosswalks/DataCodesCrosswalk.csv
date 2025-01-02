@@ -25,7 +25,6 @@ Category,LV10,AG
 Category,LV20 or CO99,AG
 Category,LV13,AG
 Category,LV15,AG
-Category,LV20 or CO99,AG
 Category,well serving people and animals,AG
 Category,"LV20 or CO99, well serving people and animals",AG
 Category,AQ,AQ
@@ -140,7 +139,6 @@ Method_annual_reported,LEW,Estimated
 Method_annual_reported,LEP,Estimated
 DataProtected,No further distribution,TRUE
 DataProtected,expressed written approval,TRUE
-Method_monthly,Unknown,NA_character_
 Method_annual_reported,CTDEEP_Reported,Metered
 Units_monthly,mg,mgal
 Units_annual_reported,mg,mgal
@@ -237,7 +235,6 @@ Method_monthly,MHP,Metered
 Method_monthly,COTH,Estimated
 Method_monthly,OTH,Estimated
 Method_monthly,MRW,Metered
-Method_monthly,MHP,Metered
 Method_monthly,LER,Estimated
 Method_monthly,LED,Estimated
 Method_monthly,LERD,Estimated
@@ -254,10 +251,8 @@ Method_annual_reported,TFM,Metered
 Method_annual_reported,THM,Metered
 Method_annual_reported,MHP,Metered
 Method_annual_reported,MRW,Metered
-Method_annual_reported,MHP,Metered
 Method_annual_reported,Metered Type Unknown,Metered
 Method_annual_reported,Flowmeter Cumulative,Metered
-Method_annual_reported,Unknown,NA_character_
 Method_annual_reported,Unknown,NA_character_
 Method_annual_reported,NA,NA_character_
 Method_annual_reported,UNSP,NA_character_
@@ -474,3 +469,10 @@ Method_annual_reported,NULL,NA_character_
 Method_annual_reported,Flow Metered,Metered
 Method_annual_reported,Others,NA_character_
 Method_annual_reported,Calculated,Estimated
+SourceType,OW,SW
+SourceType,TOT_GW_VA,GW
+SourceType,TOT_SW_VA,SW
+Category,CII,IN
+Category,0,NA_character_
+Units_monthly,GPD,gal per day
+Units_annual_reported,GPD,gal per day
