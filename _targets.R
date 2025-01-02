@@ -64,6 +64,7 @@ list(
   ),
   tar_target(NonSWUDSdata, command = merge_formatteddata(reformatted_data,
                                                          updatedCrosswalks,
+                                                         existingCrosswalks,
                                                          data = "State")),
   tar_target(combined_dat, command = 
                merge_nationaldata(nonSWUDS = NonSWUDSdata,
@@ -72,6 +73,7 @@ list(
   tar_target(FormattedNationaldata, command = prep_nationaldata(
     national_Xwalks = NationalDataCrosswalks, 
     datacodes_Xwalks = updatedCrosswalks$DataCodesCrosswalk,
+    existingCrosswalks,
     natdata = list(NAICSworkup, SWUDS, SWUDS_workup),
     extradata = list(FIPSdata)
   )),

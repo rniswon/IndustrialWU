@@ -55,7 +55,7 @@ prep_siteselection <- function(national_Xwalks, datacodes_Xwalks, siteselection 
   return(siteSelectionDat)
 }
 
-prep_nationaldata <- function(national_Xwalks, datacodes_Xwalks, natdata = list(), extradata = list()) {
+prep_nationaldata <- function(national_Xwalks, datacodes_Xwalks, existingCrosswalks, natdata = list(), extradata = list()) {
   # This function preps national scale data, such as the FIPS codes, Lauren's work with updated locations, etc
   # The headers from the national crosswalk are used to read and rename the national files
   # The national files are all merged together first before they are merged with the water use data.
@@ -73,7 +73,7 @@ prep_nationaldata <- function(national_Xwalks, datacodes_Xwalks, natdata = list(
   }
   natData <- readandrename_columns(natdata, natHeaders, national_Xwalks, data = "National") %>%
     reformat_data(., natHeaders, national_Xwalks) %>%
-    merge_formatteddata(., natHeaders, data = "National") %>%
+    merge_formatteddata(., natHeaders, existingCrosswalks, data = "National") %>%
     dplyr::filter(!is.na(FacilityName)) %>%  dplyr::mutate(State = State1) %>%
     standard_Addresstreatment(., "State")
   
