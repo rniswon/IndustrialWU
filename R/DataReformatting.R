@@ -1043,20 +1043,23 @@ merge_formatteddata <- function(x_munged = list(), updatedCrosswalks, existingCr
       if(get("stopflag", envir = .GlobalEnv) == TRUE) {
         # browser()
         messagelog <- get("messagelog", envir = .GlobalEnv)
-        datacodes_append <- get("datacodes_append", envir = .GlobalEnv) %>% unique()
-        manualcodes_append <- get("manualcodes_append", envir = .GlobalEnv) %>% unique()
+        if(exists("datacodes_append", envir = .GlobalEnv)) {
+          datacodes_append <- get("datacodes_append", envir = .GlobalEnv) %>% unique()
+          datacodes_asis <- updatedCrosswalks$DataCodesCrosswalk
+          datacodes_write <- dplyr::bind_rows(datacodes_asis, datacodes_append) %>% unique()
+          write.csv(datacodes_write, 
+                    file = file.path(existingCrosswalks, "DataCodesCrosswalk.csv"), 
+                    row.names = FALSE)
+        }
         
-        datacodes_asis <- updatedCrosswalks$DataCodesCrosswalk
-        datacodes_write <- dplyr::bind_rows(datacodes_asis, datacodes_append) %>% unique()
-        write.csv(datacodes_write, 
-                  file = file.path(existingCrosswalks, "DataCodesCrosswalk.csv"), 
-                  row.names = FALSE)
-        
-        manualcodes_asis <- updatedCrosswalks$HardcodedManualAttributes
-        manualcodes_write <- dplyr::bind_rows(manualcodes_asis, manualcodes_append) %>% unique()
-        write.csv(manualcodes_write, 
-                  file = file.path(existingCrosswalks, "HardcodedManualAttributes.csv"), 
-                  row.names = FALSE)
+        if(exists("manualcodes_append", envir = .GlobalEnv)) {
+          manualcodes_append <- get("manualcodes_append", envir = .GlobalEnv) %>% unique()
+          manualcodes_asis <- updatedCrosswalks$HardcodedManualAttributes
+          manualcodes_write <- dplyr::bind_rows(manualcodes_asis, manualcodes_append) %>% unique()
+          write.csv(manualcodes_write, 
+                    file = file.path(existingCrosswalks, "HardcodedManualAttributes.csv"), 
+                    row.names = FALSE)
+        }
         
         m <- list("Execution halted to edit data crosswalks", "       ",
                   messagelog)
