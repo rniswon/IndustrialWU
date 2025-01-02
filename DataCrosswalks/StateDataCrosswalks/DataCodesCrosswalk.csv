@@ -476,3 +476,22 @@ Category,CII,IN
 Category,0,NA_character_
 Units_monthly,GPD,gal per day
 Units_annual_reported,GPD,gal per day
+ValueType,approved 11-26-18,WD
+ValueType,approved 1-22-18,WD
+ValueType,approved 12-28-09,WD
+ValueType,NA,WD
+ValueType,approved 7-17-17,WD
+ValueType,must report annually the amount withdrawn from the CRSL aquifer (added 8-6-03),WD
+ValueType,approved 7-16-18,WD
+ValueType,approved 3-11-16,WD
+ValueType,approved 7-1-19,WD
+ValueType,The Northern States Power Company shall report annually the amount of water withdrawn each year from the Split Rock Creek Aquifer.,WD
+ValueType,6846-3 cancelled,WD
+ValueType,approved 1-14-13,WD
+ValueType,Needs to report on an annual basis the amount pumped from the BS:S aquifer (added 8-6-03),WD
+ValueType,approved 3-7-13,WD
+ValueType,transferred 11-17-11,WD
+ValueType,approved 5-9-11,WD
+ValueType,Must report annually the amount of water used from the Big Sioux:Aurora Aquifer                               (added to database 9-30-02),WD
+Units_annual_reported,acre-feet,acft
+Units_annual_reported,gallons,gal
