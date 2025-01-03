@@ -596,16 +596,61 @@ standard_nametreatment <- function(data, filename, header, updatedCrosswalks, ex
         tmp <- handle_headers(data, filename, header, updatedCrosswalks, existingCrosswalks)
       } else {
         tmp <- data %>%
-          dplyr::mutate(!!header := fedmatch::clean_strings(as.character(.[[header]]), common_words = fedmatch::corporate_words))
+          dplyr::mutate(!!header := clean_names(as.character(.[[header]])))
       }
     } else if(length(grep(header, names(data))) > 1) {
       # Multiple columns case
       tmp <- concat_columns(data, header) %>% 
-        dplyr::mutate(!!header := fedmatch::clean_strings(as.character(.[[header]]), common_words = fedmatch::corporate_words))
+        dplyr::mutate(!!header := clean_names(as.character(.[[header]])))
     }
-    
   } else {tmp <- data}  # If the header does not exist, return the data as is
   return(tmp)
+}
+
+f_gsub <- function(pattern, replacement, x) {
+  str_replace_all(x, pattern, replacement)
+  }
+
+clean_names <- function(x) {
+  x_standard <- fedmatch::clean_strings(x, common_words = fedmatch::corporate_words)
+  x_upper <- str_to_upper(x_standard)
+  # these are the changes that the site selection team did to their data
+  x_fix <- f_gsub(
+    "\\bINC\\.\\b|\\bINC\\b|\\bINCOPORATED\\b","INCORPORATED",
+    f_gsub(
+      "\\bCORP\\b|\\bCORP\\.\\b","CORPORATION", 
+      f_gsub(
+        "\\bLLC\\b|\\bLLC\\.\\b|\\bL\\.L\\.C\\.","LIMITED LIABILITY COMPANY",
+        f_gsub(
+          "\\bLIMITED LIABILITY CORPORATION\\b", "LIMITED LIABILITY COMPANY",
+          f_gsub(
+            "\\bLTD\\b|\\bLTD\\.\\b|Limtd","LIMITED", 
+            f_gsub(
+              "\\bLP\\b|\\bLP\\b|\\bL\\.P\\.","LIMITED PARTNERSHIP",      
+              f_gsub(
+                "\\bDIV\\b|DIV\\.\\b","DIVISION",
+                f_gsub(
+                  "\\bMFG\\b|\\bMFG\\.\\b","MANUFACTURING",
+                  f_gsub(
+                    "\\bCNTY\\b|\\bCNTY\\.\\b","COUNTY",
+                    f_gsub(
+                      "\\bCNTRS\\b|\\bCNTRS\\.\\b|\\bCNTR\\b","CENTERS",
+                      f_gsub(
+                        "\\bSYS\\b|\\bSYS\\.","SYSTEM",
+                        f_gsub(
+                          "\\bDEPT\\b|\\bDEPT\\.","DEPARTMENT", 
+                          f_gsub(
+                            "\\bINTL\\b", "INTERNATIONAL",
+                            f_gsub(
+                              "\\&","AND",
+                              f_gsub(
+                                "\\,","",
+                                f_gsub(
+                                  "\\s+", " ", 
+                                  f_gsub(
+                                    "\\bCO\\b|\\bCO\\.\\b|\\bCOPANY\\b|\\bCO\\.\\,\\b", 
+                                    "COMPANY", x_upper)))))))))))))))))
+  x_fix
 }
 
 #' Standard ID Treatment
@@ -828,7 +873,10 @@ standard_Addresstreatment <- function(data, filename, header) {
                                          stateindex = indices$i_state, 
                                          state_regex = state_regex, 
                                          zip_regex = zip_regex) %>%
-      {if(type == "State") {.} else {str_to_title(.)}}
+      {if(type == "State") {.} else 
+        if(type == "Address") {
+          clean_address_words(.)
+          } else {str_to_title(.)}}
     
     tmp <- data |>
       dplyr::select(-contains(header)) |>
@@ -836,6 +884,77 @@ standard_Addresstreatment <- function(data, filename, header) {
     
   } else {tmp <- data} # If the header does not exist, don't do anything to the data
   tmp
+}
+
+clean_address_words <- function(x) {
+  x_upper <- str_to_upper(x)
+  
+  # These are the substitutions that the site selection team used when processing their data
+  x_Fix <- f_gsub(
+    "\\bRDS\\b|\\bRD\\b|\\bRD\\.|\\bRD\\,", "ROAD",
+    f_gsub(
+      "\\bCTH\\b", "COUNTY HIGHWAY",
+      f_gsub("\\bST RTE\\b", "STATE ROUTE",
+             f_gsub(
+             "\\bLN\\b|\\bLN\\.|\\bLN\\,", "LANE",
+             f_gsub(
+               "\\bSTE\\b|\\bSTE\\.", "SUITE",
+               f_gsub(
+                 "\\bST\\,|\\bST\\.|\\bSTREET\\b|\\bSTREET\\,|\\bST\\.\\,", "ST",
+                 f_gsub(
+                   "\\bRTE\\b", "ROUTE",
+                   f_gsub(
+                     "\\bHWY\\b|\\bHWY\\.|\\bHWY\\,", "HIGHWAY",
+                     f_gsub(
+                       "\\bAVE\\b|\\bAVE\\.|\\bAVE\\,|\\bAV\\b", "AVENUE",
+                       f_gsub(
+                         "\\bBYP$", "BYPASS", 
+                         f_gsub(
+                           "\\bPKWY", "PARKWAY", 
+                           f_gsub(
+                             "\\bCIR\\b", "CIRCLE",
+                             f_gsub(
+                               "\\bBLV\\b|\\bBLVD\\b|\\bBLVD\\.|\\bBLVD\\,", "BOULEVARD", 
+                               f_gsub(
+                                 "\\bBLD\\b|\\bBLDG\\b", "BUILDING",
+                                 f_gsub(
+                                   "\\bDRIVE\\b|\\bDR\\.|\\bDR\\,|\\bDR\\.\\,", "DR", 
+                                   f_gsub(
+                                     "\\bEAST\\b|\\bE\\.", "E", 
+                                     f_gsub(
+                                       "\\bWEST\\b|\\bW\\.", "W",
+                                       f_gsub(
+                                         "\\bSOUTH\\b|\\bS\\.", "S",
+                                         f_gsub(
+                                           "\\bNORTH\\b|\\bN\\.|\\bNORTH\\,", "N",
+                                           f_gsub(
+                                             "\\bAPT ", "APARTMENT", 
+                                             f_gsub(
+                                               "\\bPL$|\\bPL\\.", "PLACE",
+                                               f_gsub(
+                                                 "\\bPLZ\\b", "PLAZA",
+                                                 f_gsub(
+                                                   "\\bCT\\b|\\bCT\\.|\\bCT\\,", "COURT",
+                                                   f_gsub(
+                                                     "\\bCTR\\b", "CENTER",
+                                                     f_gsub(
+                                                       "\\bTRL$", "TRAIL", 
+                                                       f_gsub(
+                                                         "\\bTPKE\\b", "TURNPIKE", 
+                                                         f_gsub(
+                                                           "\\s$", "", x_upper))
+                                                       )))))))))))))))))))))))))
+  
+  
+  # These were the flags used by the site selection team to manually change the addresses in their data
+  # In lieu of manually changing them here, we will drop the address and hope that the entries can be merged using other columns
+  # The address from the site selection team can then be used for future analysis
+  x_Fix[grepl("MILE| MI |FEET| FT |APPROX|UNKNOWN|[\\(]|[:punct:&&[^-]]| BOX |\\P O", x_Fix)] <- NA_character_
+  x_Fix[!grepl("\\d", x_Fix)] <- NA_character_
+  x_Fix
+  
+  x_use <- str_to_title(x_Fix)
+  x_use
 }
 
 #' Standard Coordinate Treatment
