@@ -46,7 +46,7 @@ prep_siteselection <- function(national_Xwalks, datacodes_Xwalks, siteselection 
     pluck(1) |>
     dplyr::mutate(
       FacilityName = fedmatch::clean_strings(
-        as.character(FacilityName), common_words = fedmatch::corporate_words)
+        clean_names(as.character(FacilityName)), common_words = fedmatch::corporate_words)
       ) |>
     dplyr::mutate(dplyr::across(c("Address1", "City1", "County1"), ~str_to_title(.))) |>
     dplyr::mutate(State = State1) |>
