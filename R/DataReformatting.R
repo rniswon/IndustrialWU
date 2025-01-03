@@ -596,53 +596,58 @@ standard_nametreatment <- function(data, filename, header, updatedCrosswalks, ex
         tmp <- handle_headers(data, filename, header, updatedCrosswalks, existingCrosswalks)
       } else {
         tmp <- data %>%
-          dplyr::mutate(!!header := fedmatch::clean_strings(clean_names(as.character(.[[header]])), common_words = fedmatch::corporate_words))
+          dplyr::mutate(!!header := clean_names(as.character(.[[header]])))
       }
     } else if(length(grep(header, names(data))) > 1) {
       # Multiple columns case
       tmp <- concat_columns(data, header) %>% 
-        dplyr::mutate(!!header := fedmatch::clean_strings(clean_names(as.character(.[[header]])), common_words = fedmatch::corporate_words))
+        dplyr::mutate(!!header := clean_names(as.character(.[[header]])))
     }
   } else {tmp <- data}  # If the header does not exist, return the data as is
   return(tmp)
 }
 
+f_gsub <- function(pattern, replacement, x) {
+  str_replace_all(x, pattern, replacement)
+  }
+
 clean_names <- function(x) {
-  x_upper <- str_to_upper(x)
+  x_standard <- fedmatch::clean_strings(x, common_words = fedmatch::corporate_words)
+  x_upper <- str_to_upper(x_standard)
   # these are the changes that the site selection team did to their data
-  x_fix <- gsub(
+  x_fix <- f_gsub(
     "\\bINC\\.\\b|\\bINC\\b|\\bINCOPORATED\\b","INCORPORATED",
-    gsub(
+    f_gsub(
       "\\bCORP\\b|\\bCORP\\.\\b","CORPORATION", 
-      gsub(
+      f_gsub(
         "\\bLLC\\b|\\bLLC\\.\\b|\\bL\\.L\\.C\\.","LIMITED LIABILITY COMPANY",
-        gsub(
+        f_gsub(
           "\\bLIMITED LIABILITY CORPORATION\\b", "LIMITED LIABILITY COMPANY",
-          gsub(
+          f_gsub(
             "\\bLTD\\b|\\bLTD\\.\\b|Limtd","LIMITED", 
-            gsub(
+            f_gsub(
               "\\bLP\\b|\\bLP\\b|\\bL\\.P\\.","LIMITED PARTNERSHIP",      
-              gsub(
+              f_gsub(
                 "\\bDIV\\b|DIV\\.\\b","DIVISION",
-                gsub(
+                f_gsub(
                   "\\bMFG\\b|\\bMFG\\.\\b","MANUFACTURING",
-                  gsub(
+                  f_gsub(
                     "\\bCNTY\\b|\\bCNTY\\.\\b","COUNTY",
-                    gsub(
+                    f_gsub(
                       "\\bCNTRS\\b|\\bCNTRS\\.\\b|\\bCNTR\\b","CENTERS",
-                      gsub(
+                      f_gsub(
                         "\\bSYS\\b|\\bSYS\\.","SYSTEM",
-                        gsub(
+                        f_gsub(
                           "\\bDEPT\\b|\\bDEPT\\.","DEPARTMENT", 
-                          gsub(
+                          f_gsub(
                             "\\bINTL\\b", "INTERNATIONAL",
-                            gsub(
+                            f_gsub(
                               "\\&","AND",
-                              gsub(
+                              f_gsub(
                                 "\\,","",
-                                gsub(
+                                f_gsub(
                                   "\\s+", " ", 
-                                  gsub(
+                                  f_gsub(
                                     "\\bCO\\b|\\bCO\\.\\b|\\bCOPANY\\b|\\bCO\\.\\,\\b", 
                                     "COMPANY", x_upper)))))))))))))))))
   x_fix
@@ -870,7 +875,7 @@ standard_Addresstreatment <- function(data, filename, header) {
                                          zip_regex = zip_regex) %>%
       {if(type == "State") {.} else 
         if(type == "Address") {
-          str_to_title(clean_address_words(.))
+          clean_address_words(.)
           } else {str_to_title(.)}}
     
     tmp <- data |>
@@ -885,58 +890,58 @@ clean_address_words <- function(x) {
   x_upper <- str_to_upper(x)
   
   # These are the substitutions that the site selection team used when processing their data
-  x_Fix <- gsub(
+  x_Fix <- f_gsub(
     "\\bRDS\\b|\\bRD\\b|\\bRD\\.|\\bRD\\,", "ROAD",
-    gsub(
+    f_gsub(
       "\\bCTH\\b", "COUNTY HIGHWAY",
-      gsub("\\bST RTE\\b", "STATE ROUTE",
-           gsub(
+      f_gsub("\\bST RTE\\b", "STATE ROUTE",
+             f_gsub(
              "\\bLN\\b|\\bLN\\.|\\bLN\\,", "LANE",
-             gsub(
+             f_gsub(
                "\\bSTE\\b|\\bSTE\\.", "SUITE",
-               gsub(
+               f_gsub(
                  "\\bST\\,|\\bST\\.|\\bSTREET\\b|\\bSTREET\\,|\\bST\\.\\,", "ST",
-                 gsub(
+                 f_gsub(
                    "\\bRTE\\b", "ROUTE",
-                   gsub(
+                   f_gsub(
                      "\\bHWY\\b|\\bHWY\\.|\\bHWY\\,", "HIGHWAY",
-                     gsub(
+                     f_gsub(
                        "\\bAVE\\b|\\bAVE\\.|\\bAVE\\,|\\bAV\\b", "AVENUE",
-                       gsub(
+                       f_gsub(
                          "\\bBYP$", "BYPASS", 
-                         gsub(
+                         f_gsub(
                            "\\bPKWY", "PARKWAY", 
-                           gsub(
+                           f_gsub(
                              "\\bCIR\\b", "CIRCLE",
-                             gsub(
+                             f_gsub(
                                "\\bBLV\\b|\\bBLVD\\b|\\bBLVD\\.|\\bBLVD\\,", "BOULEVARD", 
-                               gsub(
+                               f_gsub(
                                  "\\bBLD\\b|\\bBLDG\\b", "BUILDING",
-                                 gsub(
+                                 f_gsub(
                                    "\\bDRIVE\\b|\\bDR\\.|\\bDR\\,|\\bDR\\.\\,", "DR", 
-                                   gsub(
+                                   f_gsub(
                                      "\\bEAST\\b|\\bE\\.", "E", 
-                                     gsub(
+                                     f_gsub(
                                        "\\bWEST\\b|\\bW\\.", "W",
-                                       gsub(
+                                       f_gsub(
                                          "\\bSOUTH\\b|\\bS\\.", "S",
-                                         gsub(
+                                         f_gsub(
                                            "\\bNORTH\\b|\\bN\\.|\\bNORTH\\,", "N",
-                                           gsub(
+                                           f_gsub(
                                              "\\bAPT ", "APARTMENT", 
-                                             gsub(
+                                             f_gsub(
                                                "\\bPL$|\\bPL\\.", "PLACE",
-                                               gsub(
+                                               f_gsub(
                                                  "\\bPLZ\\b", "PLAZA",
-                                                 gsub(
+                                                 f_gsub(
                                                    "\\bCT\\b|\\bCT\\.|\\bCT\\,", "COURT",
-                                                   gsub(
+                                                   f_gsub(
                                                      "\\bCTR\\b", "CENTER",
-                                                     gsub(
+                                                     f_gsub(
                                                        "\\bTRL$", "TRAIL", 
-                                                       gsub(
+                                                       f_gsub(
                                                          "\\bTPKE\\b", "TURNPIKE", 
-                                                         gsub(
+                                                         f_gsub(
                                                            "\\s$", "", x_upper))
                                                        )))))))))))))))))))))))))
   
@@ -947,6 +952,9 @@ clean_address_words <- function(x) {
   x_Fix[grepl("MILE| MI |FEET| FT |APPROX|UNKNOWN|[\\(]|[:punct:&&[^-]]| BOX |\\P O", x_Fix)] <- NA_character_
   x_Fix[!grepl("\\d", x_Fix)] <- NA_character_
   x_Fix
+  
+  x_use <- str_to_title(x_Fix)
+  x_use
 }
 
 #' Standard Coordinate Treatment
