@@ -682,11 +682,14 @@ pull_address <- function(x, zipindex, stateindex) {
 
 pull_city <- function(x, zipindex, stateindex) {
   non_address <- unique(na.omit(c(zipindex, stateindex)))
-  tmp <- ifelse(length(x) == 0, NA_character_,
-                ifelse(length(x) == 1, x,
-                       ifelse(length(non_address) == 0, paste(x, collapse = ", "), 
+  tmp <- ifelse(length(x) == 0, 
+                NA_character_,
+                ifelse(length(x) == 1, 
+                       x,
+                       ifelse(length(non_address) == 0, 
+                              paste(x, collapse = ", "), 
                               ifelse(sum(grepl("[[:digit:]]", x[-c(non_address)])) == 1, 
-                                     x[-c(non_address)][!grep("[[:digit:]]", x[-c(non_address)])],
+                                     x[-c(non_address)][!grepl("[[:digit:]]", x[-c(non_address)])],
                                      x[-c(non_address)][2]))))
   cty <- str_to_title(tmp)
   return(cty)
@@ -720,6 +723,7 @@ pull_county <- function(x) {
 }
 
 pull_necessaryaddressdata <- function(x, type, zipindex, stateindex, state_regex, zip_regex) {
+  # browser()
   list(pull_address, pull_city, pull_state, pull_zip, pull_county) # call for targets package
   # if there is more than 1 entry in a cell separated by commas (e.g. Puelbo, CO is 2 entries), this code will try to pull the part of the entry that corresponds to the data needed.
   tmp_code <- ifelse(type == "Address", "pmap_chr(list(x, zipindex, stateindex), ~pull_address(..1, ..2, ..3))",
@@ -755,9 +759,11 @@ pull_necessaryaddressdata <- function(x, type, zipindex, stateindex, state_regex
 #'
 #'
 #'
-standard_Addresstreatment <- function(data, header) {
+standard_Addresstreatment <- function(data, filename, header) {
   # Check if the header exists in the data
+  # filename isn't used in the function, but it is very helpful to have available in order to pause execution for debugging
   if(length(grep(header, names(data))) > 0) {
+    # if(grepl("Texas", filename) & header == "City1") {browser()}
     # This step is one of the most complicated data cleaning steps, and has already needed to be debugged extensively
     # The raw entry lines (i.e. what is in the original data), is split at commas. This helps parse if an entire address (including city, state, and zip) are included as one entry
     # There are regular expressions that search for state codes and zip codes
@@ -767,7 +773,7 @@ standard_Addresstreatment <- function(data, header) {
       stringr::str_split(",") 
     
     if(any(str_detect(unlist(rawentrylines), "\r|\n"), na.rm = TRUE)) {
-      entrylines <- stringr::str_trim(rawentrylines) |> purrr::map(~{
+      entrylines <- map(rawentrylines, ~stringr::str_trim(.x)) |> purrr::map(~{
         x_clean <- subset(unique(unlist(stringr::str_split(.x, "\r|\n"))), 
                           unique(unlist(stringr::str_split(.x, "\r|\n"))) != "")
         x_clean
@@ -996,7 +1002,7 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, parallel = F
     "', updatedCrosswalks, existingCrosswalks), .progress = TRUE)", collapse = " %>% ")
   ids_code <- paste0(package_call, "map(., ~standard_idtreatment(.x, '", idcolumns, "'), .progress = TRUE)", collapse = " %>% ")
   HUCs_code <- paste0(package_call, "map(., ~standard_HUCtreatment(.x, '", HUCcolumns, "'), .progress = TRUE)", collapse = " %>% ")
-  Addresses_code <- paste0(package_call, "map(., ~standard_Addresstreatment(.x, '", Addresscolumns, "'), .progress = TRUE)", collapse = " %>% ")
+  Addresses_code <- paste0(package_call, "imap(., ~standard_Addresstreatment(.x, .y, '", Addresscolumns, "'), .progress = TRUE)", collapse = " %>% ")
   coordinates_code <- paste0(package_call, "map(., ~standard_coordinatetreatment(.x, '", coordinatecolumns, "'), .progress = TRUE)", collapse = " %>% ")
   years_code <- paste0(package_call, "imap(., ~standard_Yeartreatment(.x, .y, '", Yearcolumns, "', updatedCrosswalks, existingCrosswalks), .progress = TRUE)", collapse = " %>% ")
   data_code <- paste0(package_call, "imap(., ~standard_datatreatment(.x, .y,'", datacolumns, "'), .progress = TRUE)", collapse = " %>% ")

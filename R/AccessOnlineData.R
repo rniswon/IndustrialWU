@@ -18,7 +18,7 @@ compile_fips <- function(fps) {
                                         colClasses = "character")) |>
     dplyr::select(STATE, County1 = COUNTYNAME, STATEFP, COUNTYFP) |>
     dplyr::mutate(Full_CountyFP = paste0(STATEFP, COUNTYFP)) |>
-    standard_Addresstreatment("County1") |>
+    standard_Addresstreatment("FIPS", "County1") |>
     unique()
   
   write.csv(countyfips, file = file.path("Industrial model", 

@@ -75,7 +75,7 @@ prep_nationaldata <- function(national_Xwalks, datacodes_Xwalks, existingCrosswa
     reformat_data(., natHeaders, national_Xwalks) %>%
     merge_formatteddata(., natHeaders, existingCrosswalks, data = "National") %>%
     dplyr::filter(!is.na(FacilityName)) %>%  dplyr::mutate(State = State1) %>%
-    standard_Addresstreatment(., "State")
+    standard_Addresstreatment(., "natData", "State")
   
   augmentData <- readandrename_columns(extradata, natHeaders, national_Xwalks, data = "National") |>
     reformat_data(natHeaders, national_Xwalks) %>%
@@ -105,18 +105,28 @@ iterative_merge_siteselection <- function(WUdata, siteselectiondata, mergevars) 
   # in practice, sometimes duplicates are created. 
   # there is a warning produced that indicates when duplicates are created so that they can be addressed in future updates
   # browser()
+
   siteselection_subset <- dplyr::filter(siteselectiondata, !!sym(mergevars[[1]]) %in% 
-                                   unique(WUdata[[mergevars[[1]]]]))
+                                   unique(WUdata[[mergevars[[1]]]])) %>%
+    dplyr::filter(!dplyr::if_any(dplyr::all_of(mergevars), is.na))
   merge_dat <- rquery::natural_join(WUdata, siteselection_subset, by = mergevars, jointype = "LEFT") 
   if(nrow(merge_dat) != nrow(WUdata)) {
     nadd <- nrow(merge_dat) - nrow(WUdata)
-    m <- paste("Warning:", nadd,"Duplicates added")
+    m <- paste("Warning:", nadd,"Duplicates added when merging by", paste(mergevars, collapse = ", "))
     message(m) 
+    # browser()
     } # something went wrong
   merge_success <- merge_dat %>% dplyr::filter(!is.na(SITESELECTION_FACILITYID)) %>% 
     dplyr::group_by(dplyr::across(all_of(names(WUdata)))) %>% 
     dplyr::summarise(dplyr::across(contains("SITESELECTION"), ~paste(unique(.), collapse = " _OR_ ")),
               .groups = "drop") 
+  if(nrow(merge_success) == 0) {
+    m <- paste("Merging by", paste(mergevars, collapse = ", "), "produced no matches")
+  } else {
+    m <- paste("Merging by", paste(mergevars, collapse = ", "), "produced", nrow(merge_success),  "matches")
+  }
+  message(m)
+  
   merge_fail <- merge_dat %>% dplyr::filter(is.na(SITESELECTION_FACILITYID)) %>% 
     dplyr::select(all_of(names(WUdata)))
   
@@ -124,7 +134,6 @@ iterative_merge_siteselection <- function(WUdata, siteselectiondata, mergevars) 
 }
 
 merge_siteselection <- function(data, siteselection, siteselectionfilename) {
-  
   
 # the site selection data is merged several times by various characteristics
   # this is intented to maximize the number of merged lines
