@@ -265,3 +265,9 @@ flag_unprocessedstates <- function(x) {
     pull(file) %>% str_extract(., "(?<=/)[[:alpha:]]{2}(?=/)") %>% unique()
   return(states)
 }
+
+flag_unprocessedfiles <- function(x) {
+  files <- x %>% dplyr::filter(if_any(.cols = everything(), .fns = ~is.na(.))) %>%
+    pull(file)
+  return(files)
+}
