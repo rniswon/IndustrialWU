@@ -1159,7 +1159,7 @@ merge_formatteddata <- function(x_munged = list(), updatedCrosswalks, existingCr
   # This function merges the data that was reformatted together. 
   # State data is merged by state and then combined with row_bind
   # National data is merged together for each data set
-  # browser()
+  #browser()
   x_munged_indices_bysize <- unlist(purrr::map(x_munged, ~length(.x))) |> sort(decreasing = TRUE)
   x_merge_ready <- x_munged[names(x_munged_indices_bysize)] |> purrr::keep(~{nrow(.) > 0}) 
   

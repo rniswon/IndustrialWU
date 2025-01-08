@@ -106,7 +106,7 @@ iterative_merge_siteselection <- function(WUdata, siteselectiondata, mergevars) 
   # in practice, sometimes duplicates are created. 
   # there is a warning produced that indicates when duplicates are created so that they can be addressed in future updates
   # browser()
-
+  
   siteselection_subset <- dplyr::filter(siteselectiondata, !!sym(mergevars[[1]]) %in% 
                                    unique(WUdata[[mergevars[[1]]]])) %>%
     dplyr::filter(!dplyr::if_any(dplyr::all_of(mergevars), is.na))

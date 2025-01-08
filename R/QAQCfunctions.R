@@ -130,7 +130,7 @@ generate_statusupdate <- function(siteselectionmerged,
     dplyr::group_by(State) %>%
     dplyr::summarize(`Number of NonSWUDS files left to process` = dplyr::n(), 
                      AccessDB = any(access))
-  
+
   QAQC_tomerge <- QAQCupdate %>%
     select(
       State, 
@@ -138,7 +138,7 @@ generate_statusupdate <- function(siteselectionmerged,
       `Number of data points potentially duplicated` = n_maybeduplicated,
       `QAQC check performed` = Checked
     ) %>%
-    mutate(across(contains("Number"), ~as.integer(.)))
+    dplyr::mutate(dplyr::across(contains("Number"), ~as.integer(.)))
   
   newstatusupdate <- dplyr::full_join(
     dplyr::full_join(data_points, unmerged_sites, by = "State"),
@@ -155,7 +155,16 @@ generate_statusupdate <- function(siteselectionmerged,
              )
            )
     ) %>%
-    dplyr::mutate(`Date of Last Update` = Sys.Date())
+    dplyr::mutate(`Date of Last Update` = Sys.Date()) %>%
+    dplyr::mutate(
+      across(`QAQC check performed`, 
+             ~case_when(
+               is.na(.) ~ case_when(
+                 `NonSWUDS Data Processing Status` == "not needed" ~ "not needed",
+                 `NonSWUDS Data Processing Status` == "completed" ~ "completed",
+                 is.na(`NonSWUDS Data Processing Status`) ~ NA_character_),
+               . == "No" ~ NA_character_,
+               . == "Yes" ~ "completed")))
   
   previousstatusread <- get_filledcsv(status) %>%
     as_tibble() %>%
@@ -177,16 +186,20 @@ generate_statusupdate <- function(siteselectionmerged,
   
   write.csv(statuslinesupdate, status, row.names = FALSE)
   
-  previoustasks_people <- previousstatusread %>% pull(`Person Currently Working On`) %>% unique()
-  remainingtasks_people <- statuslinesupdate %>% pull(`Person Currently Working On`) %>% unique()
+  previoustasks_people <- previousstatusread %>% 
+    filter(!is.na(`Person Currently Working On`) & `Person Currently Working On` != "") %>%
+    pull(`Person Currently Working On`) %>% unique() 
+  remainingtasks_people <- statuslinesupdate %>% 
+    filter(!is.na(`Person Currently Working On`) & `Person Currently Working On` != "") %>%
+    pull(`Person Currently Working On`) %>% unique()
 
-  available_people <- str_subset(remainingtasks_people, previoustasks_people, negate = TRUE)
+  available_people <- str_subset(previoustasks_people,
+                                 paste0(remainingtasks_people, collapse = "|"), 
+                                 negate = TRUE)
   if(length(available_people) > 0) {
     message(paste(paste(available_people, collapse = ", "), "possibly available for another state"))
   }
 
   return(statuslinesupdate)
-  
-
   
 }

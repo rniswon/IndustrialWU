@@ -571,3 +571,6 @@ file,Header,Value,Notes
 /FL/SFWMD_2020 WATER USAGE (PUMPAGE)_20210810.xlsx$Disclaimer,ValueType,WD,data are pumpage data
 /FL/SFWMD_2020 WATER USAGE (PUMPAGE)_20210810.xlsx$Disclaimer,Method_monthly,NA,data are self reported
 /FL/SFWMD_2020 WATER USAGE (PUMPAGE)_20210810.xlsx$Disclaimer,Method_annual_reported,NA,data are self reported
+/HI/HI_IN_WU.xlsx$HI_IN_WU,ValueType,WD,NA
+/HI/HI_IN_WU.xlsx$HI_IN_WU,Units_monthly,gallons,NA
+/HI/HI_IN_WU.xlsx$HI_IN_WU,Method_monthly,gallons,NA
