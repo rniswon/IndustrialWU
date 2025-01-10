@@ -140,8 +140,8 @@ Method_annual_reported,LEP,Estimated
 DataProtected,No further distribution,TRUE
 DataProtected,expressed written approval,TRUE
 Method_annual_reported,CTDEEP_Reported,Metered
-Units_monthly,mg,mgal
-Units_annual_reported,mg,mgal
+Units_monthly,mg,Mgal
+Units_annual_reported,mg,Mgal
 ValueType,RT,RL
 ValueType,WL,WD
 SourceType,SPILLWATER,SW
@@ -371,9 +371,9 @@ SourceType,EFFLUENT RECOVERED OUTSIDE THE AOI,WW
 Saline,Unspecified,NA
 Units_monthly,Tgal/m,Tgal
 Units_monthly,gal/m,gal
-Units_monthly,Mgal/m,mgal
+Units_monthly,Mgal/m,Mgal
 Units_monthly,acre-feet/m,acft
-Units_annual_reported,Mgal/yr,mgal
+Units_annual_reported,Mgal/yr,Mgal
 Units_annual_reported,gal/yr,gal
 Method_annual_reported,permitted,Permitted
 Method_annual_reported,permited,Permitted
@@ -495,3 +495,134 @@ ValueType,approved 5-9-11,WD
 ValueType,Must report annually the amount of water used from the Big Sioux:Aurora Aquifer                               (added to database 9-30-02),WD
 Units_annual_reported,acre-feet,acft
 Units_annual_reported,gallons,gal
+SourceType,3-1806-011,GW
+SourceType,3-2308-004,GW
+SourceType,3-1805-016,GW
+SourceType,8-3703-001,GW
+SourceType,8-6250-006,GW
+SourceType,8-3701-003,GW
+SourceType,6-5125-007,GW
+SourceType,3-1806-009,GW
+SourceType,3-1806-010,GW
+SourceType,3-2803-003,GW
+SourceType,3-3407-030,GW
+SourceType,3-3407-031,GW
+SourceType,3-3407-032,GW
+SourceType,3-3407-033,GW
+SourceType,6-5328-001,GW
+SourceType,3-2103-006,GW
+SourceType,2-5727-002,GW
+SourceType,2-5727-004,GW
+SourceType,8-6528-002,GW
+SourceType,8-6528-003,GW
+SourceType,8-6323-001,GW
+SourceType,8-4203-005,GW
+SourceType,8-4203-009,GW
+SourceType,8-4461-002,GW
+SourceType,8-3802-003,GW
+SourceType,8-4304-001,GW
+SourceType,8-4304-003,GW
+SourceType,8-4304-004,GW
+SourceType,6-4822-003,GW
+SourceType,3-1806-016,GW
+SourceType,3-1806-015,GW
+SourceType,3-2357-013,GW
+SourceType,3-2357-010,GW
+SourceType,3-1752-001,GW
+SourceType,3-1752-002,GW
+SourceType,8-5005-003,GW
+SourceType,8-5005-004,GW
+SourceType,8-5005-005,GW
+SourceType,8-5005-007,GW
+SourceType,3-1807-001,GW
+SourceType,3-1807-002,GW
+SourceType,8-4203-013,GW
+SourceType,8-4203-014,GW
+SourceType,3-1805-004,GW
+SourceType,3-1805-005,GW
+SourceType,3-1805-006,GW
+SourceType,3-1805-007,GW
+SourceType,3-1805-008,GW
+SourceType,3-1805-009,GW
+SourceType,8-3802-012,GW
+SourceType,6-5427-004,GW
+SourceType,6-5427-005,GW
+SourceType,6-5427-006,GW
+SourceType,6-5427-007,GW
+SourceType,6-5427-009,GW
+SourceType,6-5427-010,GW
+SourceType,6-5427-011,GW
+SourceType,6-4829-002,GW
+SourceType,6-4829-003,GW
+SourceType,6-4829-004,GW
+SourceType,6-5427-012,GW
+SourceType,6-5427-002,GW
+SourceType,6-5427-003,GW
+SourceType,6-5328-002,GW
+SourceType,8-3900-001,GW
+SourceType,8-3900-002,GW
+SourceType,3-2808-001,GW
+SourceType,3-1806-020,GW
+SourceType,3-1806-021,GW
+SourceType,3-1806-006,GW
+SourceType,3-1907-002,GW
+SourceType,3-1807-003,GW
+SourceType,3-1807-004,GW
+SourceType,3-1805-003,GW
+SourceType,3-1805-017,GW
+SourceType,3-1805-018,GW
+SourceType,6-4927-002,GW
+SourceType,6-4927-003,GW
+SourceType,8-2883-009,GW
+SourceType,3-2408-011,GW
+SourceType,3-4057-004,GW
+SourceType,3-4057-009,GW
+SourceType,3-4057-012,GW
+SourceType,6-3619-001,GW
+SourceType,3-2509-007,GW
+SourceType,3-1646-005,GW
+SourceType,3-1851-076,GW
+SourceType,3-1851-068,GW
+SourceType,3-1851-069,GW
+SourceType,3-1751-010,GW
+SourceType,3-1751-011,GW
+SourceType,6-5641-003,GW
+SourceType,6-5641-004,GW
+SourceType,6-5240-003,GW
+SourceType,8-5352-001,GW
+SourceType,3-1750-012,GW
+SourceType,3-1750-013,GW
+SourceType,8-7347-002,GW
+SourceType,3-2408-006,GW
+SourceType,8-0536-001,GW
+SourceType,2-0620-001,GW
+SourceType,2-5822-001,GW
+SourceType,8-7448-004,GW
+SourceType,8-1232-001,GW
+SourceType,8-1128-001,GW
+SourceType,8-3702-001,GW
+SourceType,8-0933-001,GW
+SourceType,8-6117-001,GW
+SourceType,8-4204-001,GW
+SourceType,8-7448-005,GW
+Category,INDOTH,IN
+Category,INDFP,IN
+Method_monthly,gallons,reported
+SourceType,Stream Intake,SW
+SourceType,,
+SourceType,"Stream Intake, Farm pond",SW
+SourceType,Farm pond,SW
+SourceType,"Artificial Lake, industrial",SW
+SourceType,"Stream Intake, Artificial Lake, industrial",SW
+SourceType,Lagoons,SW
+SourceType,Dug reservoir(pit well),SW
+SourceType,"Artificial Lake, recreational",SW
+Category,Commercial Feedlot,LV
+Category,Ethanol Production,IN
+Category,Food Processing,IN
+Category,Industrial Cooling,IN
+Category,"Industrial, Commercial, Recreational",IN
+Category,Manufacturing,IN
+Units_annual_reported,MGY,Mgal
+Units_annual_reported,AFY,acft
+Units_annual_reported,BGY,Ggal

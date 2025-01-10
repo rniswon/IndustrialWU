@@ -513,7 +513,9 @@ applyPIVOTrules <- function(dat, headercrosswalk, updatedCrosswalks) {
                                  ifelse(.x$values_transform == '', '', paste0(', values_transform = list(', .x$values_transform, ')')), ')'),
                           paste0('tidyr::pivot_wider(.',
                                  ', names_from = c("', ifelse(grepl("=", .x$names_tofrom), stringr::str_trim(stringr::str_extract(.x$names_tofrom, "[^=]*(?==)")), .x$names_tofrom), '")',
-                                 ', values_from = "', .x$values_tofrom, '")'))
+                                 ', values_from = "', .x$values_tofrom, '"',
+                                 ifelse(.x$values_transform == '', ')', 
+                                        paste0(', values_fn = ', .x$values_transform, ')'))))
       
       # Create filter code based on whether transforming to long or wide format
       filtercode <- ifelse(.x$long_wide == "long", paste0('dplyr::filter(., !is.na(', .x$values_tofrom, '))'), '{.}')

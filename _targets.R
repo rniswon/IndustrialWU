@@ -13,7 +13,8 @@
 packages <- c("tibble", "stringr", "purrr", "readxl", "svDialogs", "tidytable", 
               "dplyr", "archive", "tidyr", "readr", "lubridate", "magrittr", 
               "furrr", "data.table", "sf", "rquery", "officer", "pdftools", "rqdatatable",
-              "fedmatch", "janitor", "zoo", "varhandle", "targets", "tarchetypes")
+              "fedmatch", "janitor", "zoo", "varhandle", "targets", "tarchetypes",
+              "tigris")
 
 # Function to install missing packages
 optinstall <- function(x) {
@@ -52,6 +53,7 @@ list(
   tar_target(SWUDS_workup, "Industrial model/SWUDS_records/From_To_Sites missing lat lng.xlsx"), # Load added lat/lon
   tar_target(SiteSelection, "Industrial model/INWU_task_folders/Site_selection/Industrial_site_list/USEPA_HIFLD_EIA_PPP_facility_v6.csv"), # load list of sites from the Site Selection group
   tar_target(QAQCstatus, "FormattedDataOutputs/DataQAQCstatus.csv", format = "file"), # Load QAQC status from previous pipeline runs
+  tar_target(status, "Industrial model/INWU_task_folders/Data_processing/StatusUpdate.csv", format = "file"), #Load status from previous pipeline runs
   tar_target(dat, command = get_all_dat(datafp)),  # List all data from the state data file
   tar_target(updatedCrosswalks, 
              command = updateCrosswalks(data = dat, existingCrosswalks = existingCrosswalks),
@@ -94,7 +96,15 @@ list(
                                            siteselectionfilename = SiteSelection)),
   tar_target(AllStates, command = write_allstates(siteselectionmerged), format = "file"),  # Write combined data for all states to a file
   tar_target(QAQCupdate, command = checkQAQCstatus(siteselectionmerged, QAQCstatus),
-             cue = tar_cue(mode = "always")) # Look for any changes in number of duplicates and missing data rows introduced
+             cue = tar_cue(mode = "always")), # Look for any changes in number of duplicates and missing data rows introduced
+  tar_target(StatusUpdate, 
+             command = generate_statusupdate(siteselectionmerged, 
+                                             FormattedSiteSelectiondata, 
+                                             updatedCrosswalks,
+                                             SWUDS,
+                                             SiteSelection,
+                                             status,
+                                             QAQCupdate))
   )
 
 
