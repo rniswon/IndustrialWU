@@ -1,5 +1,6 @@
 "file","SiteDescriptions","LocationInfo","MonthlyData","AnnualData","Metadata","Duplicate","NotRelevant"
 "/NV/FileNamesWithdrawalReports.xlsx$Sheet2",NA,NA,NA,NA,NA,NA,NA
+"/NV/FileNamesWithdrawalReports.xlsx$nv_ind_culled per John",NA,NA,NA,NA,NA,NA,NA
 "/NV/NV_IND_2000_2020_ldm.xlsx$IN_Withdawals2000_2020",NA,NA,NA,NA,NA,NA,NA
 "/NV/NV_IND_2000_2020_ldm.xlsx$NV_IND",NA,NA,NA,NA,NA,NA,NA
 "/NV/NV_IND_2000_2020_ldm.xlsx$NV_IND_culled",NA,NA,NA,NA,NA,NA,NA
@@ -102,16 +103,16 @@
 "/HI/Industrial Wells - Quantity Pumped (2000 - 2019).xlsx$Sheet1","0","0","0","0","0","1","0"
 "/HI/read_me.docx","0","0","0","0","0","0","1"
 "/IA/IA_IN_WU.xlsx$IowaBusinessWaterUseAnnual","1","1","0","0","1","0","0"
-"/IA/IA_IN_WU.xlsx$IA_IN_WU","1","1","0","0","1","0","0"
-"/IA/IA_IN_WU.xlsx$IA_IN_facility_list","1","1","0","0","1","0","0"
-"/IA/IA_IN_WU.xlsx$IA_NPDES_facility_list","1","1","0","0","1","0","0"
-"/IA/IA_IN_WU.xlsx$IA_IN_facility_list_LEE","1","1","0","0","1","0","0"
+"/IA/IA_IN_WU.xlsx$IA_IN_WU","0","0","0","0","0","1","0"
+"/IA/IA_IN_WU.xlsx$IA_IN_facility_list","0","0","0","0","0","1","0"
+"/IA/IA_IN_WU.xlsx$IA_NPDES_facility_list","0","0","0","0","0","1","0"
+"/IA/IA_IN_WU.xlsx$IA_IN_facility_list_LEE","0","0","0","0","0","1","0"
 "/IA/IA_IN_WU.xlsx$IA_hoovers_2010","0","0","0","0","0","1","0"
-"/IA/IA_IN_WU.xlsx$notes","0","0","0","0","1","0","0"
-"/IA/IA_NPDES.csv","1","1","0","0","1","0","0"
+"/IA/IA_IN_WU.xlsx$notes","0","0","0","0","0","0","1"
+"/IA/IA_NPDES.csv","0","0","0","0","0","0","1"
 "/IA/IA_NPDES.xlsx$IA_NPDES","0","0","0","0","0","1","0"
-"/IA/IA_NPDES.xlsx$IA_NPDES_facility_list","1","1","0","0","1","0","0"
-"/IA/USGSIndustrialUse.xlsx$IowaBusinessWaterUseAnnual","0","1","0","1","1","0","0"
+"/IA/IA_NPDES.xlsx$IA_NPDES_facility_list","0","0","0","0","0","1","0"
+"/IA/USGSIndustrialUse.xlsx$IowaBusinessWaterUseAnnual","0","0","0","0","0","1","0"
 "/IL/isws-data-license-agreement-for-reference-10-12-18.pdf","0","0","0","0","1","0","0"
 "/IL/lovelace_usgs_data_description_to_fill.docx","0","0","0","0","1","0","0"
 "/IL/mou_fed.docx","0","0","0","0","1","0","0"

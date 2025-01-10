@@ -169,7 +169,12 @@ generate_statusupdate <- function(siteselectionmerged,
   previousstatusread <- get_filledcsv(status) %>%
     as_tibble() %>%
     dplyr::rename_with(~str_replace_all(., "\\.", " ")) %>%
-    dplyr::mutate(dplyr::across(contains("Number"), ~as.integer(.)))
+    dplyr::mutate(dplyr::across(contains("Number"), ~as.integer(.))) %>%
+    {if(!is.POSIXt(.$`Date of Last Update`)) {
+      dplyr::mutate(., `Date of Last Update` = 
+                      as.Date(`Date of Last Update`, 
+                              tryFormats = c("%m/%d/%Y", "%Y-%m-%d")))
+    } else {.}}
     
   
   statuslinesupdate <-  map_dfr(newstatusupdate$State, ~{

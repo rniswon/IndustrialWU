@@ -140,8 +140,8 @@ Method_annual_reported,LEP,Estimated
 DataProtected,No further distribution,TRUE
 DataProtected,expressed written approval,TRUE
 Method_annual_reported,CTDEEP_Reported,Metered
-Units_monthly,mg,mgal
-Units_annual_reported,mg,mgal
+Units_monthly,mg,Mgal
+Units_annual_reported,mg,Mgal
 ValueType,RT,RL
 ValueType,WL,WD
 SourceType,SPILLWATER,SW
@@ -371,9 +371,9 @@ SourceType,EFFLUENT RECOVERED OUTSIDE THE AOI,WW
 Saline,Unspecified,NA
 Units_monthly,Tgal/m,Tgal
 Units_monthly,gal/m,gal
-Units_monthly,Mgal/m,mgal
+Units_monthly,Mgal/m,Mgal
 Units_monthly,acre-feet/m,acft
-Units_annual_reported,Mgal/yr,mgal
+Units_annual_reported,Mgal/yr,Mgal
 Units_annual_reported,gal/yr,gal
 Method_annual_reported,permitted,Permitted
 Method_annual_reported,permited,Permitted
@@ -608,3 +608,21 @@ SourceType,8-7448-005,GW
 Category,INDOTH,IN
 Category,INDFP,IN
 Method_monthly,gallons,reported
+SourceType,Stream Intake,SW
+SourceType,,
+SourceType,"Stream Intake, Farm pond",SW
+SourceType,Farm pond,SW
+SourceType,"Artificial Lake, industrial",SW
+SourceType,"Stream Intake, Artificial Lake, industrial",SW
+SourceType,Lagoons,SW
+SourceType,Dug reservoir(pit well),SW
+SourceType,"Artificial Lake, recreational",SW
+Category,Commercial Feedlot,LV
+Category,Ethanol Production,IN
+Category,Food Processing,IN
+Category,Industrial Cooling,IN
+Category,"Industrial, Commercial, Recreational",IN
+Category,Manufacturing,IN
+Units_annual_reported,MGY,Mgal
+Units_annual_reported,AFY,acft
+Units_annual_reported,BGY,Ggal

@@ -78,18 +78,52 @@ convert2decimal <- function(x) {
 #'   cleaned_data <- handle_coordinates(data, "coordinate_header")
 #'   }
 #'
-handle_coordinates <- function(data, header) {
+
+pull_stateshapes <- function() {
+  if(exists("stateshapes", envir = .GlobalEnv)) {
+    tmp <- get("stateshapes", envir = .GlobalEnv)
+  } else {
+    tmp <- tigris::states()
+    assign("stateshapes", tmp, envir = .GlobalEnv)
+  }
+  return(tmp)
+}
+
+handle_coordinates <- function(data, filename, header) {
   # Mutate the data frame to handle specified columns containing coordinates
-  tmp <- data |>
+  
+  tmp_coord_corrected <- data |>
     dplyr::mutate(dplyr::across(contains(header), ~{
       dplyr::case_when(
         . == "0" ~ NA_character_,  # Replace "0" with NA
         . == "NULL" ~ NA_character_,  # Replace "NULL" with NA
-        stringr::str_detect(., "^[[:digit:]]{2}\\.") ~ as.character(.),  # Keep values with two digits followed by a dot as is
-        stringr::str_detect(., "^[[:digit:]]{6}\\.?") ~ as.character(convert2decimal(.)),  # Convert DMS to decimal degrees
-        .default = as.character(.)  # Convert all other values to character
-      )
-    })) 
+        .default = as.character(.))}))
+  
+  st_ab <- str_extract(filename, "(?<=/)[[:upper:]]{2}(?=/)")
+  if(!is.na(st_ab)) { # for state files, check that degrees are within the bounds of the state.
+    # This helps identify when coordinates may be projections in other units (e.g. meters)
+
+    bbox <- st_bbox(pull_stateshapes() %>% dplyr::filter(STUSPS == st_ab))
+    if(header == "Lat") {bounds <- c(bbox$ymin, bbox$ymax)}
+    if(header == "Lon") {bounds <- c(bbox$xmin, bbox$xmax)}
+    check_degrees <- dplyr::between(as.numeric(str_sub(tmp_coord_corrected[[header]], 1, 2)), bounds[1], bounds[2])
+  } else {check_degrees <- TRUE} # for non-state files, assume the coordinates are in degrees and not projected
+  
+  check_dd <- stringr::str_detect(tmp_coord_corrected[[header]], "(?<=^-?)[[:digit:]]{2,3}(?=(\\.|$))") 
+  check_dms <- stringr::str_detect(tmp_coord_corrected[[header]], "^[[:digit:]]{6}(?=(\\.|$))")
+  
+  if(all(check_degrees) & all((check_dd | check_dms), na.rm = TRUE)) {
+      tmp <- tmp_coord_corrected |>
+        dplyr::mutate(dplyr::across(contains(header), ~{
+          dplyr::case_when(
+            stringr::str_detect(., "^[[:digit:]]{2}\\.") ~ as.character(.),  # Keep values with two digits followed by a dot as is
+            stringr::str_detect(., "^[[:digit:]]{6}\\.?") ~ as.character(convert2decimal(.))  # Convert DMS to decimal degrees
+          )
+        })) 
+  } else {
+    tmp <- tmp_coord_corrected |>
+      dplyr::mutate(dplyr::across(contains(header), ~as.character(.)))
+  }
   
   # Return the modified data frame
   tmp
@@ -972,13 +1006,13 @@ clean_address_words <- function(x) {
 #'   result <- standard_coordinatetreatment(data_frame, "CoordinateHeader")
 #'   }
 #'
-standard_coordinatetreatment <- function(data, header) {
+standard_coordinatetreatment <- function(data, filename, header) {
   # Check if the header exists in the data
   if(length(grep(header, names(data))) > 0) {
     if(length(grep(header, names(data))) == 1) {
-      tmp <- handle_coordinates(data, header)
+      tmp <- handle_coordinates(data, filename, header)
     } else if(length(grep(header, names(data))) > 1) {
-      tmp1 <- handle_coordinates(data, header) |>
+      tmp1 <- handle_coordinates(data, filename, header) |>
         concat_columns(header)  
       tmp <- tmp1 |> dplyr::mutate(!!header := gsub(",.*", "", tmp1[[header]]))
       
@@ -1122,7 +1156,7 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, parallel = F
   ids_code <- paste0(package_call, "map(., ~standard_idtreatment(.x, '", idcolumns, "'), .progress = TRUE)", collapse = " %>% ")
   HUCs_code <- paste0(package_call, "map(., ~standard_HUCtreatment(.x, '", HUCcolumns, "'), .progress = TRUE)", collapse = " %>% ")
   Addresses_code <- paste0(package_call, "imap(., ~standard_Addresstreatment(.x, .y, '", Addresscolumns, "'), .progress = TRUE)", collapse = " %>% ")
-  coordinates_code <- paste0(package_call, "map(., ~standard_coordinatetreatment(.x, '", coordinatecolumns, "'), .progress = TRUE)", collapse = " %>% ")
+  coordinates_code <- paste0(package_call, "imap(., ~standard_coordinatetreatment(.x, .y, '", coordinatecolumns, "'), .progress = TRUE)", collapse = " %>% ")
   years_code <- paste0(package_call, "imap(., ~standard_Yeartreatment(.x, .y, '", Yearcolumns, "', updatedCrosswalks, existingCrosswalks), .progress = TRUE)", collapse = " %>% ")
   data_code <- paste0(package_call, "imap(., ~standard_datatreatment(.x, .y,'", datacolumns, "'), .progress = TRUE)", collapse = " %>% ")
   # As noted in `manual_updates`, `|>` is the base R pipe function
@@ -1191,7 +1225,7 @@ merge_formatteddata <- function(x_munged = list(), updatedCrosswalks, existingCr
         walk(unlist(m), ~message(.x))
 
         rm(list = c("stopflag", "messagelog", "datacodes_append", "manualcodes_append"), envir = .GlobalEnv)
-        stop()
+        stop("Execution halted to edit data crosswalks")
       }
     }
     
