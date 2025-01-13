@@ -97,49 +97,49 @@ Units_monthly,mgald,mgd
 Units_monthly,Mgd,mgd
 Units_monthly,million gallons per day,mgd
 Units_monthly,Mgal/d,mgd
-Method_monthly,CTDEEP_2021_Est,Estimated
-Method_monthly,CTDEEP_Estimated,Estimated
-Method_monthly,Estimated,Estimated
-Method_monthly,CTDEEP_Reported,Metered
-Method_monthly,PA 02-102,Metered
-Method_monthly,Reported,Metered
-Method_monthly,Unknown,NA_character_
+Method_monthly,3,NA_character_
+Method_annual_reported,3,NA_character_
+Method_monthly,5,NA_character_
+Method_annual_reported,5,NA_character_
+Method_monthly,6,Metered
+Method_annual_reported,6,Metered
+Method_monthly,9,Metered
 Units_annual_reported,mgd,mgd
 Units_annual_reported,MGD,mgd
 Units_annual_reported,mgald,mgd
 Units_annual_reported,Mgd,mgd
 Units_annual_reported,million gallons per day,mgd
 Units_annual_reported,Mgal/d,mgd
-Method_annual_reported,CTDEEP_2021_Est,Estimated
-Method_annual_reported,CTDEEP_Estimated,Estimated
-Method_annual_reported,Estimated,Estimated
-Method_annual_reported,COTH,Estimated
-Method_annual_reported,OTH,Estimated
-Method_annual_reported,LER,Estimated
-Method_annual_reported,LED,Estimated
+Method_annual_reported,9,Metered
+Method_monthly,A,Metered
+Method_annual_reported,A,Metered
+Method_monthly,application,Permitted
+Method_annual_reported,application,Permitted
+Method_monthly,authorized,Permitted
+Method_annual_reported,authorized,Permitted
 Units_monthly,NA,NA_character_
 Units_annual_reported,NA,NA_character_
-Units_monthly,MG,mgal
+Units_monthly,MG,Mgal
 Units_monthly,GAL,gal
 Units_monthly,ACFT,acft
-Units_annual_reported,MG,mgal
+Units_annual_reported,MG,Mgal
 Units_annual_reported,GAL,gal
 Units_annual_reported,ACFT,acft
-Method_monthly,application,Permitted
-Method_monthly,permitted,Permitted
-Method_monthly,permited,Permitted
-Method_monthly,authorized,Permitted
-Method_monthly,reported,Metered
-Method_monthly,submitted,Metered
-Method_annual_reported,LERD,Estimated
-Method_annual_reported,LEC,Estimated
-Method_annual_reported,LEO,Estimated
-Method_annual_reported,LET,Estimated
-Method_annual_reported,LEW,Estimated
-Method_annual_reported,LEP,Estimated
+Method_monthly,C,Estimated
+Method_annual_reported,C,Estimated
+Method_monthly,Calculated,Estimated
+Method_annual_reported,Calculated,Estimated
+Method_annual_reported,COTH,Estimated
+Method_monthly,COTH,Estimated
+Method_monthly,CTDEEP_2021_Est,Estimated
+Method_annual_reported,CTDEEP_2021_Est,Estimated
+Method_monthly,CTDEEP_Estimated,Estimated
+Method_annual_reported,CTDEEP_Estimated,Estimated
+Method_monthly,CTDEEP_Reported,Metered
+Method_annual_reported,CTDEEP_Reported,Metered
 DataProtected,No further distribution,TRUE
 DataProtected,expressed written approval,TRUE
-Method_annual_reported,CTDEEP_Reported,Metered
+Method_monthly,D,Estimated
 Units_monthly,mg,Mgal
 Units_annual_reported,mg,Mgal
 ValueType,RT,RL
@@ -218,7 +218,7 @@ SourceType,NORMAL FLOW,SW
 Category,IN41,IN
 Category,IN42,IN
 Category,IN53,IN
-Method_monthly,Metered,Metered
+Method_annual_reported,D,Estimated
 ValueType,Gallons per year,WD
 Units_annual_reported,Gallons per year,gal
 Units_monthly,Gallons per month,gal
@@ -229,35 +229,35 @@ Category,Agricultural Irrigation,IR
 Category,IR,IR
 Category,IR10,IR
 Category,IR21,IR
-Method_monthly,TFM,Metered
-Method_monthly,THM,Metered
-Method_monthly,MHP,Metered
-Method_monthly,COTH,Estimated
-Method_monthly,OTH,Estimated
-Method_monthly,MRW,Metered
-Method_monthly,LER,Estimated
-Method_monthly,LED,Estimated
-Method_monthly,LERD,Estimated
-Method_monthly,LEC,Estimated
-Method_monthly,LEO,Estimated
-Method_monthly,LET,Estimated
-Method_monthly,LEW,Estimated
-Method_monthly,LEP,Estimated
-Method_annual_reported,PA 02-102,Metered
-Method_annual_reported,Reported,Metered
-Method_annual_reported,reported,Metered
-Method_annual_reported,submitted,Metered
-Method_annual_reported,TFM,Metered
-Method_annual_reported,THM,Metered
-Method_annual_reported,MHP,Metered
-Method_annual_reported,MRW,Metered
-Method_annual_reported,Metered Type Unknown,Metered
+Method_monthly,E,Metered
+Method_annual_reported,E,Metered
+Method_monthly,Elapsed-Time Meter,Metered
+Method_annual_reported,Elapsed-Time Meter,Metered
+Method_monthly,Estimated,Estimated
+Method_annual_reported,Estimated,Estimated
+Method_monthly,Flow Metered,Metered
+Method_annual_reported,Flow Metered,Metered
 Method_annual_reported,Flowmeter Cumulative,Metered
-Method_annual_reported,Unknown,NA_character_
-Method_annual_reported,NA,NA_character_
-Method_annual_reported,UNSP,NA_character_
-Method_annual_reported,UNKN,NA_character_
-Method_monthly,NA,NA_character_
+Method_monthly,Flowmeter Cumulative,Metered
+Method_monthly,G,Estimated
+Method_annual_reported,G,Estimated
+Method_monthly,gallons,Metered
+Method_monthly,H,Metered
+Method_annual_reported,H,Metered
+Method_monthly,I,Metered
+Method_annual_reported,I,Metered
+Method_monthly,J,Metered
+Method_annual_reported,J,Metered
+Method_monthly,K,Metered
+Method_annual_reported,K,Metered
+Method_annual_reported,LEC,Estimated
+Method_monthly,LEC,Estimated
+Method_annual_reported,LED,Estimated
+Method_monthly,LED,Estimated
+Method_annual_reported,LEO,Estimated
+Method_monthly,LEO,Estimated
+Method_annual_reported,LEP,Estimated
+Method_monthly,LEP,Estimated
 Category,IR22,IR
 Category,IR23,IR
 Category,IR24,IR
@@ -335,10 +335,10 @@ Category,OT12,RM
 Category,Remediation,RM
 Category,RM,RM
 Category,EG21,TE
-Method_monthly,UNSP,NA_character_
-Method_monthly,UNKN,NA_character_
-Method_annual_reported,Unspecified,NA_character_
-Method_annual_reported,application,Permitted
+Method_annual_reported,LER,Estimated
+Method_monthly,LER,Estimated
+Method_annual_reported,LERD,Estimated
+Method_monthly,LERD,Estimated
 Category,EG22,TE
 Category,EG31,TE
 Units_annual_reported,Gallons per Year,gal
@@ -375,12 +375,12 @@ Units_monthly,Mgal/m,Mgal
 Units_monthly,acre-feet/m,acft
 Units_annual_reported,Mgal/yr,Mgal
 Units_annual_reported,gal/yr,gal
-Method_annual_reported,permitted,Permitted
-Method_annual_reported,permited,Permitted
-Method_annual_reported,authorized,Permitted
-Method_monthly,Unspecified,NA_character_
-Method_monthly,Metered Type Unknown,Metered
-Method_monthly,Flowmeter Cumulative,Metered
+Method_annual_reported,LET,Estimated
+Method_monthly,LET,Estimated
+Method_annual_reported,LEW,Estimated
+Method_monthly,LEW,Estimated
+Method_monthly,M,Metered
+Method_monthly,m,Metered
 Units_annual_reported,Tgal/yr,Tgal
 Units_annual_reported,gal/d,gal per day
 Units_annual_reported,acre-feet/yr,acft
@@ -457,18 +457,18 @@ Category,Stream,IR
 Category,irrigation,AG
 Category,Thermoelectric Power,TE
 Units_monthly,gallons,gal
-Method_monthly,Elapsed-Time Meter,Metered
-Method_monthly,Water Meter,NA_character_
-Method_monthly,NULL,NA_character_
-Method_monthly,Flow Metered,Metered
-Method_monthly,Others,NA_character_
-Method_monthly,Calculated,Estimated
-Method_annual_reported,Elapsed-Time Meter,Metered
-Method_annual_reported,Water Meter,Metered
-Method_annual_reported,NULL,NA_character_
-Method_annual_reported,Flow Metered,Metered
-Method_annual_reported,Others,NA_character_
-Method_annual_reported,Calculated,Estimated
+Method_annual_reported,M,Metered
+Method_annual_reported,m,Metered
+Method_monthly,Metered,Metered
+Method_annual_reported,Metered Type Unknown,Metered
+Method_monthly,Metered Type Unknown,Metered
+Method_monthly,MHP,Metered
+Method_annual_reported,MHP,Metered
+Method_monthly,MRW,Metered
+Method_annual_reported,MRW,Metered
+Method_monthly,N,Estimated
+Method_annual_reported,N,Estimated
+Method_annual_reported,NA,NA_character_
 SourceType,OW,SW
 SourceType,TOT_GW_VA,GW
 SourceType,TOT_SW_VA,SW
@@ -607,7 +607,7 @@ SourceType,8-4204-001,GW
 SourceType,8-7448-005,GW
 Category,INDOTH,IN
 Category,INDFP,IN
-Method_monthly,gallons,reported
+Method_monthly,NA,NA_character_
 SourceType,Stream Intake,SW
 SourceType,,
 SourceType,"Stream Intake, Farm pond",SW
@@ -626,3 +626,213 @@ Category,Manufacturing,IN
 Units_annual_reported,MGY,Mgal
 Units_annual_reported,AFY,acft
 Units_annual_reported,BGY,Ggal
+Description,115A,CORN
+Description,139A,FLD CROP EXCPT GRAIN NOT ELS CLAS (HEMP)
+Description,181A,ORNAMENTAL FLORICULTURE & NURSERY PRODS
+Description,182A,FOOD CROPS GROWN UNDER COVER
+Description,212A,"BEEF CATTLE, NOT FEEDLOTS"
+Description,213A,HOGS
+Description,251A,"BROILER, FRYER, & ROASTER CHICKENS"
+Description,252A,CHICKEN EGGS
+Description,253A,TURKEYS & TURKEY EGGS
+Description,273A,ANIMAL AQUACULTURE
+Description,711A,SOIL PREP SERVS
+Description,721A,"CROP PLANTING, CULTIVATING, & PROTECTING"
+Description,723A,"CROP PREP SERVS FOR MKT, NOT COTTON GIN"
+Description,724A,COTTON GIN
+Description,1221A,BITUMINOUS COAL & LIGNITE SURFACE MINING
+Description,1311A,CRUDE PETROLEUM & NATURAL GAS
+Description,1321A,NATURAL GAS LIQUIDS
+Description,1381A,DRILLING OIL & GAS WELLS
+Description,1382A,OIL & GAS FIELD EXPLORATION SERVS
+Description,1389A,"OIL & GAS FIELD SERVS, NOT ELS CLASS"
+Description,1422A,CRUSHED & BROKEN LIMESTONE
+Description,1429A,"CRUSHED & BROKEN STONE, NOT ELS CLASS"
+Description,1442A,CONST SAND & GRAVEL
+Description,1479A,CHEMICAL FERTILIZER MINERAL MINING
+Description,1541A,GENERAL CONTRACTORS-IND BUILDINGS & WHSS
+Description,1611A,"HWY & ST CONST, NOT ELEVATED HWYS"
+Description,1622A,"BRIDGE, TUNNEL, & ELEVATED HWY CONST"
+Description,1623A,"WTR, SEWER, PIPELINE, ETC CONST"
+Description,1629A,"HEAVY CONST, NOT ELS CLASS"
+Description,1771A,CONCRETE WORK
+Description,1781A,WTR WELL DRILLING
+Description,1799A,"SPEC TRADE CONTRACTORS, NOT ELS CLASS"
+Description,2011A,MEAT PACKING PLANTS
+Description,2013A,SAUSAGES & OTHER PREP MEAT PRODS
+Description,2021A,CREAMERY BUTTER
+Description,2034A,"DRIED FRUITS, VEG, & SOUP MIXES"
+Description,2041A,FLOUR & OTHER GRAIN MILL PRODS
+Description,2047A,DOG & CAT FOOD
+Description,2048A,PREP FEED INGRED FOR ANMLS NOT DOG & CAT
+Description,2076A,VEG OIL MILLS (NOT CORN CTNSEED SOYBEAN)
+Description,2077A,ANIMAL & MARINE FATS & OILS
+Description,2086A,BOTTLED & CANNED SODA & CARBONATED WTR
+Description,2097A,MANUFACTURED ICE
+Description,2099A,"FOOD PREP, NOT ELS CLASS"
+Description,2298A,CORDAGE & TWINE
+Description,2493A,RECONSTITUTED WOOD PRODS
+Description,2499A,"WOOD PRODUCTS, NOT OTHERWISE CLASSIFIED"
+Description,2631A,PAPERBOARD MILLS
+Description,2655A,"FIBER CANS, TUBES, DRUMS, & SIM PRODS"
+Description,2656A,"SANITARY FOOD CONTAINERS, NOT FOLDING"
+Description,2672A,"COATED & LAMINATED PAPER, NOT ELS CLASS"
+Description,2759A,"COMMERCIAL PRINTING, NOT ELS CLASS"
+Description,2812A,ALKALIES & CHLORINE
+Description,2813A,IND GASES
+Description,2819A,"IND INORGANIC CHEMICALS, NOT ELS CLASS"
+Description,2836A,"BIO PRODS, NOT DIAGNOSTIC SUBSTANCES"
+Description,2841A,"SOAP & DETERGENTS, NOT SPECTY CLEANERS"
+Description,2843A,SURFACE ACTIVE & FINISHING AGENTS & ASST
+Description,2851A,"PAINTS, VARNISHES, LACQUERS, ENAMELS ETC"
+Description,2869A,"IND ORGANIC CHEMICALS, NOT ELS CLASS"
+Description,2873A,NITROGENOUS FERTILIZERS
+Description,2874A,PHOSPHATIC FERTILIZERS
+Description,2875A,"FERTILIZERS, MIXING ONLY"
+Description,2879A,"PESTICIDES & AG CHEMICALS, NOT ELS CLASS"
+Description,2892A,EXPLOSIVES
+Description,2895A,CARBON BLACK
+Description,2899A,"CHEMICALS & CHEMICAL PREP, NOT ELS CLASS"
+Description,2911A,PETROLEUM REFINING
+Description,2951A,ASPHALT PAVING MIXTURES & BLOCKS
+Description,2992A,LUBRICATING OILS & GREASES
+Description,3011A,TIRES & INNER TUBES
+Description,3084A,PLASTICS PIPE
+Description,3089A,"PLASTICS PRODS, NOT ELS CLASS"
+Description,3241A,"CEMENT, HYDRAULIC"
+Description,3251A,BRICK & STRUCTURAL CLAY TILE
+Description,3272A,"CONCRETE PRODS, NOT BLOCK & BRICK"
+Description,3273A,READY-MIXED CONCRETE
+Description,3275A,GYPSUM PRODS
+Description,3295A,"MINERALS, GROUND OR OTHERWISE TREATED"
+Description,3296A,MINERAL WOOL
+Description,3312A,"STEEL WORK, BLAST FURNACE, & ROLL MILLS"
+Description,3364A,"NONFERROUS DIE-CASTINGS, NOT ALUMINUM"
+Description,3398A,METAL HEAT TREATING
+Description,3423A,"HAND & EDGE TOOLS, NOT MACHINE TOOLS"
+Description,3443A,FABRICATED PLATE WORK (BOILER SHOPS)
+Description,3448A,PREFAB METAL BUILDINGS & COMPONENTS
+Description,3469A,"METAL STAMPINGS, NOT ELS CLASS"
+Description,3471A,"ELECTROPLATE, POLISH, ANODIZE, & COLOR"
+Description,3489A,"ORDNANCE & ACCESSORIES, NOT ELS CLASS"
+Description,3492A,FLUID POWER VALVES & HOSE FITTINGS
+Description,3511A,"STEAM, GAS, AND HYDRAULIC TURBINES"
+Description,3523A,FARM MACHINERY & EQUIP
+Description,3531A,CONST MACHINERY & EQUIP
+Description,3533A,OIL & GAS FIELD MACHINERY & EQUIP
+Description,3544A,SPEC DIES & TOOLS JIGS FIXTURES & MOLDS
+Description,3559A,"SPEC INDUSTRY MACHINERY, NOT ELS CLASS"
+Description,3563A,AIR AND GAS COMPRESSORS
+Description,3566A,"SPEED CHANGERS, HI-SPEED DRIVES, & GEARS"
+Description,3585A,AC & HEATING EQUIP & IND FRIDGE EQUIP
+Description,3691A,STORAGE BATTERIES
+Description,3721A,AIRCRAFT
+Description,3728A,AIRCRAFT PARTS & AUX EQUIP NOT ELS CLASS
+Description,3991A,BROOMS & BRUSHES
+Description,3999A,"MANUFACTURING INDUSTRIES, NOT ELS CLASS"
+Description,4212A,LOCAL TRUCKING WITHOUT STORAGE
+Description,4221A,FARM PROD WAREHOUSING & STORAGE
+Description,4222A,REFRIGERATED WAREHOUSING & STORAGE
+Description,4225A,GENERAL WAREHOUSING & STORAGE
+Description,4581A,"AIRPORTS, FLYING FIELDS, & TERMINAL SERV"
+Description,4612A,CRUDE PETROLEUM PIPELINES
+Description,4619A,"PIPELINES, NOT ELS CLASS"
+Description,4783A,PACKING AND CRATING
+Description,4911A,ELECTRIC SERVS
+Description,4922A,NATURAL GAS TRANSMISSION
+Description,4923A,NATURAL GAS TRANSMISSION & DISTRIBUTION
+Description,4925A,"MIXED, MANUFACTURED, LIQUEFIED PETROL GS"
+Description,4931A,ELECTRIC & OTHER SERVS COMBINED
+Description,4941A,WTR SUPPLY
+Description,4953A,REFUSE SYSTEMS
+Description,4971A,IRRIGATION SYSTEMS
+Description,5075A,HEATING & AIR-CONDITIONING EQUIP & SUPP
+Description,5083A,FARM & GARDEN MACHINERY & EQUIP
+Description,5084A,IND MACHINERY & EQUIP
+Description,5093A,SCRAP & WASTE MATERIALS
+Description,5144A,POULTRY AND POULTRY PRODUCTS
+Description,5149A,"GROCERIES & RELATED PRODS, NOT ELS CLASS"
+Description,5169A,"CHEMICALS & ALLIED PRODS, NOT ELS CLASS"
+Description,5171A,PETROLEUM BULK STATIONS & TERMINALS
+Description,5411A,GROCERY STORES
+Description,5541A,GASOLINE SERV STATIONS
+Description,5812A,EATING PLACES
+Description,7032A,SPORTING & RECREATIONAL CAMPS
+Description,7211A,"POWER LAUNDRIES, FAMILY & COMMERCIAL"
+Description,7215A,COIN-OPERATED LAUNDRY DRY CLEANING
+Description,7538A,GENERAL AUTOMOTIVE REPAIR SHOPS
+Description,7542A,CARWASHES
+Description,7948A,"RACING, INCLUDING TRACK OPERATION"
+Description,8062A,GENERAL MEDICAL & SURGICAL HOSPITALS
+Description,8641A,"CIVIC, SOC, & FRATERNAL ASSOCIATIONS"
+Description,8744A,FACILITIES SUPPORT MGMT SERVS
+Description,8999A,SERVICES NOT ELSEWHERE CLASSIFIED
+Description,9199A,"GENERAL GOVERNMENT, NOT ELS CLASS"
+Description,9224A,FIRE PROTECTION
+Description,9441A,"ADMIN OF SOC, HR & INCOME MAINT PROGRAMS"
+Description,9511A,AIR & WTR RESOURCE & SLD WASTE MGMT
+Description,9512A,"LAND, MINERAL, WILDLIFE, & FOREST CONS"
+ValueType,purchased,TR
+ValueType,sold,TR
+SourceType,G,GW
+SourceType,S,SW
+SourceType,purchased,PS
+SourceType,sold,NA_character_
+Category,MUN,PS
+Method_monthly,NULL,NA_character_
+Method_annual_reported,NULL,NA_character_
+Method_monthly,O,Estimated
+Method_annual_reported,O,Estimated
+Method_annual_reported,OTH,Estimated
+Method_monthly,OTH,Estimated
+Method_monthly,Others,NA_character_
+Method_annual_reported,Others,NA_character_
+Method_monthly,P,Estimated
+Method_annual_reported,P,Estimated
+Method_monthly,PA 02-102,Metered
+Method_annual_reported,PA 02-102,Metered
+Method_monthly,permited,Permitted
+Method_annual_reported,permited,Permitted
+Method_monthly,permitted,Permitted
+Method_annual_reported,permitted,Permitted
+Method_monthly,Q,Estimated
+Method_annual_reported,Q,Estimated
+Method_monthly,R,Metered
+Method_annual_reported,R,Metered
+Method_monthly,Reported,Metered
+Method_monthly,reported,Metered
+Method_annual_reported,Reported,Metered
+Method_annual_reported,reported,Metered
+Method_monthly,submitted,Metered
+Method_annual_reported,submitted,Metered
+Method_monthly,TFM,Metered
+Method_annual_reported,TFM,Metered
+Method_monthly,THM,Metered
+Method_annual_reported,THM,Metered
+Method_monthly,U,NA_character_
+Method_annual_reported,U,NA_character_
+Method_annual_reported,UNKN,NA_character_
+Method_monthly,UNKN,NA_character_
+Method_monthly,Unknown,NA_character_
+Method_annual_reported,Unknown,NA_character_
+Method_annual_reported,UNSP,NA_character_
+Method_monthly,UNSP,NA_character_
+Method_annual_reported,Unspecified,NA_character_
+Method_monthly,Unspecified,NA_character_
+Method_monthly,V,Estimated
+Method_annual_reported,V,Estimated
+Method_monthly,W,Estimated
+Method_annual_reported,W,Estimated
+Method_monthly,Water Meter,NA_character_
+Method_annual_reported,Water Meter,Metered
+Method_monthly,X,Estimated
+Method_annual_reported,X,Estimated
+ValueType,1A,WD
+ValueType,4A,TR
+ValueType,2A,RL
+ValueType,3A,WD
+ValueType,5A,TR
+ValueType,6A,TR
+ValueType,7A,NA_character_
+ValueType,8A,NA_character_
+Units_monthly,KGAL,Kgal
