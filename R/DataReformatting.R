@@ -533,7 +533,7 @@ crosswalk_codes <- function(data, fp, header, codescrosswalk, forceupdate = TRUE
   
   # Create the crosswalk mapping
   crosswalk <- codecrosswalk |> dplyr::select(original_value, new_value) |>
-    dplyr::mutate(new_value = dplyr::case_when(grepl("NA", new_value) ~ new_value,
+    dplyr::mutate(new_value = dplyr::case_when(grepl("NA_character_", new_value) ~ new_value,
                                                .default = paste0('"', new_value, '"'))) |>
     dplyr::summarize(
       original_value = paste0('c("', paste(original_value, collapse = '", "'), '")'),

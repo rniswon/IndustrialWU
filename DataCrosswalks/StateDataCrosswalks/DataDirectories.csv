@@ -6,6 +6,14 @@
 "/NV/NV_IND_2000_2020_ldm.xlsx$NV_IND_culled",NA,NA,NA,NA,NA,NA,NA
 "/NV/NV_IND_2000_2020_ldm.xlsx$Hoovers_2010",NA,NA,NA,NA,NA,NA,NA
 "/NV/NV_IND_2000_2020_ldm.xlsx$notes",NA,NA,NA,NA,NA,NA,NA
+"/SD/SD_IN_WU_2010_2019_LDM.xlsx$Sheet1",NA,NA,NA,NA,NA,NA,NA
+"/KS/K11963_CAC.xlsx$NOTES","0","0","0","0","0","0","1"
+"/KS/K11963_CAC.xlsx$PART A","0","1","0","0","1","0","0"
+"/KS/K11963_CAC.xlsx$PART B - IND","1","0","1","0","1","0","0"
+"/KS/K11963_CAC.xlsx$PART B - MUN","1","0","1","0","1","0","0"
+"/KS/K11963_CAC.xlsx$PART E","1","0","1","0","1","0","0"
+"/KS/K11963_CAC.xlsx$SIC","0","0","0","0","0","0","1"
+"/KS/KS_mergevars_CAC.csv","1","0","0","0","0","0","0"
 "/NV/NV_IND_2020_ldm.xlsx$IN_Withdawals2000_2020",NA,NA,NA,NA,NA,NA,NA
 "/NV/NV_IND_2020_ldm.xlsx$NV_IND",NA,NA,NA,NA,NA,NA,NA
 "/NV/NV_IND_2020_ldm.xlsx$NV_IND_culled",NA,NA,NA,NA,NA,NA,NA
@@ -142,12 +150,12 @@
 "/IN/WU.xlsx$WU","0","0","0","0","0","1","0"
 "/IN/WU_2020_2022.xlsx$WU","1","0","1","1","1","0","0"
 "/IN/WU1985_2020E.xlsx$WU1985_2020E","1","0","1","1","1","0","0"
-"/KS/K11963.xlsx$NOTES","0","0","0","0","1","0","0"
-"/KS/K11963.xlsx$PART A","0","1","0","0","1","0","0"
-"/KS/K11963.xlsx$PART B - IND","1","0","1","0","1","0","0"
-"/KS/K11963.xlsx$PART B - MUN","1","0","1","0","1","0","0"
-"/KS/K11963.xlsx$PART E","1","0","1","0","1","0","0"
-"/KS/K11963.xlsx$SIC","1","0","0","0","0","0","0"
+"/KS/K11963.xlsx$NOTES","0","0","0","0","0","1","0"
+"/KS/K11963.xlsx$PART A","0","0","0","0","0","1","0"
+"/KS/K11963.xlsx$PART B - IND","0","0","0","0","0","1","0"
+"/KS/K11963.xlsx$PART B - MUN","0","0","0","0","0","1","0"
+"/KS/K11963.xlsx$PART E","0","0","0","0","0","1","0"
+"/KS/K11963.xlsx$SIC","0","0","0","0","0","1","0"
 "/LA/John Lovelace_20200520_2015 IN Site-Specific WD.xlsx$ReadMe","0","0","0","0","1","0","0"
 "/LA/John Lovelace_20200520_2015 IN Site-Specific WD.xlsx$datapull","1","1","1","1","1","0","0"
 "/LA/John Lovelace_20200520_2015 IN Site-Specific WD.xlsx$facilities","1","1","1","1","1","0","0"
