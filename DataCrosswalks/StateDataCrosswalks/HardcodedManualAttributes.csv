@@ -582,3 +582,5 @@ file,Header,Value,Notes
 /KS/K11963_CAC.xlsx$PART A,ValueType,WD,Assumed withdrawalsgiven that these are pumping rates
 /KS/K11963_CAC.xlsx$PART E,Units_monthly,KGAL,"From column headers ""[Month]_KGAL"""
 /KS/K11963_CAC.xlsx$PART A,Units_annual_reported,ACFT,"From column header ""ACFT_PUMP"""
+/LA/LA_IN_WU.xlsx$datapull_2000-2019,Units_monthly,MGD,
+/LA/LA_IN_WU.xlsx$datapull_2000-2019,Units_annual_reported,MGD,

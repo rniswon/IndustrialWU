@@ -111,8 +111,7 @@ handle_coordinates <- function(data, filename, header) {
   
   check_dd <- stringr::str_detect(tmp_coord_corrected[[header]], "(?<=^-?)[[:digit:]]{2,3}(?=(\\.|$))") 
   check_dms <- stringr::str_detect(tmp_coord_corrected[[header]], "^[[:digit:]]{6}(?=(\\.|$))")
-  
-  if(all(check_degrees) & all((check_dd | check_dms), na.rm = TRUE)) {
+  if(all(check_degrees, na.rm = TRUE) & all((check_dd | check_dms), na.rm = TRUE)) {
       tmp <- tmp_coord_corrected |>
         dplyr::mutate(dplyr::across(contains(header), ~{
           dplyr::case_when(

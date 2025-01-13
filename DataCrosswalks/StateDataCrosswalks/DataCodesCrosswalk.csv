@@ -836,3 +836,13 @@ ValueType,6A,TR
 ValueType,7A,NA_character_
 ValueType,8A,NA_character_
 Units_monthly,KGAL,Kgal
+ValueType,gw,WD
+ValueType,sw,WD
+SourceType,gw,GW
+SourceType,sw,SW
+Category,in,IN
+Method_monthly,unknown,NA_character_
+Method_monthly,Estimated.,Estimated
+Method_annual_reported,Metered,Metered
+Method_annual_reported,unknown,NA_character_
+Method_annual_reported,Estimated.,Estimated
