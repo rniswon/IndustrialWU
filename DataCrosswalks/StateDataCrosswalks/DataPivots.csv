@@ -17,3 +17,7 @@
 /HI/HI_IN_WU.xlsx$HI_IN_WU,wide,"Year = lubridate::year(lubridate::as_date(map2_dbl(as.numeric(`Start Date`), as.numeric(`End Date`), ~mean(c(.x, .y))), origin = ""1899-12-30"")), `Pumpage (Gallons)` = as.numeric(`Pumpage (Gallons)`)","Month = month.abb[lubridate::month(lubridate::as_date(map2_dbl(as.numeric(`Start Date`), as.numeric(`End Date`), ~mean(c(.x, .y))), origin = ""1899-12-30""))]",,Pumpage (Gallons),sum
 /KS/K11963_CAC.xlsx$PART B - IND,wide,,Month = month.abb[as.numeric(MONTH)],,KGAL,as.numeric
 /KS/K11963_CAC.xlsx$PART B - MUN,wide,,Month = month.abb[as.numeric(MONTH)],,KGAL,as.numeric
+/ME/ME_IN_WU_CAC.xlsx$final_snowmaking_CAC,long,"contains(c(""recombined""))",Year,,Annual_reported,
+/ME/ME_IN_WU_CAC.xlsx$wu_discharge,wide,,Month = month.abb[as.numeric(Month)],,discharge,as.numeric
+/ME/ME_IN_WU_CAC.xlsx$wu_monthly_recombined,wide,,Month = month.abb[as.numeric(Month)],,wu,as.numeric
+/ND/Industrial Use 2010-2019.xlsx$IN_data,long,"which(grepl(""[[:digit:]]{4}"", names(.)))",Year,,Annual_reported,
