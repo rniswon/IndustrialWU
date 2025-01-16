@@ -858,5 +858,4 @@ Saline,fresh,FALSE
 Saline,salt,TRUE
 Method_annual_reported,METERED,Metered
 Method_annual_reported,ESTIMATED,Estimated
-ValueType,NA,NA_character_
-SourceType,NA,NA_character_
+SourceType,NA,

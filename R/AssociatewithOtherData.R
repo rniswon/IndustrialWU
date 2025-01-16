@@ -139,31 +139,55 @@ merge_siteselection <- function(data, siteselection, siteselectionfilename) {
     name = c("FacilityName", "FacilityName1", "FacilityName2"),
     address = c("Address1", "Address2"),
     city = c("City1", "City2"),
-    county = "County1",
-    state = "State"
+    county = c("County1"), #County2 not used. Try adding again at the end
+    state = c("State", "State1") #State2 not used. Try adding again at the end
   )
   
   level1_mergevars <- mergevar_synonyms$state
   level2_mergevars <- crossing(mergevar_synonyms$name, mergevar_synonyms$address)
   level3_mergevars <- crossing(mergevar_synonyms$county, mergevar_synonyms$city)
   
-  merge_combos <- list_flatten(list(
-    level2merge = list_flatten(list(
-      map(unique(unlist(level2_mergevars)), ~c(.x, level1_mergevars)),
-      pmap(level2_mergevars, ~c(.x, .y, level1_mergevars))
-    )),
-    level3merge = list_flatten(list(
-      list_flatten(map(unique(unlist(level3_mergevars)), ~{
-          l3 <- .x
-          map(unique(unlist(level2_mergevars)), ~c(l3, .x, level1_mergevars))})),
-      list_flatten(map(unique(unlist(level2_mergevars)), ~{
-          l2 <- .x
-          pmap(level3_mergevars, ~c(.x, .y, l2, level1_mergevars))})),
-      list_flatten(pmap(level2_mergevars, ~{
-          l2a <- .x
-          l2b <- .y
-          pmap(level3_mergevars, ~{
-            c(.x, .y, l2a, l2b, level1_mergevars)})}))))))
+  level2merge <- list_flatten(
+    list(
+      list_flatten(map(unique(unlist(level2_mergevars)), ~{l2 <- .x; map(level1_mergevars, ~c(l2, .x))})),
+      list_flatten(pmap(level2_mergevars, ~{l2 <- c(.x, .y); map(level1_mergevars, ~c(l2, .x))}))
+    )
+  )
+  
+  level3amerge <- list_flatten(
+    map(
+      unique(unlist(level3_mergevars)), 
+      ~{
+        l3 <- .x
+        list_flatten(map(unique(unlist(level2_mergevars)),  ~{l2 <- .x; map(level1_mergevars,~c(l3, l2, .x))}))
+      }
+    )
+  )
+  level3bmerge <- list_flatten(
+    map(
+      unique(unlist(level2_mergevars)), 
+      ~{
+        l2 <- .x
+        list_flatten(pmap(level3_mergevars, ~{l3 <- c(.x, .y); map(level1_mergevars, ~c(l3, l2, .x))}))
+      }
+    )
+  )
+  level3cmerge <- list_flatten(
+    pmap(
+      level2_mergevars, 
+      ~{
+        l2a <- .x
+        l2b <- .y
+        list_flatten(pmap(
+          level3_mergevars,
+          ~{l3 <- c(.x, .y, l2a, l2b); map(level1_mergevars, ~c(l3, .x))}
+        ))
+      }
+    )
+  )
+  level3merge <- list_flatten(list(level3amerge, level3bmerge, level3cmerge))
+  
+  merge_combos <- list_flatten(list(level2merge = level2merge, level3merge = level3merge))
   
   merge_combos_indices_bysize <- unlist(purrr::map(merge_combos, ~length(.x))) |> sort(decreasing = TRUE)
   merge_combos_ordered <- merge_combos[names(merge_combos_indices_bysize)] 
