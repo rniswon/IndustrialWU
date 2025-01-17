@@ -1,6 +1,7 @@
 ---
 title: "Facility and Employee Counts"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
 ---
@@ -41,6 +42,20 @@ options(scipen=999)
 # Path to INWU model folder on local machine
 inwu_model_folder <- "D:/DOI/GS-W-WaterUse - Industrial model"
 
+only_include_compilation <- TRUE
+```
+
+## Defining Custom Functions
+
+```{r}
+
+remove_individual_datasets <- function(df){
+  df <- df %>%
+    select(NAICS3, sum_emp_compilation, sum_estab_compilation)
+  
+  return(df)
+}
+
 ```
 
 ## Notes on this assessment
@@ -65,12 +80,12 @@ Once loaded and formatted summaries are made of the nationwide dataset by 2 digi
 
 ```{r}
 inwu_facility_csv <- paste0(inwu_model_folder,
-                            "/INWU_task_folders/Site_selection/Industrial_site_list/USEPA_HIFLD_EIA_PPP_facility_v4.csv")
+                            "/INWU_task_folders/Site_selection/Industrial_site_list/USEPA_HIFLD_EIA_PPP_facility_v5.1.csv")
 
 inwu_facility_df <- read_csv(inwu_facility_csv,
                              col_types = cols(
                                LATITUDE = col_double(),
-                               LONGTITUDE = col_double(),
+                               LONGITUDE = col_double(),
                                NAICS = col_character(),
                                EMP = col_integer(),
                                TotPerson = col_integer(),
@@ -107,9 +122,25 @@ summary_inwu_df_naics3 <- inwu_facility_df %>%
     sum_estab_Dun_Bradstreet = sum(emp_Dun_Bradstreet > 0, na.rm = TRUE),
     sum_emp_PPP = sum(emp_PPP, na.rm = TRUE),
     avg_emp_PPP = mean(emp_PPP, na.rm = TRUE),
-    sum_estab_PPP = sum(emp_PPP > 0, na.rm = TRUE)
+    sum_estab_PPP = sum(emp_PPP > 0, na.rm = TRUE),
+    sum_emp_compilation = pmax(sum_emp_PinPointers,
+                               sum_emp_Dun_Bradstreet, 
+                               sum_emp_PPP, 
+                               na.rm = TRUE),
+    sum_estab_compilation = n()
   )
+
+
+
+if (only_include_compilation) {
+  
+  summary_inwu_df_naics3 <-
+    remove_individual_datasets(summary_inwu_df_naics3) 
+  
+}
+
 ```
+
 
 # Getting CBP Data
 
@@ -157,7 +188,8 @@ summary_cbp_df_naics3 <- cbp_df %>%
     sum_estab_CBP = sum(ESTAB, na.rm = TRUE),
     avg_estab_CBP = mean(ESTAB, na.rm = TRUE),
     sum_payann_CBP = sum(PAYANN, na.rm = TRUE),
-    avg_payann_CBP = mean(PAYANN, na.rm = TRUE))
+    avg_payann_CBP = mean(PAYANN, na.rm = TRUE)
+    )
 
 ```
 
@@ -202,7 +234,7 @@ Here employee counts are compared by 3 digit naics. Here we only consider the to
 
 -   326 Plastics and rubber products
 
-```{r, fig.width=14}
+```{r}
 # Define the prefixes to filter by
 prefixes <- c("321", "327", "311", "313", "315", "322", "323", "324", "325", "326")
 
@@ -234,7 +266,8 @@ nationwide_emp_summary_plot <- ggplot(summary_emp_long, aes(x = NAICS3, y = sum_
        y = "Sum of Employees") +
   theme_bw() +  # Black and white theme
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  scale_shape_manual(values = c(1, 2, 3, 4)) 
+  scale_y_log10() +
+  scale_shape_manual(values = c(1, 2, 3, 4, 5)) 
 
 # ggplotly(nationwide_emp_summary_plot) %>%
 #   layout(xaxis = list(tickangle = -45))
@@ -243,7 +276,7 @@ nationwide_emp_summary_plot
 
 ## Comparing Establishment Counts
 
-```{r, fig.width=14}
+```{r}
 
 summary_estab_long <- summary_df_naics3 %>%
   pivot_longer(cols = starts_with("sum_estab"), 
@@ -258,7 +291,8 @@ nationwide_estab_summary_plot <- ggplot(summary_estab_long, aes(x = NAICS3, y = 
        y = "Sum of Establishments") +
   theme_bw() +  # Black and white theme
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  scale_shape_manual(values = c(1, 2, 3, 4))  # Different shapes for each type
+  scale_y_log10() +
+  scale_shape_manual(values = c(1, 2, 3, 4, 5))  # Different shapes for each type
 
 # ggplotly(nationwide_estab_summary_plot) %>%
 #   layout(xaxis = list(tickangle = -45))
@@ -328,6 +362,11 @@ summary_inwu_df_county <- inwu_facility_sf %>%
     sum_emp_PPP = sum(emp_PPP, na.rm = TRUE),
     avg_emp_PPP = mean(emp_PPP, na.rm = TRUE),
     sum_estab_PPP = sum(emp_PPP > 0, na.rm = TRUE),
+    sum_emp_compilation = pmax(sum_emp_PinPointers,
+                               sum_emp_Dun_Bradstreet, 
+                               sum_emp_PPP, 
+                               na.rm = TRUE),
+    sum_estab_compilation = n(),
     .groups = 'drop'
   )
 
@@ -340,7 +379,20 @@ summary_inwu_df_county <- summary_inwu_df_county %>%
 ```
 
 ```{r}
+
+if (only_include_compilation) {
+  
+  summary_inwu_df_county <-
+    remove_individual_datasets(summary_inwu_df_county) 
+  
+}
+
+```
+
+
+```{r}
 # Merging CBP data into facility data 
+
 summary_inwu_df_county <- summary_inwu_df_county %>%
   rename(GEOID = AFFGEOID) %>%
   select(NAICS3, 
@@ -348,13 +400,15 @@ summary_inwu_df_county <- summary_inwu_df_county %>%
          geometry,
          sum_emp_CBP, 
          sum_estab_CBP, 
-         sum_payann_CBP, 
-         sum_emp_PinPointers,
-         sum_estab_PinPointers,
-         sum_emp_Dun_Bradstreet,
-         sum_estab_Dun_Bradstreet,
-         sum_emp_PPP,
-         sum_estab_PPP) 
+         #sum_payann_CBP, 
+         #sum_emp_PinPointers,
+         #sum_estab_PinPointers,
+         #sum_emp_Dun_Bradstreet,
+         #sum_estab_Dun_Bradstreet,
+         #sum_emp_PPP,
+         #sum_estab_PPP,
+         sum_emp_compilation,
+         sum_estab_compilation) 
   
 summary_inwu_df_county <- st_drop_geometry(summary_inwu_df_county)
 # # Formatting shapefile geoid 
@@ -410,7 +464,8 @@ summary_estab_county_boxplot <- ggplot(summary_inwu_estab_county_long, aes(x = N
   scale_fill_viridis(option = 'cividis',discrete = TRUE) +
   labs(title = "Comparison of County Establishment Values by NAICS3 and Dataset",
        x = "NAICS3 Code",
-       y = "Values") 
+       y = "Values") +
+  theme_minimal()
 
 summary_estab_county_boxplot
 
@@ -427,13 +482,21 @@ for (naics in naics_list){
   naics_map_df <- summary_inwu_df_county %>%
     filter(NAICS3 == naics) %>%
     right_join(counties_sf, by = c("GEOID" = "AFFGEOID")) %>%
+    mutate(sum_emp_CBP = as.integer(sum_emp_CBP),
+           sum_estab_CBP = as.integer(sum_estab_CBP)) %>%
     st_as_sf()
+  
+  scale_max <- max(naics_map_df[, estab_columns], na.rm = TRUE)
+  scale_min <- min(naics_map_df[, estab_columns], na.rm = TRUE)
   
   for (estab_col in estab_columns){
     
     estab_map <- ggplot(data = naics_map_df) + 
       geom_sf(aes_string(fill = estab_col)) +
-      scale_fill_viridis_c(option = 'cividis', trans = 'log', na.value = "white") + 
+      scale_fill_viridis_c(option = 'cividis', 
+                           trans = 'log', 
+                           na.value = "white",
+                           limits = c(scale_min, scale_max)) + 
       labs(title = paste(naics, estab_col),
            fill = "Number of Establishments") +
       theme_minimal()
