@@ -111,8 +111,7 @@ handle_coordinates <- function(data, filename, header) {
   
   check_dd <- stringr::str_detect(tmp_coord_corrected[[header]], "(?<=^-?)[[:digit:]]{2,3}(?=(\\.|$))") 
   check_dms <- stringr::str_detect(tmp_coord_corrected[[header]], "^[[:digit:]]{6}(?=(\\.|$))")
-  
-  if(all(check_degrees) & all((check_dd | check_dms), na.rm = TRUE)) {
+  if(all(check_degrees, na.rm = TRUE) & all((check_dd | check_dms), na.rm = TRUE)) {
       tmp <- tmp_coord_corrected |>
         dplyr::mutate(dplyr::across(contains(header), ~{
           dplyr::case_when(
@@ -802,7 +801,6 @@ pull_county <- function(x) {
 }
 
 pull_necessaryaddressdata <- function(x, type, zipindex, stateindex, state_regex, zip_regex) {
-  # browser()
   list(pull_address, pull_city, pull_state, pull_zip, pull_county) # call for targets package
   # if there is more than 1 entry in a cell separated by commas (e.g. Puelbo, CO is 2 entries), this code will try to pull the part of the entry that corresponds to the data needed.
   tmp_code <- ifelse(type == "Address", "pmap_chr(list(x, zipindex, stateindex), ~pull_address(..1, ..2, ..3))",
@@ -1193,14 +1191,12 @@ merge_formatteddata <- function(x_munged = list(), updatedCrosswalks, existingCr
   # This function merges the data that was reformatted together. 
   # State data is merged by state and then combined with row_bind
   # National data is merged together for each data set
-  #browser()
   x_munged_indices_bysize <- unlist(purrr::map(x_munged, ~length(.x))) |> sort(decreasing = TRUE)
   x_merge_ready <- x_munged[names(x_munged_indices_bysize)] |> purrr::keep(~{nrow(.) > 0}) 
   
   if(data == "State") {
     if(exists("stopflag", envir = .GlobalEnv)) {
       if(get("stopflag", envir = .GlobalEnv) == TRUE) {
-        # browser()
         messagelog <- get("messagelog", envir = .GlobalEnv)
         if(exists("datacodes_append", envir = .GlobalEnv)) {
           datacodes_append <- get("datacodes_append", envir = .GlobalEnv) %>% unique()

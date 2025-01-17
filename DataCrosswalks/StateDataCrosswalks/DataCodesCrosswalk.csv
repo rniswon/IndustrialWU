@@ -836,3 +836,26 @@ ValueType,6A,TR
 ValueType,7A,NA_character_
 ValueType,8A,NA_character_
 Units_monthly,KGAL,Kgal
+ValueType,gw,WD
+ValueType,sw,WD
+SourceType,gw,GW
+SourceType,sw,SW
+Category,in,IN
+Method_monthly,unknown,NA_character_
+Method_monthly,Estimated.,Estimated
+Method_annual_reported,Metered,Metered
+Method_annual_reported,unknown,NA_character_
+Method_annual_reported,Estimated.,Estimated
+SourceType,Ground Water,GW
+ValueType,self,WD
+ValueType,pub,TR
+ValueType,public,TR
+ValueType,WELL,WD
+ValueType,SURFACE INTAKE,WD
+ValueType,Ground Water,WD
+ValueType,Surface Water,WD
+Saline,fresh,FALSE
+Saline,salt,TRUE
+Method_annual_reported,METERED,Metered
+Method_annual_reported,ESTIMATED,Estimated
+SourceType,NA,

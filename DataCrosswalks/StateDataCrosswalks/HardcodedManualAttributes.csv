@@ -582,3 +582,12 @@ file,Header,Value,Notes
 /KS/K11963_CAC.xlsx$PART A,ValueType,WD,Assumed withdrawalsgiven that these are pumping rates
 /KS/K11963_CAC.xlsx$PART E,Units_monthly,KGAL,"From column headers ""[Month]_KGAL"""
 /KS/K11963_CAC.xlsx$PART A,Units_annual_reported,ACFT,"From column header ""ACFT_PUMP"""
+/LA/LA_IN_WU.xlsx$datapull_2000-2019,Units_monthly,MGD,
+/LA/LA_IN_WU.xlsx$datapull_2000-2019,Units_annual_reported,MGD,
+/ME/ME_IN_WU_CAC.xlsx$wu_discharge,ValueType,RL,NPDES discharges
+/ME/ME_IN_WU_CAC.xlsx$wu_discharge,Category,IN,Only industrial sites included
+/ME/ME_IN_WU_CAC.xlsx$wu_monthly_recombined,Category,IN,Only industrial sites included
+/ME/ME_IN_WU_CAC.xlsx$wu_monthly_recombined,Method_annual_reported,Estimated,Calculated based on NPDES discharges and coefficients
+/ME/site_specific_data_20240619/site_specific_data_20240619/master_coeffs.csv,Datum,WGS84,According to metadata txt file
+/ME/ME_IN_WU_CAC.xlsx$final_snowmaking_CAC,Category,CO,Snowmaking is commercial
+/MO/Industrial_2000-2019.xlsx$Sheet1,Category,IN,Only includes industrial
