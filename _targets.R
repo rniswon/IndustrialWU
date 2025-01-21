@@ -7,10 +7,14 @@
 
 
 # Specify the packages required for the pipeline
-packages <- c("tibble", "stringr", "purrr", "readxl", "svDialogs", "dplyr", "archive",
-              "tidyr", "readr", "lubridate", "magrittr", "furrr", "data.table",
-              "sf", "rquery", "officer", "pdftools", "rqdatatable",
-              "fedmatch", "janitor", "zoo", "varhandle", "targets", "tarchetypes","tidytable")
+# Note that tidytable and dplyr have many functions named the same. 
+# Suggest specifying in the script dplyr:: or tidytable::
+# dplyr is loaded last so that it is the default
+packages <- c("tibble", "stringr", "purrr", "readxl", "svDialogs", "tidytable", 
+              "dplyr", "archive", "tidyr", "readr", "lubridate", "magrittr", 
+              "furrr", "data.table", "sf", "rquery", "officer", "pdftools", "rqdatatable",
+              "fedmatch", "janitor", "zoo", "varhandle", "targets", "tarchetypes",
+              "tigris")
 
 # Function to install missing packages
 optinstall <- function(x) {
@@ -47,8 +51,9 @@ list(
   tar_target(NAICSworkup, "Industrial model/Industrial_DataSummary_By_LEE.xlsx", format = "file"), # Load NAICS summary
   tar_target(SWUDS, "Industrial model/SWUDS_records/natprod_CN_QNTY_industrial_2024-07-12.xlsx", format = "file"), # Load SWUDS records
   tar_target(SWUDS_workup, "Industrial model/SWUDS_records/From_To_Sites missing lat lng.xlsx"), # Load added lat/lon
-  tar_target(SiteSelection, "Industrial model/INWU_task_folders/Site_selection/Industrial_site_list/facility_v3_NAICS_SIC.csv"), # load list of sites from the Site Selection group
+  tar_target(SiteSelection, "Industrial model/INWU_task_folders/Site_selection/Industrial_site_list/USEPA_HIFLD_EIA_PPP_facility_v6.csv"), # load list of sites from the Site Selection group
   tar_target(QAQCstatus, "FormattedDataOutputs/DataQAQCstatus.csv", format = "file"), # Load QAQC status from previous pipeline runs
+  tar_target(status, "Industrial model/INWU_task_folders/Data_processing/StatusUpdate.csv", format = "file"), #Load status from previous pipeline runs
   tar_target(dat, command = get_all_dat(datafp)),  # List all data from the state data file
   tar_target(updatedCrosswalks, 
              command = updateCrosswalks(data = dat, existingCrosswalks = existingCrosswalks),
@@ -61,6 +66,7 @@ list(
   ),
   tar_target(NonSWUDSdata, command = merge_formatteddata(reformatted_data,
                                                          updatedCrosswalks,
+                                                         existingCrosswalks,
                                                          data = "State")),
   tar_target(combined_dat, command = 
                merge_nationaldata(nonSWUDS = NonSWUDSdata,
@@ -69,10 +75,11 @@ list(
   tar_target(FormattedNationaldata, command = prep_nationaldata(
     national_Xwalks = NationalDataCrosswalks, 
     datacodes_Xwalks = updatedCrosswalks$DataCodesCrosswalk,
+    existingCrosswalks,
     natdata = list(NAICSworkup, SWUDS, SWUDS_workup),
     extradata = list(FIPSdata)
   )),
-  tar_target(FormattedSiteSelectiondata, command = prep_siteselection(
+   tar_target(FormattedSiteSelectiondata, command = prep_siteselection(
     national_Xwalks = NationalDataCrosswalks, 
     datacodes_Xwalks = updatedCrosswalks$DataCodesCrosswalk,
     siteselection = list(SiteSelection)
@@ -89,8 +96,17 @@ list(
                                            siteselectionfilename = SiteSelection)),
   tar_target(AllStates, command = write_allstates(siteselectionmerged), format = "file"),  # Write combined data for all states to a file
   tar_target(QAQCupdate, command = checkQAQCstatus(siteselectionmerged, QAQCstatus),
-             cue = tar_cue(mode = "always")) # Look for any changes in number of duplicates and missing data rows introduced
+             cue = tar_cue(mode = "always")), # Look for any changes in number of duplicates and missing data rows introduced
+  tar_target(StatusUpdate, 
+             command = generate_statusupdate(siteselectionmerged, 
+                                             FormattedSiteSelectiondata, 
+                                             updatedCrosswalks,
+                                             SWUDS,
+                                             SiteSelection,
+                                             status,
+                                             QAQCupdate))
   )
+
 
 # For debugging ----
 # lapply(packages, library, character.only = TRUE)  # Load all required packages 

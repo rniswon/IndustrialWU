@@ -10,3 +10,14 @@
 /CO/CO_Manufacture_Demands_Water.xlsx$Western Sugar (Fort Morgan),long,"contains(c(""DivTotal""))","SourceNumber, Units_monthly","sep: "", DivTotal, """,Monthly_reported,
 /CO/CO_Manufacture_Demands_Water.xlsx$Western Sugar (Fort Morgan),wide,"Year = lubridate::year(lubridate::as_date(`DATE`, format = ""%Y-%m"")), SourceNumber, Units_monthly","Month = month.abb[lubridate::month(lubridate::as_date(`DATE`, format = ""%Y-%m""))]",,Monthly_reported,
 /CO/CFIandMolsonCoors_Copy.xlsx$CFI_MC_reformat,wide,Year = lubridate::year(lubridate::as_date(`Date`)),Month = month.abb[lubridate::month(lubridate::as_date(`Date`))],,Diversions,
+/DE/IndustrialWaterUse_modified.xlsx$Water Use,wide,,Month = month.abb[as.numeric(`Current Month`)],,"Monthly Water Use, gal.",
+/DE/IndustrialWaterUse_USGS_Lovelace.xlsx$Water Use,wide,,Month = month.abb[as.numeric(`Current Month`)],,"Monthly Water Use, gal.",
+/DE/WaterUse_2004-2019_all_categories.xlsx$Sheet1,wide,,Month = month.abb[as.numeric(`currentMonth`)],,wateruse,
+/FL/SiteSpecific_IndWaterUse_FL_2020_ldm.xlsx$FL_SiteSpecificWithdrawals_Annu,long,"c(""TOT_GW_VA"", ""TOT_SW_VA"")",SourceType,,Annual_reported,Annual_reported = as.numeric
+/HI/HI_IN_WU.xlsx$HI_IN_WU,wide,"Year = lubridate::year(lubridate::as_date(map2_dbl(as.numeric(`Start Date`), as.numeric(`End Date`), ~mean(c(.x, .y))), origin = ""1899-12-30"")), `Pumpage (Gallons)` = as.numeric(`Pumpage (Gallons)`)","Month = month.abb[lubridate::month(lubridate::as_date(map2_dbl(as.numeric(`Start Date`), as.numeric(`End Date`), ~mean(c(.x, .y))), origin = ""1899-12-30""))]",,Pumpage (Gallons),sum
+/KS/K11963_CAC.xlsx$PART B - IND,wide,,Month = month.abb[as.numeric(MONTH)],,KGAL,as.numeric
+/KS/K11963_CAC.xlsx$PART B - MUN,wide,,Month = month.abb[as.numeric(MONTH)],,KGAL,as.numeric
+/ME/ME_IN_WU_CAC.xlsx$final_snowmaking_CAC,long,"contains(c(""recombined""))",Year,,Annual_reported,
+/ME/ME_IN_WU_CAC.xlsx$wu_discharge,wide,,Month = month.abb[as.numeric(Month)],,discharge,as.numeric
+/ME/ME_IN_WU_CAC.xlsx$wu_monthly_recombined,wide,,Month = month.abb[as.numeric(Month)],,wu,as.numeric
+/ND/Industrial Use 2010-2019.xlsx$IN_data,long,"which(grepl(""[[:digit:]]{4}"", names(.)))",Year,,Annual_reported,

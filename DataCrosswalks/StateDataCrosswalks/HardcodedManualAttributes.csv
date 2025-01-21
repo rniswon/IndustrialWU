@@ -564,3 +564,30 @@ file,Header,Value,Notes
 /MI/Michigan monthly water use by facility and source.xlsx$2020,Year,2020,Year comes from the excel sheet name
 /MI/Michigan monthly water use by facility and source.xlsx$2021,Year,2021,Year comes from the excel sheet name
 /MI/Michigan monthly water use by facility and source.xlsx$2022,Year,2022,Year comes from the excel sheet name
+/DE/IndustrialWaterUse_USGS_Lovelace.xlsx$Water Use,Units_monthly,gallons,"From ""Monthly Water Use, gal."""
+/DE/WaterUse_2004-2019_all_categories.xlsx$Sheet1,Units_monthly,gallons,Determined by comparison of overlapping entries with  /DE/IndustrialWaterUse_USGS_Lovelace.xlsx$Water Use
+/DE/IndustrialWaterUse_modified.xlsx$Water Use,Units_monthly,gallons,"From ""Monthly Water Use, gal."""
+/DE/read_me_072220.docx,ValueType,WD,
+/FL/SFWMD_2020 WATER USAGE (PUMPAGE)_20210810.xlsx$Disclaimer,ValueType,WD,data are pumpage data
+/FL/SFWMD_2020 WATER USAGE (PUMPAGE)_20210810.xlsx$Disclaimer,Method_monthly,NA,data are self reported
+/FL/SFWMD_2020 WATER USAGE (PUMPAGE)_20210810.xlsx$Disclaimer,Method_annual_reported,NA,data are self reported
+/HI/HI_IN_WU.xlsx$HI_IN_WU,ValueType,WD,
+/HI/HI_IN_WU.xlsx$HI_IN_WU,Units_monthly,gallons,
+/HI/HI_IN_WU.xlsx$HI_IN_WU,Method_monthly,gallons,
+/IA/IA_IN_WU.xlsx$IowaBusinessWaterUseAnnual,Datum,,not specified
+/IA/IA_IN_WU.xlsx$IowaBusinessWaterUseAnnual,Projection,UTM zone 15N,
+/KS/K11963_CAC.xlsx$PART B - IND,Units_monthly,KGAL,"From column header ""KGAL"""
+/KS/K11963_CAC.xlsx$PART B - MUN,Units_monthly,KGAL,"From column header ""KGAL"""
+/KS/K11963_CAC.xlsx$PART A,Datum,NAD83,"From column headers ""PD_[Lat/Lon]_NAD83"""
+/KS/K11963_CAC.xlsx$PART A,ValueType,WD,Assumed withdrawalsgiven that these are pumping rates
+/KS/K11963_CAC.xlsx$PART E,Units_monthly,KGAL,"From column headers ""[Month]_KGAL"""
+/KS/K11963_CAC.xlsx$PART A,Units_annual_reported,ACFT,"From column header ""ACFT_PUMP"""
+/LA/LA_IN_WU.xlsx$datapull_2000-2019,Units_monthly,MGD,
+/LA/LA_IN_WU.xlsx$datapull_2000-2019,Units_annual_reported,MGD,
+/ME/ME_IN_WU_CAC.xlsx$wu_discharge,ValueType,RL,NPDES discharges
+/ME/ME_IN_WU_CAC.xlsx$wu_discharge,Category,IN,Only industrial sites included
+/ME/ME_IN_WU_CAC.xlsx$wu_monthly_recombined,Category,IN,Only industrial sites included
+/ME/ME_IN_WU_CAC.xlsx$wu_monthly_recombined,Method_annual_reported,Estimated,Calculated based on NPDES discharges and coefficients
+/ME/site_specific_data_20240619/site_specific_data_20240619/master_coeffs.csv,Datum,WGS84,According to metadata txt file
+/ME/ME_IN_WU_CAC.xlsx$final_snowmaking_CAC,Category,CO,Snowmaking is commercial
+/MO/Industrial_2000-2019.xlsx$Sheet1,Category,IN,Only includes industrial
