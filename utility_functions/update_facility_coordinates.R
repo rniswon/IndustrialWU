@@ -10,8 +10,6 @@
 #' @param source A character string indicating the source of the latitude and longitude 
 #'               data being added. This will be recorded in the `LL_Src` column of 
 #'               the `facility_df`.
-#' @param additional_fields A list of fields from the coordinate_df you would like appended
-#'                          with the data
 #' 
 #' @return A data frame with updated latitude and longitude values. The function 
 #'         preserves all original columns in `facility_df` and updates `LATITUDE`, 

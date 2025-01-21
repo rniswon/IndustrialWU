@@ -21,7 +21,7 @@
 #' # Example usage:
 #' result <- append_hu_to_sf(input_df, hu_no = 2, wbd_gpkg_pth = "path/to/wbd.gpkg")
 #'
-append_hu_to_sf <- function(input_df, hu_no, wbd_gpkg_pth) {
+append_huc_to_df <- function(input_df, hu_no, wbd_gpkg_pth) {
   
   # Load the required library for spatial operations
   library(sf)
