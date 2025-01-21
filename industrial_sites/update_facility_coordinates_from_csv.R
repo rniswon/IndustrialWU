@@ -9,9 +9,15 @@
 # list of facilities, merges it with geocoded data, and updates the 
 # coordinates where applicable.
 #
+# This Script has been modified to add fips codes and CDC region to the
+# facilities list
+#
+#
 # Dependencies:
 # - utility_functions/update_facility_coordinates.R: Contains the function 
 #   `update_facility_coordinates` used to update facility coordinates.
+# - utility_functions/add_fips_and_region.R: Contains the function 
+#   'add_fips_and_region' used to populate the fips codes
 #
 # User Inputs:
 # - inwu_model_folder: Path to the Industrial model folder.
@@ -19,21 +25,22 @@
 #
 # Data Sources:
 # 1. Industrial Facilities List (v4):
-#    - File: USEPA_HIFLD_EIA_PPP_facility_v4.csv
+#    - File: USEPA_HIFLD_EIA_PPP_facility_v6.csv
 #    - Location: D:/DOI/GS-W-WaterUse - Industrial model/INWU_task_folders/
 #      Site_selection/Industrial_site_list/
 # 2. Geocoding Outputs:
 #    - Location: ~/GS-W-WaterUse - Industrial model/INWU_task_folders/
 #      Site_selection/Data/_CLEANUP/Find_Lats_Longs/NAICS_Address
 #    - Files are the outputs of `Geo_code_Add_lat_Long.R`
-#    - Files are named in the format: NAICS_[3-digit Code]_[Category Name]_
-#      [Source]_geo.csv
 #
 # Processing Steps:
 # 1. Read the Industrial Facilities List from CSV.
 # 2. List CSV files from geocoding output directory.
 # 3. Update facility coordinates by merging with geocoded data from each CSV.
 # 4. Count and print the number of updated records.
+# 5. Add Region and FIPS to facilities
+# 6. Add HUC 2 to facilities
+# 7. Remove duplicate facilities
 #
 # Output:
 # - Prints the number of coordinates that were updated to the console.
@@ -41,6 +48,8 @@
 
 library(tidyverse)
 source("utility_functions/update_facility_coordinates.R")
+source("utility_functions/add_fips_and_region.R")
+source("utility_functions/append_huc_to_df.R")
 
 ### Getting User Inputs ###
 inwu_model_folder <- "D:/DOI/GS-W-WaterUse - Industrial model"
@@ -54,7 +63,7 @@ if (!dir.exists(output_directory)) {
 
 ### Reading v4 of the Industrial Facilities List ### 
 inwu_facility_csv <- paste0(inwu_model_folder,
-                            "/INWU_task_folders/Site_selection/Industrial_site_list/USEPA_HIFLD_EIA_PPP_facility_v4.csv")
+                            "/INWU_task_folders/Site_selection/Industrial_site_list/USEPA_HIFLD_EIA_PPP_facility_v6.csv")
 
 # Read the Industrial Facilities List into a dataframe with specified column types
 inwu_facility_df <- read_csv(inwu_facility_csv,
@@ -65,11 +74,12 @@ inwu_facility_df <- read_csv(inwu_facility_csv,
                                EMP = col_integer(),
                                TotPerson = col_integer(),
                                JobsReported = col_integer()
-                             ))
+                             )) %>%
+  mutate(CDC_Region = NA)
 
 ### Getting List of CSV File Outputs from `Geo_code_Add_lat_Long.R` ###
 csv_directory <- paste0(inwu_model_folder, 
-                        '\\INWU_task_folders\\Site_selection\\Data\\_CLEANUP\\Find_Lats_Longs\\NAICS_Address')
+                        '\\INWU_task_folders\\Site_selection\\Data\\_CLEANUP\\Find_Lats_Longs2')
 
 # List all CSV files in the specified directory
 csv_files <- list.files(path = csv_directory, 
@@ -82,10 +92,12 @@ na_count <- sum(is.na(inwu_facility_df$LATITUDE))  # Count NA latitude values be
 # Loop through each geocoding output file
 for (csv in csv_files) {
   
-  # Extract the source from the filename, which follows the format 
-  # NIACS_[3-digit Code]_[Category Name]_[Source]_geo.csv
   csv_name <- basename(csv)
-  source <- strsplit(csv_name, "_")[[1]][4]
+  source <- strsplit(csv_name, "_")[[1]][3]
+  
+  if (source == 'LL') {
+    source = NA
+  }
   
   # Skip files where the source is 'No', as these indicate null values
   skip_list <- c('No')
@@ -100,6 +112,32 @@ for (csv in csv_files) {
                                                             source)
   }
 }
+
+
+
+### Getting Counts of Updates ###
+
+# Count the number of NA values in the updated dataframe
+updated_na_count <- sum(is.na(updated_inwu_facility_df$LATITUDE))
+
+# Calculate the number of records that were updated
+updated_record_count <- na_count - updated_na_count
+
+# Print the number of coordinates that were updated
+print(paste0(updated_record_count, ' coordinates updated'))
+
+# Count occurrences of different sources in the updated dataframe
+coordinate_sources <- updated_inwu_facility_df %>%
+  group_by(LL_Src) %>%
+  summarise(count = n())
+
+### Add Region and FIPS to facilities ###
+fips_csv_path <- paste0(inwu_model_folder,'/INWU_task_folders/WU_analysis/NAICS_Regions/FIPS_States_County_Codes.csv')
+updated_inwu_facility_df <- add_fips_and_region(updated_inwu_facility_df, 
+                                                fips_csv_path) 
+### Add HUC2 to Facilities ### 
+wbd_gpkg_pth = paste0(inwu_model_folder, '\\INWU_task_folders\\Site_selection\\Data\\WBD_National_GPKG\\WBD_National_GPKG.gpkg')
+updated_inwu_facility_df <- append_huc_to_df(updated_inwu_facility_df, 2, wbd_gpkg_pth)
 
 ### Handling Duplicate Facility Entries ###
 
@@ -119,25 +157,8 @@ duplicate_facilities_df <- inwu_facility_df %>%
 # Remove duplicate facilities, keeping only the first occurrence of each FACILITYID
 updated_inwu_facility_df <- updated_inwu_facility_df %>%
   distinct(FACILITYID, .keep_all = TRUE)
-
-### Getting Counts of Updates ###
-
-# Count the number of NA values in the updated dataframe
-updated_na_count <- sum(is.na(updated_inwu_facility_df$LATITUDE))
-
-# Calculate the number of records that were updated
-updated_record_count <- na_count - updated_na_count
-
-# Print the number of coordinates that were updated
-print(paste0(updated_record_count, ' coordinates updated'))
-
-# Count occurrences of different sources in the updated dataframe
-coordinate_sources <- updated_inwu_facility_df %>%
-  group_by(LL_Src) %>%
-  summarise(count = n())
-
-# Outputting Results to CSV Files
-output_path <- paste0(output_directory, '/USEPA_HIFLD_EIA_PPP_facility_v5.csv')
+### Outputting Results to CSV Files ###
+output_path <- paste0(output_directory, '/USEPA_HIFLD_EIA_PPP_facility_v7.csv')
 duplicates_path <- paste0(output_directory, '/duplicate_facility_ids_v4_20241114.csv')
 
 # Write the updated facilities dataframe to CSV
