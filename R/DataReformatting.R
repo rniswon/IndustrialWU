@@ -487,6 +487,7 @@ crosswalk_codes <- function(data, fp, header, codescrosswalk, forceupdate = TRUE
   # Filter the crosswalk based on the specified header
   codecrosswalk <- codescrosswalk |> 
     dplyr::filter(header == header_tmp)
+  data[[header]] <- gsub("\r\n", "", data[[header]])
   if(forceupdate) {
     # Check for any new codes not present in the crosswalk
     if(any(!unique(data[[header]]) %in% codecrosswalk$original_value)) {
@@ -532,13 +533,15 @@ crosswalk_codes <- function(data, fp, header, codescrosswalk, forceupdate = TRUE
   
   # Create the crosswalk mapping
   crosswalk <- codecrosswalk |> dplyr::select(original_value, new_value) |>
+    dplyr::mutate(original_value = dplyr::case_when(grepl('"', original_value) ~ gsub('"', "inch", original_value),
+                                               .default = original_value)) %>%
     dplyr::mutate(new_value = dplyr::case_when(grepl("NA_character_", new_value) ~ new_value,
                                                .default = paste0('"', new_value, '"'))) |>
     dplyr::summarize(
       original_value = paste0('c("', paste(original_value, collapse = '", "'), '")'),
       .by = new_value) |>
     dplyr::mutate(expr = paste0(original_value, " ~ ", new_value))
-  
+
   # Generate the mutate expression
   mutatecode <- ifelse(length(crosswalk$expr) > 0,
                        paste0(
@@ -547,7 +550,11 @@ crosswalk_codes <- function(data, fp, header, codescrosswalk, forceupdate = TRUE
                        ".")
   
   # Evaluate the mutate expression and return the updated data frame
-  tmp <- data %>% {eval(parse(text = mutatecode))}
+  tmp <- data %>%
+    dplyr::mutate(!!header := dplyr::case_when(
+      grepl('"', .[[header]]) ~ gsub('"', "inch", .[[header]]),
+      .default =  .[[header]])) %>% 
+    {eval(parse(text = mutatecode))}
   
   return(tmp)
 }

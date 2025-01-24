@@ -591,3 +591,15 @@ file,Header,Value,Notes
 /ME/site_specific_data_20240619/site_specific_data_20240619/master_coeffs.csv,Datum,WGS84,According to metadata txt file
 /ME/ME_IN_WU_CAC.xlsx$final_snowmaking_CAC,Category,CO,Snowmaking is commercial
 /MO/Industrial_2000-2019.xlsx$Sheet1,Category,IN,Only includes industrial
+/NM/NM_IN_WU_CAC.xlsx$Industrial USGS_frJulie_0918202,Units_annual_reported,AF,From column header
+/NM/Industrial_NM_forJohnL.xlsx$Commercial2010,Year,2010,From sheet name
+/NM/Industrial_NM_forJohnL.xlsx$Commercial2015,Year,2015,From sheet name
+/MS/USGS Data Request_Industrial Use 2000-2019.xlsx$MS_IN_WU,ValueType,WD,Seem to be mostly wells
+/NM/Industrial_NM_forJohnL.xlsx$Commercial2010,ValueType,WD,Permit numbers
+/NM/Industrial_NM_forJohnL.xlsx$Commercial2015,ValueType,WD,Permit numbers
+/NM/NM_IN_WU.xlsx$Industrial2010,ValueType,WD,Permit numbers
+/NM/Industrial_NM_forJohnL.xlsx$Commercial2010,Category,Commercial,From sheet name
+/MS/USGS Data Request_Industrial Use 2000-2019.xlsx$MS_IN_WU,Units_annual_reported,MGD,From column header
+/NM/Industrial_NM_forJohnL.xlsx$Commercial2010,Units_annual_reported,AFY,From column header
+/NM/Industrial_NM_forJohnL.xlsx$Commercial2015,Units_annual_reported,AFY,From column header
+/NM/NM_IN_WU.xlsx$Industrial2010,Units_annual_reported,AFY,From note above data table
