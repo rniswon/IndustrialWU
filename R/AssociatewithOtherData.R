@@ -39,18 +39,25 @@ prep_siteselection <- function(national_Xwalks, datacodes_Xwalks, siteselection 
   # The headers from the national Header Crosswalk are used to read and rename the data
   # Then, the facility names are cleaned, and the address columns are formatted.
   # These adjustments will help with later merging.
-  # browser()
   natHeaders <- list(
     HeaderCrosswalk = get_filledcsv(file.path(national_Xwalks, "HeaderCrosswalk.csv")),
     DataCodesCrosswalk = datacodes_Xwalks
   )
-  siteSelectionDat <- readandrename_columns(siteselection, natHeaders, national_Xwalks, data = "National") |>
+  siteSelectionDat_editted <- readandrename_columns(siteselection, natHeaders, national_Xwalks, data = "National") |>
     pluck(1) |>
     tidytable::mutate(tidytable::across(c("FacilityName", "FacilityName1", "FacilityName2"), ~clean_names(.))) |>
     tidytable::mutate(tidytable::across(c("Address1", "Address2"), ~clean_address_words(.))) |>
     tidytable::mutate(tidytable::across(c("City1", "County1", "City2"), ~str_to_title(.))) |>
     tidytable::mutate(State = State1) |>
-    unique() |>
+    unique() 
+  
+  fullsiteSelectionDat <- read_in_datafile(dirname(siteselection[[1]]), 
+                                           basename(siteselection[[1]])) %>%
+    rename_with(.fn = ~paste0("SITESELECTION_", .), .cols = everything())
+  
+  siteSelectionDat <- left_join(siteSelectionDat_editted, 
+                                fullsiteSelectionDat, 
+                                by = "SITESELECTION_FACILITYID") %>%
     as.data.frame()
     
   return(siteSelectionDat)
