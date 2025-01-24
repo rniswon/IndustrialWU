@@ -481,7 +481,6 @@ applyPIVOTrules <- function(dat, headercrosswalk, updatedCrosswalks) {
       # Create select code based on whether the pivot is to a wide or long format
       # This code is based on the inputs from the pivot instructions crosswalk
       # It can be rather finicky. If there are errors popping up in this function, the select code is a good place to check first.
-      # browser()
       selectcode <- ifelse(.x$long_wide == "wide",
                            paste0('dplyr::select(., any_of(c("', paste(
                              ifelse(
@@ -524,7 +523,7 @@ applyPIVOTrules <- function(dat, headercrosswalk, updatedCrosswalks) {
       intr <- list(mutatecode = mutatecode, selectcode = selectcode, pivotcode = pivotcode, filtercode = filtercode)
       intr
     })
-    
+
     # Evaluate the constructed transformation instructions on the dataset
     dat2 <- suppressWarnings({dat %>% 
         {eval(parse(text = paste(unlist(instructions, use.names = FALSE), 
@@ -688,18 +687,11 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks,
                   pivotapplied$pivotinstructions)$selectcode))} %>%
                 {eval(parse(text = select_code))} |>
                 names()
-              if(old_sub %in% names_check) {
-                nm <- manual_update(data.frame(tmp = NA), 
-                                    unique(headercrosswalk$file), new, 
-                                    updatedCrosswalks, existingCrosswalks, 
-                                    names_check)
-                tmp <- tibble::tibble(!!new := nm[[new]])
-              } else {
-                nm <- manual_update(data.frame(tmp = NA), 
-                                    unique(headercrosswalk$file), old_sub, 
-                                    updatedCrosswalks, existingCrosswalks,
-                                    names_check)
-                tmp <- tibble::tibble(!!new := nm[[old_sub]])}}
+              nm <- manual_update(data.frame(tmp = NA), 
+                                  unique(headercrosswalk$file), new, 
+                                  updatedCrosswalks, existingCrosswalks, 
+                                  names_check)
+              tmp <- tibble::tibble(!!new := nm[[new]])}
                 }
             tmp
           }) |> purrr::list_cbind(name_repair = "unique")
