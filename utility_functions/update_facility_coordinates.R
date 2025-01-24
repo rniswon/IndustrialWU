@@ -29,7 +29,7 @@ update_facility_coordinates <- function(coordinate_df, facility_df, source){
   coordinate_df <- coordinate_df %>%
     select(FACILITYID, lat, long) %>%
     mutate(source = source)
-  
+
   na_count <- sum(is.na(facility_df$LATITUDE))
   
   facility_df <- facility_df %>%
