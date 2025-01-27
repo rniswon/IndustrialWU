@@ -91,12 +91,12 @@ Category,IN64,IN
 Saline,NA,NA
 Saline,SW,FALSE
 Saline,GW,FALSE
-Units_monthly,mgd,mgd
-Units_monthly,MGD,mgd
-Units_monthly,mgald,mgd
-Units_monthly,Mgd,mgd
-Units_monthly,million gallons per day,mgd
-Units_monthly,Mgal/d,mgd
+Units_monthly,mgd,Mgal per day
+Units_monthly,MGD,Mgal per day
+Units_monthly,mgald,Mgal per day
+Units_monthly,Mgd,Mgal per day
+Units_monthly,million gallons per day,Mgal per day
+Units_monthly,Mgal/d,Mgal per day
 Method_monthly,3,NA_character_
 Method_annual_reported,3,NA_character_
 Method_monthly,5,NA_character_
@@ -104,12 +104,12 @@ Method_annual_reported,5,NA_character_
 Method_monthly,6,Metered
 Method_annual_reported,6,Metered
 Method_monthly,9,Metered
-Units_annual_reported,mgd,mgd
-Units_annual_reported,MGD,mgd
-Units_annual_reported,mgald,mgd
-Units_annual_reported,Mgd,mgd
-Units_annual_reported,million gallons per day,mgd
-Units_annual_reported,Mgal/d,mgd
+Units_annual_reported,mgd,Mgal per day
+Units_annual_reported,MGD,Mgal per day
+Units_annual_reported,mgald,Mgal per day
+Units_annual_reported,Mgd,Mgal per day
+Units_annual_reported,million gallons per day,Mgal per day
+Units_annual_reported,Mgal/d,Mgal per day
 Method_annual_reported,9,Metered
 Method_monthly,A,Metered
 Method_annual_reported,A,Metered
@@ -1456,3 +1456,95 @@ SourceType,ESTIMATEESTIMATEESTIMATE,NA_character_
 Units_monthly,"Monthly Water Use, gal.",gal
 Units_annual_reported,AF),acft
 Method_annual_reported,ESTIMATEESTIMATEESTIMATE,Estimated
+ValueType,Ground Water Withdrawal,WD
+ValueType,Interconnection,TR
+ValueType,Surface Water Withdrawal,WD
+SourceType,Ground Water Withdrawal,GW
+SourceType,Interconnection,PS
+SourceType,Surface Water Withdrawal,SW
+SourceType,WE,GW
+SourceType,ST,SW
+SourceType,RS,SW
+SourceType,SP,GW
+SourceType,PD,SW
+SourceType,SM,SW
+SourceType,LK,SW
+SourceType,CN,SW
+Category,Industrial Use,IN
+Category,Electric Use,IN
+Category,IM,IN
+Category,GC,IN
+Category,"IM  ,LV  ,WI",NA_character_
+Category,"IM  ,WI",NA_character_
+Category,"DO  ,IM",NA_character_
+Category,"IM  ,IR  ,IS",NA_character_
+Category,"IM  ,IR  ,IS  ,QM",NA_character_
+Category,"CM  ,IM",NA_character_
+Category,"FP  ,IM",NA_character_
+Category,"AG  ,IM",NA_character_
+Category,"IM  ,IR",NA_character_
+Category,"FP  ,IM  ,RW",NA_character_
+Category,"DS  ,IM  ,IR  ,IS  ,MU  ,PM  ,QM",NA_character_
+Category,"IM  ,LV",NA_character_
+Category,"IM  ,MU",NA_character_
+Category,"IM  ,PW  ,SM",NA_character_
+Category,"IM  ,IS  ,PM",NA_character_
+Category,"IM  ,IS  ,PM  ,ST",NA_character_
+Category,"IC  ,IM",NA_character_
+Category,"IM  ,ST",NA_character_
+Category,"IM  ,NU",NA_character_
+Category,"DO  ,IM  ,IR  ,LV  ,NU  ,PA  ,PM  ,RC",NA_character_
+Category,"DO  ,IM  ,MU",NA_character_
+Category,"DS  ,IM  ,IR  ,MU  ,PA  ,QM  ,ST",NA_character_
+Category,"DO  ,IM  ,IR  ,LV  ,PM  ,QM",NA_character_
+Category,"CM  ,FI  ,IM",NA_character_
+Category,"IM  ,PA",NA_character_
+Category,"IM  ,MI",NA_character_
+Category,"GD  ,IM",NA_character_
+Category,"DN  ,IM",NA_character_
+Category,"CM  ,DO  ,IM",NA_character_
+Category,"IM  ,RW",NA_character_
+Category,"DO  ,IM  ,IR  ,LV  ,ST",NA_character_
+Category,"DO  ,IM  ,ST",NA_character_
+Category,"DO  ,IM  ,IR  ,IS  ,LV  ,PM  ,RC  ,ST",NA_character_
+Category,"IM  ,IS",NA_character_
+Category,"DO  ,IM  ,IS  ,LV",NA_character_
+Units_monthly,millions of gallons,Mgal
+Method_monthly,ECF; NA,Estimated
+Method_monthly,EFV; NA,Estimated
+Method_monthly,NA; NA,NA_character_
+Method_monthly,WOF; NA,Metered
+Method_monthly,FMT; NA,Metered
+Method_monthly,OTH; Measured by volume in tank of water truck.,Metered
+Method_monthly,OTH; Estimated use,Estimated
+Method_monthly,OTH; meter & HR (HI?) tickets,Metered
+Method_monthly,OTH; Meter and production records,Metered
+Method_monthly,OTH; meter & production,Metered
+Method_monthly,OTH; production,Estimated
+Method_monthly,OTH; Mean daily flows at station 14065500 converted to AF,Estimated
+Method_monthly,OTH; Station 14065500 daily mean flows converted to AF,Estimated
+Method_monthly,PWR; NA,Estimated
+Method_monthly,VLM; NA,Estimated
+Method_monthly,OTH; meter & load tickets,Metered
+Method_monthly,OTH; Production records,Estimated
+Method_monthly,OTH; production records,Estimated
+Method_monthly,OTH; Flume,Metered
+Method_monthly,OTH; Flow Meter,Metered
+Method_monthly,OTH; Hydromet,Metered
+Method_monthly,OTH; Cement production records,Estimated
+Method_monthly,OTH; best guesstimate,Estimated
+Method_monthly,OTH; WRD gage station 1407000,Estimated
+Method_monthly,OTH; NRCS website - storage data,Metered
+Method_monthly,OTH; Meter and production,Metered
+Method_monthly,OTH; Production (water truck),Estimated
+Method_monthly,OTH; production watertrock (?),Estimated
+Method_monthly,OTH; water truck records,Metered
+Method_monthly,OTH; 3 springs with a 5K holding tank.,Estimated
+Method_monthly,OTH; Estimate of water use with 1 tenant in residence throughout 2016,Estimated
+Method_monthly,OTH; KWH from power meter. see additional comments,Estimated
+Method_monthly,OTH; Weir,Metered
+Method_monthly,STG; NA,Metered
+Method_monthly,OTH; Integrator,Metered
+Method_monthly,OTH; water truck loads,Metered
+Method_monthly,OTH; Well mounted flow totalizing meter recorded monthly.,Metered
+Units_annual_reported,millions of gallons,Mgal

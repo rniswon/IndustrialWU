@@ -87,7 +87,7 @@ prep_nationaldata <- function(national_Xwalks, datacodes_Xwalks, existingCrosswa
   
   augmentData <- readandrename_columns(extradata, natHeaders, national_Xwalks, data = "National") |>
     reformat_data(natHeaders, national_Xwalks) %>%
-    map(., ~dplyr::mutate(.x, dplyr::across(any_of("State"), ~State1)))
+    purrr::map(., ~dplyr::mutate(.x, dplyr::across(any_of("State"), ~State1)))
   
   return(list(natData_merge = natData, natHeaders = natHeaders, augmentData = augmentData))
 }
@@ -141,7 +141,6 @@ merge_siteselection <- function(data, siteselection, siteselectionfilename) {
   # browser()
 # the site selection data is merged several times by various characteristics
   # this is intented to maximize the number of merged lines
-  
   mergevar_synonyms <- list(
     name = c("FacilityName", "FacilityName1", "FacilityName2"),
     address = c("Address1", "Address2"),
@@ -154,47 +153,47 @@ merge_siteselection <- function(data, siteselection, siteselectionfilename) {
   level2_mergevars <- crossing(mergevar_synonyms$name, mergevar_synonyms$address)
   level3_mergevars <- crossing(mergevar_synonyms$county, mergevar_synonyms$city)
   
-  level2merge <- list_flatten(
+  level2merge <- purrr::list_flatten(
     list(
-      list_flatten(map(unique(unlist(level2_mergevars)), ~{l2 <- .x; map(level1_mergevars, ~c(l2, .x))})),
-      list_flatten(pmap(level2_mergevars, ~{l2 <- c(.x, .y); map(level1_mergevars, ~c(l2, .x))}))
+      purrr::list_flatten(purrr::map(unique(unlist(level2_mergevars)), ~{l2 <- .x; purrr::map(level1_mergevars, ~c(l2, .x))})),
+      purrr::list_flatten(purrr::pmap(level2_mergevars, ~{l2 <- c(.x, .y); purrr::map(level1_mergevars, ~c(l2, .x))}))
     )
   )
   
-  level3amerge <- list_flatten(
-    map(
+  level3amerge <- purrr::list_flatten(
+    purrr::map(
       unique(unlist(level3_mergevars)), 
       ~{
         l3 <- .x
-        list_flatten(map(unique(unlist(level2_mergevars)),  ~{l2 <- .x; map(level1_mergevars,~c(l3, l2, .x))}))
+        purrr::list_flatten(purrr::map(unique(unlist(level2_mergevars)),  ~{l2 <- .x; purrr::map(level1_mergevars,~c(l3, l2, .x))}))
       }
     )
   )
-  level3bmerge <- list_flatten(
-    map(
+  level3bmerge <- purrr::list_flatten(
+    purrr::map(
       unique(unlist(level2_mergevars)), 
       ~{
         l2 <- .x
-        list_flatten(pmap(level3_mergevars, ~{l3 <- c(.x, .y); map(level1_mergevars, ~c(l3, l2, .x))}))
+        purrr::list_flatten(purrr::pmap(level3_mergevars, ~{l3 <- c(.x, .y); purrr::map(level1_mergevars, ~c(l3, l2, .x))}))
       }
     )
   )
-  level3cmerge <- list_flatten(
-    pmap(
+  level3cmerge <- purrr::list_flatten(
+    purrr::pmap(
       level2_mergevars, 
       ~{
         l2a <- .x
         l2b <- .y
-        list_flatten(pmap(
+        purrr::list_flatten(purrr::pmap(
           level3_mergevars,
-          ~{l3 <- c(.x, .y, l2a, l2b); map(level1_mergevars, ~c(l3, .x))}
+          ~{l3 <- c(.x, .y, l2a, l2b); purrr::map(level1_mergevars, ~c(l3, .x))}
         ))
       }
     )
   )
-  level3merge <- list_flatten(list(level3amerge, level3bmerge, level3cmerge))
+  level3merge <- purrr::list_flatten(list(level3amerge, level3bmerge, level3cmerge))
   
-  merge_combos <- list_flatten(list(level2merge = level2merge, level3merge = level3merge))
+  merge_combos <- purrr::list_flatten(list(level2merge = level2merge, level3merge = level3merge))
   
   merge_combos_indices_bysize <- unlist(purrr::map(merge_combos, ~length(.x))) |> sort(decreasing = TRUE)
   merge_combos_ordered <- merge_combos[names(merge_combos_indices_bysize)] 

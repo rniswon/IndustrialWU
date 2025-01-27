@@ -603,3 +603,7 @@ file,Header,Value,Notes
 /NM/Industrial_NM_forJohnL.xlsx$Commercial2010,Units_annual_reported,AFY,From column header
 /NM/Industrial_NM_forJohnL.xlsx$Commercial2015,Units_annual_reported,AFY,From column header
 /NM/NM_IN_WU.xlsx$Industrial2010,Units_annual_reported,AFY,From note above data table
+/PA/PA_IN_PF_2005-2019.xlsx$IN_PF_2015-2019_Water_Use_by_Fa,ValueType,RL,NA
+/OR/read_me_072320.docx,Units_monthly,acre-feet,
+/PA/PA_IN_PF_2005-2019.xlsx$IN_PF_2015-2019_Water_Use_by_Fa,Units_annual_reported,gallons,NA
+/OR/read_me_072320.docx,Units_annual_reported,acre-feet,
