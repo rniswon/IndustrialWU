@@ -107,7 +107,7 @@ merge_withaugmentation <- function(x, y, yname) {
   merge_andreplaceNA(x = x, y = y, yname = yname, merge_vars = merge_vars, jointype = "LEFT")
 }
 
-iterative_merge_siteselection <- function(WUdata, siteselectiondata, mergevars) {
+iterative_merge_siteselection <- function(WUdata, siteselectiondata, mergevars, verbose = FALSE) {
   # this function does the merging of the site selection data into the WU data. 
   # the merge is a left merge, so ideally no new lines will be added
   # in practice, sometimes duplicates are created. 
@@ -129,7 +129,7 @@ iterative_merge_siteselection <- function(WUdata, siteselectiondata, mergevars) 
     dplyr::summarise(dplyr::across(contains("SITESELECTION"), ~paste(unique(.), collapse = " _OR_ ")),
               .groups = "drop") 
     m <- paste("Merging by", paste(mergevars, collapse = ", "), "produced", nrow(merge_success),  "matches")
-  message(m)
+    if(verbose) {message(m)}
   
   merge_fail <- merge_dat %>% dplyr::filter(is.na(SITESELECTION_FACILITYID)) %>% 
     dplyr::select(all_of(names(WUdata)))

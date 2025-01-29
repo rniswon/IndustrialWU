@@ -149,28 +149,13 @@ handle_coordinates <- function(data, filename, header) {
 #'   result <- merge_andreplaceNA(data_frame1, data_frame2)
 #'   }
 #'
-merge_andreplaceNA <- function(x, y, yname = NULL, merge_vars = NULL, jointype = "FULL") {
-  
-  # Select columns from x that have no NA values
-  x_complete <- x |> dplyr::select(where(~!any(is.na(.))))
-  # Select columns from y that have no NA values
-  y_complete <- y |> dplyr::select(where(~!any(is.na(.))))
-  
-  # Identify common columns to use for merging
-  if(is.null(merge_vars)) {
-    merge_vars <- names(x_complete)[names(x_complete) %in% names(y_complete)]
-    if(is.null(yname)) {
-      merge_vars <- subset(merge_vars, merge_vars != "DataSource")
-    }
-  }
-  
+standard_mergeandreplace <- function(x, y, yname, merge_vars, jointype, datavars) {
   # Check if the maximum row count from grouped y exceeds the number of merge variables
   if(
     max(dplyr::pull(
       dplyr::summarize(dplyr::group_by(y, dplyr::across(all_of(merge_vars))), n = dplyr::n(), .groups = "drop"), 
       n)) > length(merge_vars)) {
     # Define data variables to be used in grouping. These cannot be summarized by group and must remain independent
-    datavars <- c("Annual_reported", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Year", "Category")
     
     # Group y by merge variables and data variables, summarizing unique values
     y_unique <- y |> 
@@ -193,6 +178,54 @@ merge_andreplaceNA <- function(x, y, yname = NULL, merge_vars = NULL, jointype =
     dplyr::select(-DataSource_new) %>%
     unique()
   if(any(class(merge) == "data.table")) {browser(); stop()}
+  return(merge)
+}
+
+merge_andreplaceNA <- function(x, y, yname = NULL, merge_vars = NULL, jointype = "FULL") {
+  
+  x <- dplyr::mutate(
+    x, 
+    dplyr::across(
+      where(is.character),
+      ~dplyr::case_when(. == "NA" ~ NA_character_, . != "NA" ~ .)))
+  y <- dplyr::mutate(
+    y, 
+    dplyr::across(
+      where(is.character),
+      ~dplyr::case_when(. == "NA" ~ NA_character_, . != "NA" ~ .)))
+  
+  datavars <- c("Annual_reported", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+  dataqualifiers <- c("Category", "Year", "ValueType")
+  
+  constantqualifiers <- y %>% 
+    select(any_of(dataqualifiers)) %>% 
+    map_dbl(., ~length(unique(.x))) %>% keep(.p = ~(. == 1)) %>% names()
+  datasubset <- y %>% select(all_of(constantqualifiers)) %>% unique() %>% 
+    select(any_of(names(x)))
+
+  filter_code <- ifelse(nrow(datasubset) > 0,
+                        paste(paste0("dplyr::filter(., ", names(datasubset), " == '", datasubset[1,], "')"), collapse = " %>% "),
+                        ".")
+  subset_x <- x %>%
+    {eval(parse(text = filter_code))}
+
+  x_complete <- {if(nrow(subset_x) > 0) {subset_x} else {x}} %>% 
+    dplyr::select(where(~{sum(is.na(.))/length(.)<0.005}))
+  # Select columns from y that have no or very few NA values  
+  y_complete <- y |> dplyr::select(where(~{sum(is.na(.))/length(.)<0.005}))
+  
+  # Identify common columns to use for merging
+  if(is.null(merge_vars)) {
+    merge_vars <- names(x_complete)[names(x_complete) %in% names(y_complete)]
+    if(is.null(yname)) {
+      merge_vars <- subset(merge_vars, merge_vars != "DataSource")
+    }
+  }
+
+    merge <- standard_mergeandreplace(x, y, yname, merge_vars, jointype,
+                                      c(datavars, dataqualifiers))
+   
   # if(sum(duplicated(merge)) > 0) {browser()} # fix problems now to keep them from propagating
   # Return the merged data frame
   return(merge)
@@ -642,7 +675,7 @@ standard_nametreatment <- function(data, filename, header, updatedCrosswalks, ex
       # Multiple columns case
       tmp <- concat_columns(data, header) %>% 
         dplyr::mutate(!!header := clean_names(as.character(.[[header]])))
-    }
+    } else {tmp <- data} # This may be used if secondary headers are available (e.g. SourceName1), but primary ones are not (e.g. SourceName)
   } else {tmp <- data}  # If the header does not exist, return the data as is
   return(tmp)
 }
@@ -1065,7 +1098,7 @@ standard_Yeartreatment <- function(data, filename, header, updatedCrosswalks, ex
 
 # Definition of various representations of "NA" (Not Available) found in datasets
 data_NAcodes <- c("", "n/a", "N/A", "NA", "NAN", "na", "nan", 
-                  "not reported yet", "closed", NA)
+                  "not reported yet", "closed", NA, "-1", "-999")
 
 #' Standard Data Treatment
 #'
@@ -1093,7 +1126,11 @@ standard_datatreatment <- function(data, filename, header) {
       } else {
         suppressWarnings({
           tmp <- data |>
-            dplyr::mutate(!!header := as.numeric(data[[header]]))
+            dplyr::mutate(!!header := 
+                            dplyr::case_when(
+                              data[[header]] %in% data_NAcodes ~ NA_real_,
+                              !data[[header]] %in% data_NAcodes ~ 
+                                as.numeric(data[[header]])))
         })
       }
     } else {tmp <- data}

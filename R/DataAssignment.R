@@ -36,7 +36,8 @@ read_in_datafile <- function(datafp, fp) {
   } else if(
     grepl(".csv|.txt|.rdb", fp)) {
     # Read CSV or text files 
-    data.table::fread(file.path(datafp, fp), fill = TRUE, header = TRUE, data.table = FALSE)
+    data.table::fread(file.path(datafp, fp), fill = TRUE, header = TRUE, 
+                      data.table = FALSE, verbose = FALSE, showProgress = FALSE)
   } else if(grepl(".xlsx|.xls", fp)) {
     # Read Excel files
     workbook_fp <- stringr::str_extract(fp, ".*(?=\\$)")  # Extract workbook filename
