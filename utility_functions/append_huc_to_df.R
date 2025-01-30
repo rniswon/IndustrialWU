@@ -31,11 +31,11 @@ append_huc_to_df <- function(input_df, hu_no, wbd_gpkg_pth) {
   selection_field <- paste0('huc', as.character(hu_no))
   
   # Filter out rows from input_df where LONGITUDE is NA
-  input_df <- input_df %>%
+  coords_df <- input_df %>%
     filter(!is.na(LONGITUDE))
   
   # Convert the filtered input dataframe to an sf object using LONGITUDE and LATITUDE as coordinates
-  input_sf <- st_as_sf(input_df, coords = c("LONGITUDE", "LATITUDE"), crs = 4326)
+  input_sf <- st_as_sf(coords_df, coords = c("LONGITUDE", "LATITUDE"), crs = 4326)
   
   # Read the specified WBD layer from the GeoPackage and transform it to the same CRS (EPSG:4326)
   wbd_sf <- st_read(dsn = wbd_gpkg_pth, layer = wbd_layer_name) %>%
