@@ -37,13 +37,15 @@ read_in_datafile <- function(datafp, fp) {
     grepl(".csv|.txt|.rdb", fp)) {
     # Read CSV or text files 
     data.table::fread(file.path(datafp, fp), fill = TRUE, header = TRUE, 
-                      data.table = FALSE, verbose = FALSE, showProgress = FALSE)
+                      data.table = FALSE, verbose = FALSE, showProgress = FALSE,
+                      colClasses = "character")
   } else if(grepl(".xlsx|.xls", fp)) {
     # Read Excel files
     workbook_fp <- stringr::str_extract(fp, ".*(?=\\$)")  # Extract workbook filename
     sheetnm <- stringr::str_extract(fp, "(?<=\\$).*")  # Extract sheet name
     suppressWarnings(suppressMessages(
-      readxl::read_excel(file.path(datafp, workbook_fp), sheet = sheetnm)))  # Read worksheet
+      readxl::read_excel(file.path(datafp, workbook_fp), sheet = sheetnm, 
+                         col_types = "text")))  # Read worksheet
   } else if(grepl(".docx", fp)) {
     # Read Word documents
     dat <- officer::read_docx(file.path(datafp, fp))  # Load the Word document
@@ -524,7 +526,6 @@ applyPIVOTrules <- function(dat, headercrosswalk, updatedCrosswalks) {
       intr <- list(mutatecode = mutatecode, selectcode = selectcode, pivotcode = pivotcode, filtercode = filtercode)
       intr
     })
-
     # Evaluate the constructed transformation instructions on the dataset
     dat2 <- suppressWarnings({dat %>% 
         {eval(parse(text = paste(unlist(instructions, use.names = FALSE), 
