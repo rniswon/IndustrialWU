@@ -1620,3 +1620,46 @@ Category,"COM, DOM",CO
 Category,PH,TE
 Category,PN,TE
 Category,OT,NA_character_
+ValueType,Withdrawal,WD
+ValueType,Transfer In,TR
+ValueType,Transfer Out,TR
+ValueType,Delivery,TR
+ValueType,Return,RL
+ValueType,/VA/VDEQ_WUDR_ConsUse/VDEQ_WUDR_ConsUse_discharge_facility.csv,RL
+ValueType,/VA/VDEQ_WUDR_ConsUse/VDEQ_WUDR_ConsUse_discharge_site.csv,RL
+ValueType,/VA/VDEQ_WUDR_ConsUse/VDEQ_WUDR_ConsUse_withdrawal_facility.csv,WD
+ValueType,/VA/VDEQ_WUDR_ConsUse/VDEQ_WUDR_ConsUse_withdrawal_site.csv,WD
+SourceType,Well,GW
+SourceType,Reservoir,SW
+SourceType,Drain,GW
+SourceType,Well/Spring,GW
+SourceType,Tunnel,PS
+SourceType,Well Field,GW
+SourceType,Well/Stream,GW
+SourceType,Surface Water Intake,SW
+SourceType,outfall,SW
+SourceType,Transfer,PS
+Category,Mgt Plan,PS
+Category,Water Supplier,PS
+Category,Domestic,PS
+Category,Sewage Treatment,RM
+Category,Agricultural,AG
+Category,Power (Hydro-Elec),TE
+Category,Geothermal,TE
+Category,Power (Fossil-Fuel),TE
+Category,Power (Geothermal),TE
+Category,manufacturing,IN
+Category,industrial,IN
+Category,unknown,NA_character_
+Category,commercial,CO
+Category,municipal,PS
+Category,wwtp,RM
+Category,fossilpower,TE
+Category,mining,MI
+Category,hydropower,TE
+Category,nuclearpower,TE
+Category,agriculture,AG
+Category,gw2_private,PS
+Category,gw2_municipal,PS
+Units_monthly,mgallons,Mgal
+Units_annual_reported,mgallons,Mgal
