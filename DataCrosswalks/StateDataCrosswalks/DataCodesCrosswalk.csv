@@ -1548,3 +1548,118 @@ Method_monthly,OTH; Integrator,Metered
 Method_monthly,OTH; water truck loads,Metered
 Method_monthly,OTH; Well mounted flow totalizing meter recorded monthly.,Metered
 Units_annual_reported,millions of gallons,Mgal
+ValueType,/TN/2006_WITHDRAWALS.xlsx$_2006_WITHDRAWALS,WD
+ValueType,/TN/2007 WITHDRAWALS.xlsx$_2007_WITHDRAWALS,WD
+ValueType,/TN/2008 WITHDRAWALS.xlsx$_2008_WITHDRAWALS,WD
+ValueType,/TN/WW_Info 2009-2019.xlsx$09-19 Discharges,RL
+ValueType,/TN/WW_Info 2009-2019.xlsx$09-19 Withdrawals,WD
+ValueType,/TN/WW_Info 2009-2019.xlsx$Discharge_Sites,RL
+ValueType,/TN/WW_Info 2009-2019.xlsx$WW_Sites,WD
+ValueType,/TN/WW_Info 2020.xlsx$20 Discharge,RL
+ValueType,/TN/WW_Info 2020.xlsx$20 Withdrawal,WD
+ValueType,/TN/WW_Info 2020.xlsx$Discharge_Sites,RL
+ValueType,/TN/WW_Info 2020.xlsx$WW_Sites,WD
+SourceType,SEPTIC,WW
+SourceType,WASTEWATER SPRAY,WW
+SourceType,STREAM,SW
+SourceType,LAKE AND POND,SW
+SourceType,SEWER,WW
+SourceType,Public Sewer,WW
+SourceType,LAGOON,SW
+SourceType,RSF SYSTEM,WW
+SourceType,PUBLIC SEWER,WW
+SourceType,Other,NA_character_
+SourceType,Septic Tank,WW
+SourceType,SEPTIC SYSTEM,WW
+SourceType,WELL INJECTION,GW
+SourceType,SEPTIC TANK,WW
+SourceType,LAND APPLICATION,WW
+SourceType,SPRING,SW
+SourceType,OUTFALL 001,SW
+SourceType,OUTFLALL 002,SW
+SourceType,OUTFALL 003,SW
+SourceType,BAYOU,SW
+SourceType,LAKE,SW
+SourceType,WASTE SPRAY,WW
+SourceType,RIVER,SW
+SourceType,WW PLANT,WW
+SourceType,?,NA_character_
+SourceType,POND,SW
+SourceType,STREAM OR SEWER,WW
+SourceType,Sewer,WW
+SourceType,ROADSIDE DITCH,SW
+SourceType,MILL EFFLUENT,WW
+SourceType,SALT LAKE CREEK,SW
+SourceType,OFFSITE,NA_character_
+SourceType,TMSP Permit,NA_character_
+SourceType,OUTFALL,SW
+SourceType,CUMBERLAND RIVER,SW
+SourceType,ONSITE WWTB,WW
+SourceType,OUTFALL 002,SW
+SourceType,P,PS
+SourceType,NORTHWOOD BRANCH,SW
+SourceType,L,SW
+SourceType,/SC/qry_DHEC_surfacewater_POR.xlsx$qry_DHEC_surfacewater_POR,SW
+SourceType,/SC/qry_DHEC_wateruse_GW_POR.xlsx$qry_DHEC_wateruse_GW_POR,GW
+Category,Secondary Industry w/o ELGs,IN
+Category,Secondary Industry w ELGs,IN
+Category,Primary Industry,IN
+Category,N/A,NA_character_
+Category,RECREATIONAL,CO
+Category,MINING,MI
+Category,IIRRIGATION,IR
+Category,HYDROELECTRIC,TE
+Category,RECREATION,CO
+Category,DOMESTIC,PS
+Category,NAVIGATION,CO
+Category,DEWATERING,MI
+Category,THERMAL PLANT,TE
+Category,NUCLEAR PLANT,TE
+Category,Thermal Plant,TE
+Category,"COM, DOM",CO
+Category,PH,TE
+Category,PN,TE
+Category,OT,NA_character_
+ValueType,Withdrawal,WD
+ValueType,Transfer In,TR
+ValueType,Transfer Out,TR
+ValueType,Delivery,TR
+ValueType,Return,RL
+ValueType,/VA/VDEQ_WUDR_ConsUse/VDEQ_WUDR_ConsUse_discharge_facility.csv,RL
+ValueType,/VA/VDEQ_WUDR_ConsUse/VDEQ_WUDR_ConsUse_discharge_site.csv,RL
+ValueType,/VA/VDEQ_WUDR_ConsUse/VDEQ_WUDR_ConsUse_withdrawal_facility.csv,WD
+ValueType,/VA/VDEQ_WUDR_ConsUse/VDEQ_WUDR_ConsUse_withdrawal_site.csv,WD
+SourceType,Well,GW
+SourceType,Reservoir,SW
+SourceType,Drain,GW
+SourceType,Well/Spring,GW
+SourceType,Tunnel,PS
+SourceType,Well Field,GW
+SourceType,Well/Stream,GW
+SourceType,Surface Water Intake,SW
+SourceType,outfall,SW
+SourceType,Transfer,PS
+Category,Mgt Plan,PS
+Category,Water Supplier,PS
+Category,Domestic,PS
+Category,Sewage Treatment,RM
+Category,Agricultural,AG
+Category,Power (Hydro-Elec),TE
+Category,Geothermal,TE
+Category,Power (Fossil-Fuel),TE
+Category,Power (Geothermal),TE
+Category,manufacturing,IN
+Category,industrial,IN
+Category,unknown,NA_character_
+Category,commercial,CO
+Category,municipal,PS
+Category,wwtp,RM
+Category,fossilpower,TE
+Category,mining,MI
+Category,hydropower,TE
+Category,nuclearpower,TE
+Category,agriculture,AG
+Category,gw2_private,PS
+Category,gw2_municipal,PS
+Units_monthly,mgallons,Mgal
+Units_annual_reported,mgallons,Mgal
