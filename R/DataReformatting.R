@@ -669,12 +669,12 @@ standard_nametreatment <- function(data, filename, header, updatedCrosswalks, ex
         tmp <- handle_headers(data, filename, header, updatedCrosswalks, existingCrosswalks)
       } else {
         tmp <- data %>%
-          dplyr::mutate(!!header := clean_names(as.character(.[[header]])))
+          dplyr::mutate(!!header := local_clean_names(as.character(.[[header]])))
       }
     } else if(length(grep(header, names(data))) > 1) {
       # Multiple columns case
       tmp <- concat_columns(data, header) %>% 
-        dplyr::mutate(!!header := clean_names(as.character(.[[header]])))
+        dplyr::mutate(!!header := local_clean_names(as.character(.[[header]])))
     } else {tmp <- data} # This may be used if secondary headers are available (e.g. SourceName1), but primary ones are not (e.g. SourceName)
   } else {tmp <- data}  # If the header does not exist, return the data as is
   return(tmp)
@@ -684,7 +684,7 @@ f_gsub <- function(pattern, replacement, x) {
   str_replace_all(x, pattern, replacement)
   }
 
-clean_names <- function(x) {
+local_clean_names <- function(x) {
   x_standard <- fedmatch::clean_strings(x, common_words = fedmatch::corporate_words)
   x_upper <- str_to_upper(x_standard)
   # these are the changes that the site selection team did to their data
@@ -1157,50 +1157,88 @@ standard_datatreatment <- function(data, filename, header) {
 #'   result <- reformat_data(data_frame, updated_crosswalks, existing_crosswalks, "State")
 #'   }
 #'
+#'
+subset_vector <- function(x, y) {
+  x[which(x %in% gsub("\\.\\.\\.[[:digit:]]+", "", y))]
+}
+
 reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, parallel = FALSE) {
   # if names of columns have changed in input data on the disk, this function may error, and the HeaderCrosswalk.csv will need to be updated to match the changes made to the data
   list(standard_datacodestreatment, standard_nametreatment, standard_idtreatment, 
        standard_HUCtreatment, standard_Addresstreatment, standard_coordinatetreatment,
        standard_Yeartreatment, standard_datatreatment) # call these to let the targets package know that they are used in this function
   
+ x <- purrr::list_flatten(x)
+  
+  available_columns <- unique(unlist(map(x, ~names(.x))))
   # Define column groups for standardization
-  datacodecolumns_force <- c("ValueType", "SourceType", "Category", "Saline", 
-                             "Units_monthly", "Method_monthly", "Units_annual_reported",
-                             "Method_annual_reported"
-                             )
-  datacodecolumns_unforce <- c("Description", "Datum", "Projection", "DataProtected")
-  namecolumns <- c("FacilityName", "FacilityName1", "FacilityName2", "SourceName",
-                   "SourceName1", "SourceName2", "AquiferName1", "AquiferName2",
-                   "BasinName1", "BasinName2")
-  idcolumns <- c("FacilityNumber", "FacilityNumber1", "FacilityNumber2", "SourceNumber",
-                 "SourceNumber1", "SourceNumber2", "NAICS", "SIC")
-  HUCcolumns <- c("HUC8", "HUC10", "HUC12")
-  Addresscolumns <- c("Address1", "City1", "State1", "Zip1", "Address2", "City2",
-                      "State2", "Zip2", "County1", "County2")
-  coordinatecolumns <- c("Lat", "Lon")
-  Yearcolumns <- "Year"
-  datacolumns <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", 
-                   "Sep", "Oct", "Nov", "Dec", "Annual_reported")
+  datacodecolumns_force <- subset_vector(
+    c("ValueType", "SourceType", "Category", "Saline", 
+      "Units_monthly", "Method_monthly", "Units_annual_reported",
+      "Method_annual_reported"
+    ), available_columns)
+  datacodecolumns_unforce <- subset_vector(c("Description", "Datum", "Projection", "DataProtected"), available_columns)
+  namecolumns <- subset_vector(c("FacilityName", "FacilityName1", "FacilityName2", "SourceName",
+                                 "SourceName1", "SourceName2", "AquiferName1", "AquiferName2",
+                                 "BasinName1", "BasinName2"), available_columns)
+  idcolumns <- subset_vector(c("FacilityNumber", "FacilityNumber1", "FacilityNumber2", "SourceNumber",
+                               "SourceNumber1", "SourceNumber2", "NAICS", "SIC"), available_columns)
+  HUCcolumns <- subset_vector(c("HUC8", "HUC10", "HUC12"), available_columns)
+  Addresscolumns <- subset_vector(c("Address1", "City1", "State1", "Zip1", "Address2", "City2",
+                                    "State2", "Zip2", "County1", "County2"), available_columns)
+  coordinatecolumns <- subset_vector(c("Lat", "Lon"), available_columns)
+  Yearcolumns <- subset_vector("Year", available_columns)
+  datacolumns <- subset_vector(c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", 
+                                 "Sep", "Oct", "Nov", "Dec", "Annual_reported"), available_columns)
+
   
   # Create treatment code strings for each column type
   package_call <- ifelse(parallel, "furrr::future_", "purrr::")
-  datacodes_f_code <- paste0(
-    package_call, "imap(., ~standard_datacodestreatment(.x, .y, '", datacodecolumns_force, 
-    "', updatedCrosswalks, existingCrosswalks, force = TRUE), .progress = TRUE)", collapse = " %>% "
-  )
-  datacodes_u_code <- paste0(
-    package_call, "imap(., ~standard_datacodestreatment(.x, .y, '", datacodecolumns_unforce, 
-    "', updatedCrosswalks, existingCrosswalks, force = FALSE), .progress = TRUE)", collapse = " %>% "
-  )
-  names_code <- paste0(
-    package_call, "imap(., ~standard_nametreatment(.x, .y, '", namecolumns, 
-    "', updatedCrosswalks, existingCrosswalks), .progress = TRUE)", collapse = " %>% ")
-  ids_code <- paste0(package_call, "map(., ~standard_idtreatment(.x, '", idcolumns, "'), .progress = TRUE)", collapse = " %>% ")
-  HUCs_code <- paste0(package_call, "map(., ~standard_HUCtreatment(.x, '", HUCcolumns, "'), .progress = TRUE)", collapse = " %>% ")
-  Addresses_code <- paste0(package_call, "imap(., ~standard_Addresstreatment(.x, .y, '", Addresscolumns, "'), .progress = TRUE)", collapse = " %>% ")
-  coordinates_code <- paste0(package_call, "imap(., ~standard_coordinatetreatment(.x, .y, '", coordinatecolumns, "'), .progress = TRUE)", collapse = " %>% ")
-  years_code <- paste0(package_call, "imap(., ~standard_Yeartreatment(.x, .y, '", Yearcolumns, "', updatedCrosswalks, existingCrosswalks), .progress = TRUE)", collapse = " %>% ")
-  data_code <- paste0(package_call, "imap(., ~standard_datatreatment(.x, .y,'", datacolumns, "'), .progress = TRUE)", collapse = " %>% ")
+  datacodes_f_code <- ifelse(
+    length(datacodecolumns_force) > 0,
+    paste0(package_call, "imap(., ~standard_datacodestreatment(.x, .y, '", datacodecolumns_force, "', updatedCrosswalks, existingCrosswalks, force = TRUE))", collapse = " %>% "),
+    ".")
+
+  datacodes_u_code <- ifelse(
+    length(datacodecolumns_unforce) > 0,
+    paste0(package_call, "imap(., ~standard_datacodestreatment(.x, .y, '", datacodecolumns_unforce, "', updatedCrosswalks, existingCrosswalks, force = FALSE))", collapse = " %>% "),
+    ".")
+  
+  names_code <- ifelse(
+    length(namecolumns) > 0,
+    paste0(package_call, "imap(., ~standard_nametreatment(.x, .y, '", namecolumns, "', updatedCrosswalks, existingCrosswalks))", collapse = " %>% "),
+    ".")
+  
+  ids_code <- ifelse(
+    length(idcolumns) > 0,
+    paste0(package_call, "map(., ~standard_idtreatment(.x, '", idcolumns, "'))", collapse = " %>% "),
+    ".")
+  
+  HUCs_code <- ifelse(
+    length(HUCcolumns) > 0,
+    paste0(package_call, "map(., ~standard_HUCtreatment(.x, '", HUCcolumns, "'))", collapse = " %>% "),
+    ".")
+  
+  Addresses_code <- ifelse(
+    length(Addresscolumns) > 0,
+    paste0(package_call, "imap(., ~standard_Addresstreatment(.x, .y, '", Addresscolumns, "'))", collapse = " %>% "),
+    ".")
+  
+  coordinates_code <- ifelse(
+    length(coordinatecolumns) > 0,
+    paste0(package_call, "imap(., ~standard_coordinatetreatment(.x, .y, '", coordinatecolumns, "'))", collapse = " %>% "),
+    ".")
+  
+  years_code <- ifelse(
+    length(Yearcolumns) > 0,
+    paste0(package_call, "imap(., ~standard_Yeartreatment(.x, .y, '", Yearcolumns, "', updatedCrosswalks, existingCrosswalks))", collapse = " %>% "),
+    ".")
+  
+  data_code <- ifelse(
+    length(datacolumns) > 0,
+    paste0(package_call, "imap(., ~standard_datatreatment(.x, .y,'", datacolumns, "'))", collapse = " %>% "),
+    ".")
+  
   # As noted in `manual_updates`, `|>` is the base R pipe function
   # In the next block of code, I've used `|>` where possible, but I had to use `%>%` for the lines that parse the written code
   # The reason, I think, is that the `%>%` operator from dplyr allows you to pass an object (here a list) along using the `.` syntax while the `|>` operator does not.
@@ -1231,14 +1269,31 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, parallel = F
   return(x_munged)
 }
 
-merge_formatteddata <- function(x_munged = list(), updatedCrosswalks, existingCrosswalks, data = c("State", "National")) {
+merge_formatted_National_data <- function(x_munged = list(), updatedCrosswalks, existingCrosswalks) {
+  # This function merges the data that was reformatted together. 
+  # State data is merged by state and then combined with row_bind
+  # National data is merged together for each data set
+  x_munged_indices_bysize <- unlist(purrr::map(x_munged, ~length(.x))) |> sort(decreasing = TRUE)
+  x_merge_ready <- x_munged[names(x_munged_indices_bysize)] |> purrr::keep(~{nrow(.) > 0}) 
+    if(length(x_merge_ready) > 1) {
+      x_all <- purrr::map(x_merge_ready, ~plugFacilityName(.x, drop = TRUE)) %>%
+        purrr::reduce2(.x = ., .y = names(.), .f = merge_andreplaceNA, 
+                       .init = dplyr::mutate(.[[1]], DataSource = names(.)[1]))
+    } else {x_all <- pluck(x_merge_ready, 1)}
+  ordered <- c(names(updatedCrosswalks$HeaderCrosswalk), "DataSource")
+  
+  x_ordered <- x_all |> dplyr::select(any_of(ordered))
+  
+  return(x_ordered)
+}
+
+merge_formatted_indState_data <- function(x_munged = list(), updatedCrosswalks, existingCrosswalks) {
   # This function merges the data that was reformatted together. 
   # State data is merged by state and then combined with row_bind
   # National data is merged together for each data set
   x_munged_indices_bysize <- unlist(purrr::map(x_munged, ~length(.x))) |> sort(decreasing = TRUE)
   x_merge_ready <- x_munged[names(x_munged_indices_bysize)] |> purrr::keep(~{nrow(.) > 0}) 
   
-  if(data == "State") {
     if(exists("stopflag", envir = .GlobalEnv)) {
       if(get("stopflag", envir = .GlobalEnv) == TRUE) {
         messagelog <- get("messagelog", envir = .GlobalEnv)
@@ -1268,33 +1323,30 @@ merge_formatteddata <- function(x_munged = list(), updatedCrosswalks, existingCr
         stop("Execution halted to edit data crosswalks")
       }
     }
-    
+
     x_bystate <- purrr::map(fedmatch::State_FIPS$Abbreviation, ~{
       st <- .x; purrr::keep_at(x_merge_ready, ~grepl(paste0("/", st, "/"), .))
       }); names(x_bystate) <- fedmatch::State_FIPS$Abbreviation
     x_readystates <- purrr::keep(x_bystate, ~length(.) > 0)
+    if(any(grepl("KY", names(x_readystates)))) {browser()}
     x_simplestates <- purrr::map(x_readystates, ~{
       purrr::reduce2(.x = .x, .y = names(.x), .f = merge_andreplaceNA, 
                      .init = dplyr::mutate(.x[[1]], DataSource = names(.x)[1]))})
-    dplyr_bind_rows <- dplyr::bind_rows
-    x_all <- do.call("dplyr_bind_rows", x_simplestates) %>% 
-      plugFacilityName(drop = FALSE)
-  } else if(data == "National") {
-    if(length(x_merge_ready) > 1) {
-      x_all <- purrr::map(x_merge_ready, ~plugFacilityName(.x, drop = TRUE)) %>%
-        purrr::reduce2(.x = ., .y = names(.), .f = merge_andreplaceNA, 
-                       .init = dplyr::mutate(.[[1]], DataSource = names(.)[1]))
-    } else {x_all <- pluck(x_merge_ready, 1)}
-    
-  }
-  
+
+    return(x_simplestates)
+}
+
+merge_formatted_allState_data <- function(x_simplestates = list(), updatedCrosswalks) {
+  dplyr_bind_rows <- dplyr::bind_rows
+  x_all <- do.call("dplyr_bind_rows", list_flatten(x_simplestates)) %>% 
+    plugFacilityName(drop = FALSE)
   
   ordered <- c(names(updatedCrosswalks$HeaderCrosswalk), "DataSource")
   
   x_ordered <- x_all |> dplyr::select(any_of(ordered))
   
   return(x_ordered)
-}
+  }
 
 #' Plug Facility Name
 #'
@@ -1339,26 +1391,34 @@ plugFacilityName <- function(x, drop = TRUE) {
 #'   }
 #'
 write_allstates <- function(x) {
-  statedir <- file.path("FormattedDataOutputs","Statewise")
-  purrr::map(dplyr::group_split(x, .by = State, .keep = FALSE), 
-             ~{
-               if(!dir.exists(statedir)) {
-                 dir.create(statedir)
-               }
-               stname <- unique(.x$State)
-               if(nrow(.x) > 100000) {
-                 purrr::map(dplyr::group_split(.x, .by = Year, .keep = FALSE),
-                            ~{
-                              yr <- unique(.x$Year)
-                              write.csv(.x, file.path(statedir, 
-                                                      paste0(stname, yr, "_formatted.csv")), 
-                                        row.names = FALSE)})
-                 } else {
-                 write.csv(x = .x, file = file.path(statedir, paste0(stname, "_formatted.csv")), row.names = FALSE)
-                   }
-               })
-  write.csv(x, "FormattedDataOutputs/AllStates.csv", row.names = FALSE)
-  write.csv(x, "Industrial model/INWU_task_folders/Data_processing/SWUDSandNONSWUDS_AllStates.csv")
+  data.table::fwrite(x, "FormattedDataOutputs/AllStates.csv", row.names = FALSE, quote = TRUE, na = "NA")
+  data.table::fwrite(x, "Industrial model/INWU_task_folders/Data_processing/SWUDSandNONSWUDS_AllStates.csv",, row.names = FALSE, quote = TRUE, na = "NA")
   save(x, file = "FormattedDataOutputs/AllStates.RDa")
   return("FormattedDataOutputs/AllStates.csv")
+}
+
+split_allstates <- function(x) {
+
+  state_split <- dplyr::group_split(x, .by = State, .keep = FALSE)
+  splits <- purrr::map(state_split, 
+             ~{
+               if(nrow(.x) > 100000) {
+                 tmp <- dplyr::group_split(.x, .by = Year, .keep = FALSE)
+                 names(tmp) <- map(tmp, ~unique(.x$Year))
+               } else {tmp <- .x}
+               tmp
+             }); names(splits) <- map_chr(state_split, ~unique(.x$State)); splits <- list_flatten(splits)
+  return(splits)
+             
+  }
+
+write_indstates <- function(x) {
+  statedir <- file.path("FormattedDataOutputs","Statewise")
+  if(!dir.exists(statedir)) {dir.create(statedir)}
+  
+  if(length(list_flatten(x)) > 1) {browser()} else {
+    x <- list_flatten(x)
+    filename <- paste0(gsub("_", "", names(x)), "_formatted.csv")
+      data.table::fwrite(as.data.table(x[[1]]), file = file.path(statedir, filename), row.names = FALSE, quote = TRUE, na = "NA")
+  }
 }

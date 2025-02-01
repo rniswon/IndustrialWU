@@ -703,7 +703,11 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks,
   })
   names(dat) <- headers_classified$file
   
-  return(dat)
+  if(data == "State") {
+    dat_branchready <- purrr::map(fedmatch::State_FIPS$Abbreviation, ~{
+      dat[which(grepl(paste0("/", .x, "/"), names(dat)))]}) %>% purrr::compact()
+  } else {dat_branchready <- dat}
+  return(dat_branchready)
 }
 
 
