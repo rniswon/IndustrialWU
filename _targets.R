@@ -43,7 +43,8 @@ list(
                                                 "INWU_task_folders", 
                                                 "Data_processing",
                                                 "StateFIPS"), 
-                                      make_fipsURLS())),
+                                      make_fipsURLS()),
+               error = "continue"),
   tar_target(FIPSdata, compile_fips(FIPSstates), format = "file"),
   tar_target(datafp, "state_data", format = "file"),  # Load state data file
   tar_target(existingCrosswalks, "DataCrosswalks/StateDataCrosswalks", format = "file"),  # Load existing state crosswalks

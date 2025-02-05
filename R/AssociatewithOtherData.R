@@ -114,9 +114,16 @@ iterative_merge_siteselection <- function(WUdata, siteselectiondata, mergevars, 
   # there is a warning produced that indicates when duplicates are created so that they can be addressed in future updates
   # browser()
   
-  siteselection_subset <- dplyr::filter(siteselectiondata, !!sym(mergevars[[1]]) %in% 
-                                   unique(WUdata[[mergevars[[1]]]])) %>%
-    dplyr::filter(!dplyr::if_any(dplyr::all_of(mergevars), is.na))
+  siteselection_subset <- siteselectiondata %>%
+    tidytable::filter(., !tidytable::if_any(dplyr::all_of(mergevars), is.na)) %>%
+    {eval(parse(text = paste(map(1:length(mergevars), 
+                                 ~paste0("tidytable::filter(., !!sym(mergevars[[", .x, "]]) %in% unique(WUdata[[mergevars[[", .x, "]]]])) ")), 
+                             collapse = " %>% ")))} %>%
+    as_tibble()
+  
+  ss_indices <- eval(parse(text = paste0("str_c(", paste0("siteselection_subset$", mergevars, collapse = ", "), ")")))
+  WU_indices <- eval(parse(text = paste0("str_c(", paste0("WUdata$", mergevars, collapse = ", "), ")")))
+  if(any(ss_indices %in% WU_indices)) {
   merge_dat <- rquery::natural_join(WUdata, siteselection_subset, by = mergevars, jointype = "LEFT") 
   if(nrow(merge_dat) != nrow(WUdata)) {
     nadd <- nrow(merge_dat) - nrow(WUdata)
@@ -133,6 +140,10 @@ iterative_merge_siteselection <- function(WUdata, siteselectiondata, mergevars, 
   
   merge_fail <- merge_dat %>% dplyr::filter(is.na(SITESELECTION_FACILITYID)) %>% 
     dplyr::select(all_of(names(WUdata)))
+  } else {
+    merge_success <- NULL
+    merge_fail <- WUdata
+  }
   
   return(list(merge_success = merge_success, merge_fail = merge_fail))
 }
