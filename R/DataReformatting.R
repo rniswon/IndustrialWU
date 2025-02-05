@@ -83,7 +83,12 @@ pull_stateshapes <- function() {
   if(exists("stateshapes", envir = .GlobalEnv)) {
     tmp <- get("stateshapes", envir = .GlobalEnv)
   } else {
-    tmp <- tigris::states()
+    tmp <- tryCatch(tigris::states(), error = function(e) NULL)
+    if(is.null(tmp)) {tmp <- tryCatch(tigris::states(year = 2020), error = function(e) NULL)}
+    if(is.null(tmp)) {
+      tmp <- rnaturalearth::ne_states(country = "united states of america") %>%
+        dplyr::rename(STUSPS = postal)
+    }
     assign("stateshapes", tmp, envir = .GlobalEnv)
   }
   return(tmp)
@@ -182,7 +187,6 @@ standard_mergeandreplace <- function(x, y, yname, merge_vars, jointype, datavars
 }
 
 merge_andreplaceNA <- function(x, y, yname = NULL, merge_vars = NULL, jointype = "FULL") {
-  
   x <- dplyr::mutate(
     x, 
     dplyr::across(
@@ -1323,12 +1327,11 @@ merge_formatted_indState_data <- function(x_munged = list(), updatedCrosswalks, 
         stop("Execution halted to edit data crosswalks")
       }
     }
-
     x_bystate <- purrr::map(fedmatch::State_FIPS$Abbreviation, ~{
       st <- .x; purrr::keep_at(x_merge_ready, ~grepl(paste0("/", st, "/"), .))
       }); names(x_bystate) <- fedmatch::State_FIPS$Abbreviation
     x_readystates <- purrr::keep(x_bystate, ~length(.) > 0)
-    if(any(grepl("KY", names(x_readystates)))) {browser()}
+    # if(any(grepl("DE", names(x_readystates)))) {browser()}
     x_simplestates <- purrr::map(x_readystates, ~{
       purrr::reduce2(.x = .x, .y = names(.x), .f = merge_andreplaceNA, 
                      .init = dplyr::mutate(.x[[1]], DataSource = names(.x)[1]))})

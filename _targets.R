@@ -10,14 +10,14 @@
 # Note that tidytable and dplyr have many functions named the same. 
 # Suggest specifying in the script dplyr:: or tidytable::
 # dplyr is loaded last so that it is the default
-debugMode <- FALSE
+debugMode <- TRUE
 runParallel <- TRUE
 
 packages <- c("tibble", "stringr", "purrr", "readxl", "svDialogs", "tidytable", 
               "dplyr", "archive", "tidyr", "readr", "lubridate", "magrittr", 
               "furrr", "data.table", "sf", "rquery", "officer", "pdftools", "rqdatatable",
               "fedmatch", "janitor", "zoo", "varhandle", "targets", "tarchetypes",
-              "tigris", "crew")
+              "tigris", "crew", "rnaturalearth", "rnaturalearthhires")
 
 # Function to install missing packages
 optinstall <- function(x) {
@@ -41,11 +41,14 @@ if(runParallel) {
     workers = 4, # can run in parallel
     seconds_idle = 10
   )
+  tar_option_reset()
   tar_option_set(packages = packages,  # Define required packages
                  format = "rds", # Set default storage format to "rds"
                  controller = controller 
   )       
 } else {
+  print("Controller theoretically switched")
+  tar_option_reset()
   tar_option_set(packages = packages,  # Define required packages
                  format = "rds",
                  controller = NULL
