@@ -30,7 +30,10 @@ library(readxl)
 library(dplyr)
 library(plotly)
 library(sp)
+library(readr)
 options(scipen=999)
+
+source("../utility_functions/export_figure.R")
 ```
 
 ## Now we need some inputs from the user
@@ -42,21 +45,20 @@ options(scipen=999)
 # Path to INWU model folder on local machine
 inwu_model_folder <- "D:/DOI/GS-W-WaterUse - Industrial model"
 
+counties_shapefile_path <- "D:\\water_use\\water_use_industrial\\IndustrialWU\\data\\cb_2018_us_county_500k.shp"
+
+GNIS_path <- paste0(inwu_model_folder, '\\INWU_task_folders\\Site_selection\\GIS\\Ref_layers\\GNIS\\US_GNIS_for_GIS.csv')
+
 only_include_compilation <- TRUE
+
+export_figures <- TRUE
+
+output_folder = '../outputs/'
 ```
 
 ## Defining Custom Functions
 
-```{r}
 
-remove_individual_datasets <- function(df){
-  df <- df %>%
-    select(NAICS3, sum_emp_compilation, sum_estab_compilation)
-  
-  return(df)
-}
-
-```
 
 ## Notes on this assessment
 
@@ -80,7 +82,7 @@ Once loaded and formatted summaries are made of the nationwide dataset by 2 digi
 
 ```{r}
 inwu_facility_csv <- paste0(inwu_model_folder,
-                            "/INWU_task_folders/Site_selection/Industrial_site_list/USEPA_HIFLD_EIA_PPP_facility_v5.1.csv")
+                            "/INWU_task_folders/Site_selection/Industrial_site_list/USEPA_HIFLD_EIA_PPP_facility_v7.csv")
 
 inwu_facility_df <- read_csv(inwu_facility_csv,
                              col_types = cols(
@@ -91,6 +93,72 @@ inwu_facility_df <- read_csv(inwu_facility_csv,
                                TotPerson = col_integer(),
                                JobsReported = col_integer(),
                                                  ))
+```
+
+```{r}
+
+populate_coords_cty_centroid <- function(input_df, lat_field, long_field, GNIS_layer) {
+  
+  # Preparing Counties Layer
+  
+  GNIS_df <- read_csv(GNIS_layer)
+  
+  GNIS_df <- GNIS_df %>%
+    mutate(PP_NAME = str_to_upper(PP_NAME)) %>%
+    select(PP_NAME, STATE_ABBV, LAT, LONG)
+  
+  # Preparing Facilities Layer
+  
+  facility_fields <- names(input_df)
+  
+  facilities_with_coords <- input_df %>%
+    filter(!is.na(LATITUDE))
+  
+  facilities_missing_coords <- input_df %>%
+    filter(is.na(LATITUDE))
+  
+  # Resolving coordinates
+  
+  unresolved_coords_count <- nrow(facilities_missing_coords)
+  raw_facilities_count <- nrow(input_df)
+  
+  print(paste0(unresolved_coords_count,' of ', raw_facilities_count, ' missing cordinates'))
+
+  facilities_resolved_coords_df <- facilities_missing_coords %>%
+    inner_join(GNIS_df, by = c("CITY" = "PP_NAME", "STATE" = "STATE_ABBV")) %>%
+    mutate(LATITUDE = coalesce(LATITUDE, LAT),
+           LONGITUDE = coalesce(LONGITUDE, LONG),
+           LL_Src = 'City Centroid') %>%
+    select(facility_fields) %>%
+    distinct(FACILITYID, .keep_all = TRUE)
+  
+  resolved_coordinates <- nrow(facilities_resolved_coords_df)
+  
+  print(paste0(resolved_coordinates, ' facility coordinates have been resolved'))
+  
+  input_df <- rbind(facilities_with_coords,
+                    facilities_resolved_coords_df)
+  
+  return(input_df)
+}
+
+
+inwu_facility_df <- populate_coords_cty_centroid(inwu_facility_df, 'LATITUDE', 'LONGITUDE', GNIS_path)
+
+#counties_sf <- st_read(counties_shapefile_path)
+
+#facilities_missing_coords <- inwu_facility_df %>%
+  #filter(is.na(LATITUDE))
+
+ 
+
+
+```
+
+
+
+
+```{r}
 
 # Rename the fields
 inwu_facility_df <- inwu_facility_df %>%
@@ -107,8 +175,7 @@ inwu_facility_df <- inwu_facility_df %>%
   ) %>%
   mutate(
     NAICS3 = substr(NAICS, 1, 3)
-  ) %>%
-  filter(LATITUDE > 0)
+  ) 
 
 # Calculate sums and averages for each unique NAICS
 summary_inwu_df_naics3 <- inwu_facility_df %>%
@@ -131,12 +198,11 @@ summary_inwu_df_naics3 <- inwu_facility_df %>%
   )
 
 
-
 if (only_include_compilation) {
   
-  summary_inwu_df_naics3 <-
-    remove_individual_datasets(summary_inwu_df_naics3) 
-  
+  summary_inwu_df_naics3 <- summary_inwu_df_naics3 %>%
+    select(NAICS3, sum_emp_compilation, sum_estab_compilation)
+    
 }
 
 ```
@@ -212,31 +278,38 @@ summary_df_naics3 <- summary_inwu_df_naics3 %>%
 
 ## Comparing Employee Counts
 
-Here employee counts are compared by 3 digit naics. Here we only consider the top water using naics codes as determined by Boreo and Pasqualini. These categories are
+Here employee counts are compared by 3 digit naics. Here we only consider the top water using naics codes as determined by an analysis of withdrawal data done by Cheryl Buchwald
 
--   321 Wood Products
+![](images/buchwald_top_naics.png)
 
--   327 Nonmetalic mineral products
+NAICS Code	Industrial Description
+31	Manufacturing
+311	Food Manufacturing
+312	Beverage and Tobacco Product Manufacturing
+313	Textile Mills
+314	Textile Product Mills
+315	Apparel Manufacturing
+316	Leather and Allied Product Manufacturing
+321	Wood Product Manufacturing
+322	Paper Manufacturing
+323	Printing and Related Support Activities
+324	Petroleum and Coal Products Manufacturing
+325	Chemical Manufacturing
+326	Plastics and Rubber Products Manufacturing
+327	Nonmetallic Mineral Product Manufacturing
+331	Primary Metal Manufacturing
+332	Fabricated Metal Product Manufacturing
+333	Machinery Manufacturing
+334	Computer and Electronic Product Manufacturing
+335	Electrical Equipment, Appliance, and Component Manufacturing
+336	Transportation Equipment Manufacturing
+337	Furniture and Related Product Manufacturing
+339	Miscellaneous Manufacturing
 
--   311 Food and berage and tobacco products
-
--   313 Textile mills and textile product mills
-
--   315 Apparel and leather and allied products
-
--   322 Paper Products
-
--   323 Printing and related support activities
-
--   324 Petroleum and coal products
-
--   325 Chemical products
-
--   326 Plastics and rubber products
 
 ```{r}
 # Define the prefixes to filter by
-prefixes <- c("321", "327", "311", "313", "315", "322", "323", "324", "325", "326")
+prefixes <- c("322", "331", "325", "324", "337", "336", "314", "326", "312", "311")
 
 # Create a regular expression pattern
 pattern <- paste0("^(", paste(prefixes, collapse = "|"), ")")
@@ -272,6 +345,13 @@ nationwide_emp_summary_plot <- ggplot(summary_emp_long, aes(x = NAICS3, y = sum_
 # ggplotly(nationwide_emp_summary_plot) %>%
 #   layout(xaxis = list(tickangle = -45))
 nationwide_emp_summary_plot
+
+if (export_figures) {
+  
+  export_figure(nationwide_emp_summary_plot, output_dir, 'nationwide_emp_summary_plot', 10, 5, svg_output=FALSE)
+  
+}
+
 ```
 
 ## Comparing Establishment Counts
@@ -292,11 +372,16 @@ nationwide_estab_summary_plot <- ggplot(summary_estab_long, aes(x = NAICS3, y = 
   theme_bw() +  # Black and white theme
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_y_log10() +
-  scale_shape_manual(values = c(1, 2, 3, 4, 5))  # Different shapes for each type
+  scale_shape_manual(values = c(1, 2, 3, 4, 5)) 
 
-# ggplotly(nationwide_estab_summary_plot) %>%
-#   layout(xaxis = list(tickangle = -45))
 nationwide_estab_summary_plot
+
+if (export_figures) {
+  
+  export_figure(nationwide_estab_summary_plot, output_dir, 'nationwide_estab_summary_plot', 10, 5, svg_output=FALSE)
+  
+}
+
 
 ```
 
@@ -307,7 +392,6 @@ First we load a shapefile of US counties and join it to our facilities list
 \# If you want to convert it to an sf object
 
 ```{r}
-counties_shapefile_path <- "D:\\water_use\\water_use_industrial\\IndustrialWU\\data\\cb_2018_us_county_500k.shp"
 
 # Load shapefile
 counties_sf <- st_read(counties_shapefile_path)
@@ -370,6 +454,13 @@ summary_inwu_df_county <- inwu_facility_sf %>%
     .groups = 'drop'
   )
 
+if (only_include_compilation) {
+  
+  summary_inwu_df_county <- summary_inwu_df_county %>%
+    select(NAICS3, AFFGEOID, sum_emp_compilation, sum_estab_compilation)
+    
+}
+
 # Now, join with summary_cbp_df_county
 summary_inwu_df_county <- summary_inwu_df_county %>%
   inner_join(summary_cbp_df_county, 
@@ -378,16 +469,6 @@ summary_inwu_df_county <- summary_inwu_df_county %>%
 
 ```
 
-```{r}
-
-if (only_include_compilation) {
-  
-  summary_inwu_df_county <-
-    remove_individual_datasets(summary_inwu_df_county) 
-  
-}
-
-```
 
 
 ```{r}
@@ -419,20 +500,7 @@ summary_inwu_df_county <- st_drop_geometry(summary_inwu_df_county)
 
 ```{r, fig.width=14}
 
-# summary_inwu_emp_county_long <- summary_inwu_sf_county %>%
-#   pivot_longer(cols = starts_with("sum_emp"),
-#                names_to = c("emp_type"),
-#                values_to = "sum_emp")
-# 
-# summary_emp_county_boxplot <- ggplot(summary_inwu_emp_county_long, aes(x = emp_type, y = sum_emp)) +
-#   geom_boxplot() +
-#   scale_y_log10() +
-#   labs(title = "Comparison county employment from  of employment values by dataset",
-#        x = "Variables",
-#        y = "Values") +
-#   theme_minimal()
-# 
-# summary_emp_county_boxplot
+
 summary_inwu_emp_county_long <- summary_inwu_df_county %>%
   pivot_longer(cols = starts_with("sum_emp"),
                names_to = c("emp_type"),
@@ -448,6 +516,13 @@ summary_emp_county_boxplot <- ggplot(summary_inwu_emp_county_long, aes(x = NAICS
   theme_minimal()
 
 summary_emp_county_boxplot
+
+if (export_figures) {
+  
+  export_figure(summary_emp_county_boxplot, output_dir, 'summary_emp_county_boxplot', 10, 5, svg_output=FALSE)
+  
+}
+
 ```
 
 ```{r, fig.width=14}
@@ -469,25 +544,50 @@ summary_estab_county_boxplot <- ggplot(summary_inwu_estab_county_long, aes(x = N
 
 summary_estab_county_boxplot
 
+if (export_figures) {
+  
+  export_figure(summary_estab_county_boxplot, output_dir, 'summary_estab_county_boxplot', 10, 5, svg_output=FALSE)
+  
+}
+
 ```
 
 ```{r, fig.width=14}
 
-output_dir = 'outputs'
 estab_columns <- names(summary_inwu_df_county)[grepl("^sum_estab", names(summary_inwu_df_county))]
+emp_columns <- names(summary_inwu_df_county)[grepl("^sum_emp", names(summary_inwu_df_county))]
 naics_list <- unique(summary_inwu_df_county$NAICS3)
-
+custom_colors <- c(viridis(3, begin = 0.7, end = 0.9), viridis(3, begin=0.1, end = 0.3))
 for (naics in naics_list){
   
   naics_map_df <- summary_inwu_df_county %>%
     filter(NAICS3 == naics) %>%
+    filter(!is.na(NAICS3)) %>%
+    mutate(pct_diff_estab_CBP_compilation = ((sum_estab_CBP - sum_estab_compilation)/((sum_estab_CBP + sum_estab_compilation)/2)*100),
+           pct_diff_emp_CBP_compilation = ((sum_emp_CBP - sum_emp_compilation)/((sum_emp_CBP + sum_emp_compilation)/2)*100)) %>%
     right_join(counties_sf, by = c("GEOID" = "AFFGEOID")) %>%
-    mutate(sum_emp_CBP = as.integer(sum_emp_CBP),
-           sum_estab_CBP = as.integer(sum_estab_CBP)) %>%
     st_as_sf()
   
-  scale_max <- max(naics_map_df[, estab_columns], na.rm = TRUE)
-  scale_min <- min(naics_map_df[, estab_columns], na.rm = TRUE)
+  scale_max <- max(naics_map_df$sum_estab_compilation)
+  
+  # Output as .shp
+  # Check if the directory exists, if not, create it
+  output_dir <- paste0(output_folder, "/emp_estab_by_naics_maps/",naics, '/')
+  
+  if (!dir.exists(output_dir)) {
+    dir.create(output_dir)
+  }
+  
+  output_gpkg <- paste0(output_dir, naics, '_emp_estab.gpkg')
+  
+  st_write(naics_map_df, 
+           dsn = output_gpkg,  # Data Source Name (path to the GeoPackage)
+           layer = naics,      # Layer name within the GeoPackage
+           driver = "GPKG",
+           append=FALSE)
+  
+
+  # Creating Establishment Maps
   
   for (estab_col in estab_columns){
     
@@ -496,17 +596,105 @@ for (naics in naics_list){
       scale_fill_viridis_c(option = 'cividis', 
                            trans = 'log', 
                            na.value = "white",
-                           limits = c(scale_min, scale_max)) + 
+                           limits = c(1, scale_max)) + 
       labs(title = paste(naics, estab_col),
            fill = "Number of Establishments") +
       theme_minimal()
       
     print(estab_map)
-  
     
+    if (export_figures) {
+      export_figure(estab_map,
+                    output_dir,
+                    paste0(naics, '_', estab_col), 
+                    10, 
+                    5, 
+                    svg_output=FALSE)
+      }
+
     
   }
   
+  # Creating Establishment Difference Maps
+  
+  estab_difference_map <- ggplot(data = naics_map_df) + 
+    geom_sf(aes_string(fill = "pct_diff_estab_CBP_compilation")) +
+    scale_fill_gradient2(midpoint = 0, low = cividis(3)[1], mid = cividis(3)[2], high = cividis(3)[3],na.value = "white",) +
+    # scale_fill_gradient2(
+    #   low = "yellow",
+    #   mid = "lightgrey",
+    #   high = "blue",
+    #   midpoint = 0,
+    #   name = "Value",
+    #   na.value = "white") +
+    labs(title = paste("Percent Difference in Establishment Count between CBP and Facilities Dataset for ", naics)) + 
+    theme_minimal()
+  
+  print(estab_difference_map)
+  
+  scale_max <- max(naics_map_df$sum_emp_compilation)
+  
+  if (export_figures) {
+    export_figure(estab_difference_map,
+                  output_dir,
+                  paste0(naics, "_establishment_difference_map"), 
+                  10, 
+                  5, 
+                  svg_output=FALSE)
+      }
+  
+  # Creating Employee Maps
+  
+  for (emp_col in emp_columns){
+    
+    emp_map <- ggplot(data = naics_map_df) + 
+      geom_sf(aes_string(fill = emp_col)) +
+      scale_fill_viridis_c(option = 'cividis', 
+                           trans = 'log', 
+                           na.value = "white",
+                           limits = c(1, scale_max)) + 
+      labs(title = paste(naics, emp_col),
+           fill = "Number of Employees") +
+      theme_minimal()
+      
+    print(emp_map)
+    
+    if (export_figures) {
+      export_figure(emp_map,
+                    output_dir,
+                    paste(naics, '_', emp_col), 
+                    10, 
+                    5, 
+                    svg_output=FALSE)
+      }
+    
+  }
+  
+  # Creating Employee Difference Maps
+  
+  emp_difference_map <- ggplot(data = naics_map_df) + 
+    geom_sf(aes_string(fill = "pct_diff_emp_CBP_compilation")) +
+    scale_fill_gradient2(midpoint = 0, low = cividis(3)[1], mid = cividis(3)[2], high = cividis(3)[3],na.value = "white",) +
+    # scale_fill_gradient2(
+    #   low = "yellow",
+    #   mid = "lightgrey",
+    #   high = "blue",
+    #   midpoint = 0,
+    #   name = "Value",
+    #   na.value = "white",) +
+    labs(title = paste("Percent Difference in Employee Count between CBP and Facilities Dataset for ", naics)) + 
+    theme_minimal()
+  
+  print(emp_difference_map)
+  
+  if (export_figures) {
+    export_figure(emp_difference_map,
+                  output_dir,
+                  paste0(naics, "_employment_difference_map"), 
+                  10, 
+                  5, 
+                  svg_output=FALSE)
+    }
   
   # 
   # map_files <- purrr::map(estab_columns, function(estab_col) {
