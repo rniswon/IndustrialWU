@@ -22,7 +22,7 @@
 #'
 detect_readme <- function(filename, updatedCrosswalks) {
   # Extract the README entry corresponding to the provided filename from the crosswalks
-  ReadMeentry <- updatedCrosswalks$HeaderCrosswalk %>% filter(file == filename) %>%  # Filter for the specific file
+  ReadMeentry <- updatedCrosswalks$HeaderCrosswalk %>% dplyr::filter(file == filename) %>%  # Filter for the specific file
     pull(IsReadMe)  # Extract the IsReadMe column
   # Check if the README entry is not empty and return the result as a logical value
   ReadMeentry != ""
@@ -78,18 +78,51 @@ convert2decimal <- function(x) {
 #'   cleaned_data <- handle_coordinates(data, "coordinate_header")
 #'   }
 #'
-handle_coordinates <- function(data, header) {
+
+pull_stateshapes <- function() {
+  if(exists("stateshapes", envir = .GlobalEnv)) {
+    tmp <- get("stateshapes", envir = .GlobalEnv)
+  } else {
+    tmp <- tigris::states()
+    assign("stateshapes", tmp, envir = .GlobalEnv)
+  }
+  return(tmp)
+}
+
+handle_coordinates <- function(data, filename, header) {
   # Mutate the data frame to handle specified columns containing coordinates
-  tmp <- data |>
+  
+  tmp_coord_corrected <- data |>
     dplyr::mutate(dplyr::across(contains(header), ~{
       dplyr::case_when(
         . == "0" ~ NA_character_,  # Replace "0" with NA
         . == "NULL" ~ NA_character_,  # Replace "NULL" with NA
-        stringr::str_detect(., "^[[:digit:]]{2}\\.") ~ as.character(.),  # Keep values with two digits followed by a dot as is
-        stringr::str_detect(., "^[[:digit:]]{6}\\.?") ~ as.character(convert2decimal(.)),  # Convert DMS to decimal degrees
-        .default = as.character(.)  # Convert all other values to character
-      )
-    })) 
+        .default = as.character(.))}))
+  
+  st_ab <- str_extract(filename, "(?<=/)[[:upper:]]{2}(?=/)")
+  if(!is.na(st_ab)) { # for state files, check that degrees are within the bounds of the state.
+    # This helps identify when coordinates may be projections in other units (e.g. meters)
+
+    bbox <- st_bbox(pull_stateshapes() %>% dplyr::filter(STUSPS == st_ab))
+    if(header == "Lat") {bounds <- c(bbox$ymin, bbox$ymax)}
+    if(header == "Lon") {bounds <- c(bbox$xmin, bbox$xmax)}
+    check_degrees <- dplyr::between(as.numeric(str_sub(tmp_coord_corrected[[header]], 1, 2)), bounds[1], bounds[2])
+  } else {check_degrees <- TRUE} # for non-state files, assume the coordinates are in degrees and not projected
+  
+  check_dd <- stringr::str_detect(tmp_coord_corrected[[header]], "(?<=^-?)[[:digit:]]{2,3}(?=(\\.|$))") 
+  check_dms <- stringr::str_detect(tmp_coord_corrected[[header]], "^[[:digit:]]{6}(?=(\\.|$))")
+  if(all(check_degrees, na.rm = TRUE) & all((check_dd | check_dms), na.rm = TRUE)) {
+      tmp <- tmp_coord_corrected |>
+        dplyr::mutate(dplyr::across(contains(header), ~{
+          dplyr::case_when(
+            stringr::str_detect(., "^[[:digit:]]{2}\\.") ~ as.character(.),  # Keep values with two digits followed by a dot as is
+            stringr::str_detect(., "^[[:digit:]]{6}\\.?") ~ as.character(convert2decimal(.))  # Convert DMS to decimal degrees
+          )
+        })) 
+  } else {
+    tmp <- tmp_coord_corrected |>
+      dplyr::mutate(dplyr::across(contains(header), ~as.character(.)))
+  }
   
   # Return the modified data frame
   tmp
@@ -148,18 +181,18 @@ merge_andreplaceNA <- function(x, y, yname = NULL, merge_vars = NULL, jointype =
   } else {y_unique <- y} # If  maximum row count from grouped y does not exceed the number of merge variables, keep y as is
   
   if(is.null(yname)) {
-    y_named <- rename(y_unique, DataSource_new = DataSource)
+    y_named <- dplyr::rename(y_unique, DataSource_new = DataSource)
   } else {
-    y_named <- mutate(y_unique, DataSource_new = yname)
+    y_named <- dplyr::mutate(y_unique, DataSource_new = yname)
   }
   # Perform a full natural join on x and the unique version of y
   merge <- rquery::natural_join(x, y_named, by = merge_vars, jointype = jointype) %>%
-    mutate(DataSource = map2_chr(DataSource, DataSource_new, ~{
+    dplyr::mutate(DataSource = map2_chr(DataSource, DataSource_new, ~{
       paste(unique(str_split_1(paste(na.omit(c(.x, .y)), collapse = ", "), ", ")), collapse = ", ")
     })) %>% 
-    select(-DataSource_new) %>%
+    dplyr::select(-DataSource_new) %>%
     unique()
-  
+  if(any(class(merge) == "data.table")) {browser(); stop()}
   # if(sum(duplicated(merge)) > 0) {browser()} # fix problems now to keep them from propagating
   # Return the merged data frame
   return(merge)
@@ -243,7 +276,7 @@ concat_columns <- function(data, Column) {
   # Select specified columns and concatenate them using pastecomma
   tmp <- data |>
     dplyr::select(contains(Column)) |> 
-    dplyr::mutate(tmp = reduce(across(contains(Column)), .f = pastecomma)) |>
+    dplyr::mutate(tmp = reduce(dplyr::across(contains(Column)), .f = pastecomma)) |>
     dplyr::pull(tmp)
   # Remove original columns and add the concatenated column
   tmp2 <- data |>
@@ -361,7 +394,7 @@ handle_oddformats <- function(data, fp, header, updatedCrosswalks, existingCross
 #'   result <- manual_update(data_frame, "file_path", "header_name", updated_crosswalk_data, existing_crosswalk_data, suggested_options)
 #'   }
 #'
-manual_update <- function(data, fp, header, updatedCrosswalks, existingCrosswalks, inputoptions) {
+manual_update <- function(data, fp, header, updatedCrosswalks, existingCrosswalks, inputoptions, forceupdate = TRUE) {
   
   # Take the hardcoded parameters that are already in the existing crosswalk
   hardparams <- updatedCrosswalks$HardcodedManualAttributes
@@ -370,29 +403,59 @@ manual_update <- function(data, fp, header, updatedCrosswalks, existingCrosswalk
     # `|>` is the baseR version of the dplyr pipe `%>%`. They mostly work the same, but have slight differences. I'll note those differences in the function `reformat_data`.
     # I tried to change as many instances of `%>%` to `|>` as I could to reduce the number of times a specific package is needed
     found_param_manual <- hardparams |> dplyr::filter(Header == header, file == fp) |> dplyr::pull(Value)
+    # Once the hardcoded parameters crosswalk is updated, the entered value will be stored as `found_param_manual`
+    # The column designated by the `header` string in this function will be assigned the value of `found_param_manual` in the data frame
+    # The following is written in dplyr-ese. 
+    # `|>` is the native pipe operator
+    # `!!` indicates to dplyr that it needs to find the variable outside of the dataframe `data`. 
+    # Without including `!!`, dplyr::mutate will complain that there is no column called "header" in data. 
+    # With `!!`, dplyr::mutate knows that it needs to use the value of header to look for a column in data.
+    # `:=` is used here instead of `=` because header is a variable. Again, without it, dplyr::mutate would add a new column called "header" with the values of found_param_manual
+    # With `:=`, the name of the column is the value of header
+    # This could be done in base R pretty easily as well, but it would require multiple lines and my personal preference is to use dplyr because the pipes execute everything together.
+    tmp <- data |> dplyr::mutate(!!header := found_param_manual)
   } else {
-    # if the header isn't entered manual entry is needed
-    # Generate the error message
-    message = paste("Enter suspected", header, "value based on", fp, ". Suggested options are", paste(inputoptions, collapse = ", "))
-    # Add the line to the hardcoded parameters data frame that needs to be filled out by the user
-    hardparams_update <- hardparams |> add_row(file = fp, Header = header, Value = '')
-    
-    # Write the dataframe back to disk. The user can update it here. It will be tracked as a change by the targets package in the line `tar_target(existingCrosswalks, "DataCrosswalks", format = "file")` next time that tar_make() is run.
-    write.csv(hardparams_update, file = file.path(existingCrosswalks, "HardcodedManualAttributes.csv"), row.names = FALSE)
-    # Stopping the code here generates the message telling the user what to do, and also will send targets back to the existingCrosswalks target next time tar_make() is run.
-    stop(message)
-  }
-  # Once the hardcoded parameters crosswalk is updated, the entered value will be stored as `found_param_manual`
-  # The column designated by the `header` string in this function will be assigned the value of `found_param_manual` in the data frame
-  # The following is written in dplyr-ese. 
-  # `|>` is the native pipe operator
-  # `!!` indicates to dplyr that it needs to find the variable outside of the dataframe `data`. 
-  # Without including `!!`, dplyr::mutate will complain that there is no column called "header" in data. 
-  # With `!!`, dplyr::mutate knows that it needs to use the value of header to look for a column in data.
-  # `:=` is used here instead of `=` because header is a variable. Again, without it, dplyr::mutate would add a new column called "header" with the values of found_param_manual
-  # With `:=`, the name of the column is the value of header
-  # This could be done in base R pretty easily as well, but it would require multiple lines and my personal preference is to use dplyr because the pipes execute everything together.
-  tmp <- data |> dplyr::mutate(!!header := found_param_manual)
+    if(forceupdate) {
+      # manual entry is needed
+      # Generate the error message
+      m <- paste0("Enter suspected ", header, " value based on ", fp, 
+                      ". Enter these into the file HardcodedManualAttributes.csv.")
+        # The stop flag and message logs are intended to allow the code to run until all new codes have been identified.
+        # This reduces the number of times the code will be run and stopped with errors.
+        stopflag <- TRUE
+        assign("stopflag", stopflag, envir = .GlobalEnv)
+        
+        if(exists("messagelog", envir = .GlobalEnv)) {
+          messagelog <- get("messagelog", envir = .GlobalEnv) %>%
+            append(m)
+          assign("messagelog", messagelog, envir = .GlobalEnv)
+        } else {
+          messagelog <- list(m)
+          assign("messagelog", messagelog, envir = .GlobalEnv)
+        }
+        
+        if(exists("manualcodes_append", envir = .GlobalEnv)) {
+          manualcodes_append <- get("manualcodes_append", envir = .GlobalEnv) %>%
+            dplyr::bind_rows(.,
+                             data.frame(
+                               file = fp,
+                               Header = header,
+                               Value = "",
+                               Notes = NA
+                             ))
+          assign("manualcodes_append", manualcodes_append, envir = .GlobalEnv)
+        } else {
+          manualcodes_append <- data.frame(
+            file = fp,
+            Header = header,
+            Value = "",
+            Notes = NA
+          )
+          assign("manualcodes_append", manualcodes_append, envir = .GlobalEnv)
+        }
+    }
+    tmp <- data |> dplyr::mutate(!!header := NA_character_)
+    }
   
   return(tmp)
 }
@@ -427,17 +490,49 @@ crosswalk_codes <- function(data, fp, header, codescrosswalk, forceupdate = TRUE
   if(forceupdate) {
     # Check for any new codes not present in the crosswalk
     if(any(!unique(data[[header]]) %in% codecrosswalk$original_value)) {
-      message(paste("New codes", 
-                 paste(unique(data[[header]])[!unique(data[[header]]) %in% codecrosswalk$original_value], collapse = ", "), 
-                 "detected for", header, "in", fp))
+      m <- paste("New codes", 
+                 paste(
+                   unique(data[[header]])[!unique(data[[header]]) %in% 
+                                            codecrosswalk$original_value], 
+                   collapse = ", "), 
+                 "detected for", header, "in", fp)
+      # The stop flag and message logs are intended to allow the code to run until all new codes have been identified.
+      # This reduces the number of times the code will be run and stopped with errors.
       stopflag <- TRUE
       assign("stopflag", stopflag, envir = .GlobalEnv)
+    
+      if(exists("messagelog", envir = .GlobalEnv)) {
+        messagelog <- get("messagelog", envir = .GlobalEnv) %>%
+          append(m)
+        assign("messagelog", messagelog, envir = .GlobalEnv)
+      } else {
+        messagelog <- list(m)
+        assign("messagelog", messagelog, envir = .GlobalEnv)
+      }
+      
+      if(exists("datacodes_append", envir = .GlobalEnv)) {
+        datacodes_append <- get("datacodes_append", envir = .GlobalEnv) %>%
+          dplyr::bind_rows(.,
+                    data.frame(
+                      header = header,
+                      original_value = unique(data[[header]])[!unique(data[[header]]) %in% codecrosswalk$original_value],
+                      new_value = ""
+                    ))
+        assign("datacodes_append", datacodes_append, envir = .GlobalEnv)
+      } else {
+        datacodes_append <- data.frame(
+          header = header,
+          original_value = unique(data[[header]])[!unique(data[[header]]) %in% codecrosswalk$original_value],
+          new_value = ""
+        )
+        assign("datacodes_append", datacodes_append, envir = .GlobalEnv)
+      }
     }
   }
   
   # Create the crosswalk mapping
   crosswalk <- codecrosswalk |> dplyr::select(original_value, new_value) |>
-    dplyr::mutate(new_value = dplyr::case_when(grepl("NA", new_value) ~ new_value,
+    dplyr::mutate(new_value = dplyr::case_when(grepl("NA_character_", new_value) ~ new_value,
                                                .default = paste0('"', new_value, '"'))) |>
     dplyr::summarize(
       original_value = paste0('c("', paste(original_value, collapse = '", "'), '")'),
@@ -534,16 +629,61 @@ standard_nametreatment <- function(data, filename, header, updatedCrosswalks, ex
         tmp <- handle_headers(data, filename, header, updatedCrosswalks, existingCrosswalks)
       } else {
         tmp <- data %>%
-          dplyr::mutate(!!header := fedmatch::clean_strings(as.character(.[[header]]), common_words = fedmatch::corporate_words))
+          dplyr::mutate(!!header := clean_names(as.character(.[[header]])))
       }
     } else if(length(grep(header, names(data))) > 1) {
       # Multiple columns case
       tmp <- concat_columns(data, header) %>% 
-        dplyr::mutate(!!header := fedmatch::clean_strings(as.character(.[[header]]), common_words = fedmatch::corporate_words))
+        dplyr::mutate(!!header := clean_names(as.character(.[[header]])))
     }
-    
   } else {tmp <- data}  # If the header does not exist, return the data as is
   return(tmp)
+}
+
+f_gsub <- function(pattern, replacement, x) {
+  str_replace_all(x, pattern, replacement)
+  }
+
+clean_names <- function(x) {
+  x_standard <- fedmatch::clean_strings(x, common_words = fedmatch::corporate_words)
+  x_upper <- str_to_upper(x_standard)
+  # these are the changes that the site selection team did to their data
+  x_fix <- f_gsub(
+    "\\bINC\\.\\b|\\bINC\\b|\\bINCOPORATED\\b","INCORPORATED",
+    f_gsub(
+      "\\bCORP\\b|\\bCORP\\.\\b","CORPORATION", 
+      f_gsub(
+        "\\bLLC\\b|\\bLLC\\.\\b|\\bL\\.L\\.C\\.","LIMITED LIABILITY COMPANY",
+        f_gsub(
+          "\\bLIMITED LIABILITY CORPORATION\\b", "LIMITED LIABILITY COMPANY",
+          f_gsub(
+            "\\bLTD\\b|\\bLTD\\.\\b|Limtd","LIMITED", 
+            f_gsub(
+              "\\bLP\\b|\\bLP\\b|\\bL\\.P\\.","LIMITED PARTNERSHIP",      
+              f_gsub(
+                "\\bDIV\\b|DIV\\.\\b","DIVISION",
+                f_gsub(
+                  "\\bMFG\\b|\\bMFG\\.\\b","MANUFACTURING",
+                  f_gsub(
+                    "\\bCNTY\\b|\\bCNTY\\.\\b","COUNTY",
+                    f_gsub(
+                      "\\bCNTRS\\b|\\bCNTRS\\.\\b|\\bCNTR\\b","CENTERS",
+                      f_gsub(
+                        "\\bSYS\\b|\\bSYS\\.","SYSTEM",
+                        f_gsub(
+                          "\\bDEPT\\b|\\bDEPT\\.","DEPARTMENT", 
+                          f_gsub(
+                            "\\bINTL\\b", "INTERNATIONAL",
+                            f_gsub(
+                              "\\&","AND",
+                              f_gsub(
+                                "\\,","",
+                                f_gsub(
+                                  "\\s+", " ", 
+                                  f_gsub(
+                                    "\\bCO\\b|\\bCO\\.\\b|\\bCOPANY\\b|\\bCO\\.\\,\\b", 
+                                    "COMPANY", x_upper)))))))))))))))))
+  x_fix
 }
 
 #' Standard ID Treatment
@@ -606,6 +746,7 @@ standard_HUCtreatment <- function(data, header) {
 }
 
 pull_address <- function(x, zipindex, stateindex) {
+  # Addresses are assumed to come from parts of the cell entry that do not include state abbreviations or zip codes
   non_address <- unique(na.omit(c(zipindex, stateindex)))
   tmp <- ifelse(length(x) == 0, NA_character_,
                 ifelse(length(x) == 1, x,
@@ -619,11 +760,14 @@ pull_address <- function(x, zipindex, stateindex) {
 
 pull_city <- function(x, zipindex, stateindex) {
   non_address <- unique(na.omit(c(zipindex, stateindex)))
-  tmp <- ifelse(length(x) == 0, NA_character_,
-                ifelse(length(x) == 1, x,
-                       ifelse(length(non_address) == 0, paste(x, collapse = ", "), 
+  tmp <- ifelse(length(x) == 0, 
+                NA_character_,
+                ifelse(length(x) == 1, 
+                       x,
+                       ifelse(length(non_address) == 0, 
+                              paste(x, collapse = ", "), 
                               ifelse(sum(grepl("[[:digit:]]", x[-c(non_address)])) == 1, 
-                                     x[-c(non_address)][!grep("[[:digit:]]", x[-c(non_address)])],
+                                     x[-c(non_address)][!grepl("[[:digit:]]", x[-c(non_address)])],
                                      x[-c(non_address)][2]))))
   cty <- str_to_title(tmp)
   return(cty)
@@ -658,6 +802,7 @@ pull_county <- function(x) {
 
 pull_necessaryaddressdata <- function(x, type, zipindex, stateindex, state_regex, zip_regex) {
   list(pull_address, pull_city, pull_state, pull_zip, pull_county) # call for targets package
+  # if there is more than 1 entry in a cell separated by commas (e.g. Puelbo, CO is 2 entries), this code will try to pull the part of the entry that corresponds to the data needed.
   tmp_code <- ifelse(type == "Address", "pmap_chr(list(x, zipindex, stateindex), ~pull_address(..1, ..2, ..3))",
                 ifelse(type == "City", "pmap_chr(list(x, zipindex, stateindex), ~pull_city(..1, ..2, ..3))",
                        ifelse(type == "State", "map2_chr(x, stateindex, ~pull_state(.x, .y, state_regex))",
@@ -691,20 +836,27 @@ pull_necessaryaddressdata <- function(x, type, zipindex, stateindex, state_regex
 #'
 #'
 #'
-standard_Addresstreatment <- function(data, header) {
+standard_Addresstreatment <- function(data, filename, header) {
   # Check if the header exists in the data
-  if(length(grep(header, names(data))) > 0 ) {
+  # filename isn't used in the function, but it is very helpful to have available in order to pause execution for debugging
+  if(length(grep(header, names(data))) > 0) {
+    # if(grepl("Texas", filename) & header == "City1") {browser()}
+    # This step is one of the most complicated data cleaning steps, and has already needed to be debugged extensively
+    # The raw entry lines (i.e. what is in the original data), is split at commas. This helps parse if an entire address (including city, state, and zip) are included as one entry
+    # There are regular expressions that search for state codes and zip codes
+    # Identifying state and zip codes helps the code assign different parts of the entered data to different types of information (address, city, state, etc)
     rawentrylines <- concat_columns(data[which(str_detect(names(data), header))], header) |> 
       pull(header) |>
       stringr::str_split(",") 
     
-    if(any(str_detect(rawentrylines, "\r|\n"), na.rm = TRUE)) {
-      entrylines <- stringr::str_trim(rawentrylines) |> purrr::map(~{
+    if(any(str_detect(unlist(rawentrylines), "\r|\n"), na.rm = TRUE)) {
+      entrylines <- map(rawentrylines, ~stringr::str_trim(.x)) |> purrr::map(~{
         x_clean <- subset(unique(unlist(stringr::str_split(.x, "\r|\n"))), 
                           unique(unlist(stringr::str_split(.x, "\r|\n"))) != "")
         x_clean
       }) 
-    } else {entrylines <- stringr::str_trim(rawentrylines)}
+    } else {entrylines <- map(rawentrylines, ~stringr::str_trim(.x)) #stringr::str_trim(unlist(rawentrylines))
+    }
 
     type <- stringr::str_extract(header, "Address|City|State|Zip|County")
     
@@ -716,7 +868,8 @@ standard_Addresstreatment <- function(data, header) {
     
     if(type %in% c("Address", "City", "State")) {
       indices_state <- map_dbl(entrylines, ~{
-        ifelse(length(.x) == 1, ifelse(stringr::str_detect(.x, state_regex), 
+        # If there are more than one entries in a line, search if any of them include a state code.
+        ifelse(length(.x) != 1, ifelse(any(stringr::str_detect(.x, state_regex)), 
                                                     stringr::str_which(.x, state_regex),
                                                     NA_integer_), NA_integer_)
         })
@@ -724,7 +877,8 @@ standard_Addresstreatment <- function(data, header) {
     
     if(type %in% c("Address", "City", "Zip")) {
       indices_zip <-  map_dbl(entrylines, ~{
-        ifelse(length(.x) == 1, ifelse(stringr::str_detect(.x, zip_regex), 
+        # If there are more than one entries in a line, search if any of them include a zip code.
+        ifelse(length(.x) != 1, ifelse(any(stringr::str_detect(.x, zip_regex)), 
                                        stringr::str_which(.x, zip_regex),
                                        NA_integer_), NA_integer_)
         })
@@ -751,7 +905,10 @@ standard_Addresstreatment <- function(data, header) {
                                          stateindex = indices$i_state, 
                                          state_regex = state_regex, 
                                          zip_regex = zip_regex) %>%
-      {if(type == "State") {.} else {str_to_title(.)}}
+      {if(type == "State") {.} else 
+        if(type == "Address") {
+          clean_address_words(.)
+          } else {str_to_title(.)}}
     
     tmp <- data |>
       dplyr::select(-contains(header)) |>
@@ -759,6 +916,77 @@ standard_Addresstreatment <- function(data, header) {
     
   } else {tmp <- data} # If the header does not exist, don't do anything to the data
   tmp
+}
+
+clean_address_words <- function(x) {
+  x_upper <- str_to_upper(x)
+  
+  # These are the substitutions that the site selection team used when processing their data
+  x_Fix <- f_gsub(
+    "\\bRDS\\b|\\bRD\\b|\\bRD\\.|\\bRD\\,", "ROAD",
+    f_gsub(
+      "\\bCTH\\b", "COUNTY HIGHWAY",
+      f_gsub("\\bST RTE\\b", "STATE ROUTE",
+             f_gsub(
+             "\\bLN\\b|\\bLN\\.|\\bLN\\,", "LANE",
+             f_gsub(
+               "\\bSTE\\b|\\bSTE\\.", "SUITE",
+               f_gsub(
+                 "\\bST\\,|\\bST\\.|\\bSTREET\\b|\\bSTREET\\,|\\bST\\.\\,", "ST",
+                 f_gsub(
+                   "\\bRTE\\b", "ROUTE",
+                   f_gsub(
+                     "\\bHWY\\b|\\bHWY\\.|\\bHWY\\,", "HIGHWAY",
+                     f_gsub(
+                       "\\bAVE\\b|\\bAVE\\.|\\bAVE\\,|\\bAV\\b", "AVENUE",
+                       f_gsub(
+                         "\\bBYP$", "BYPASS", 
+                         f_gsub(
+                           "\\bPKWY", "PARKWAY", 
+                           f_gsub(
+                             "\\bCIR\\b", "CIRCLE",
+                             f_gsub(
+                               "\\bBLV\\b|\\bBLVD\\b|\\bBLVD\\.|\\bBLVD\\,", "BOULEVARD", 
+                               f_gsub(
+                                 "\\bBLD\\b|\\bBLDG\\b", "BUILDING",
+                                 f_gsub(
+                                   "\\bDRIVE\\b|\\bDR\\.|\\bDR\\,|\\bDR\\.\\,", "DR", 
+                                   f_gsub(
+                                     "\\bEAST\\b|\\bE\\.", "E", 
+                                     f_gsub(
+                                       "\\bWEST\\b|\\bW\\.", "W",
+                                       f_gsub(
+                                         "\\bSOUTH\\b|\\bS\\.", "S",
+                                         f_gsub(
+                                           "\\bNORTH\\b|\\bN\\.|\\bNORTH\\,", "N",
+                                           f_gsub(
+                                             "\\bAPT ", "APARTMENT", 
+                                             f_gsub(
+                                               "\\bPL$|\\bPL\\.", "PLACE",
+                                               f_gsub(
+                                                 "\\bPLZ\\b", "PLAZA",
+                                                 f_gsub(
+                                                   "\\bCT\\b|\\bCT\\.|\\bCT\\,", "COURT",
+                                                   f_gsub(
+                                                     "\\bCTR\\b", "CENTER",
+                                                     f_gsub(
+                                                       "\\bTRL$", "TRAIL", 
+                                                       f_gsub(
+                                                         "\\bTPKE\\b", "TURNPIKE", 
+                                                         f_gsub(
+                                                           "\\s$", "", x_upper))
+                                                       )))))))))))))))))))))))))
+  
+  
+  # These were the flags used by the site selection team to manually change the addresses in their data
+  # In lieu of manually changing them here, we will drop the address and hope that the entries can be merged using other columns
+  # The address from the site selection team can then be used for future analysis
+  x_Fix[grepl("MILE| MI |FEET| FT |APPROX|UNKNOWN|[\\(]|[:punct:&&[^-]]| BOX |\\P O", x_Fix)] <- NA_character_
+  x_Fix[!grepl("\\d", x_Fix)] <- NA_character_
+  x_Fix
+  
+  x_use <- str_to_title(x_Fix)
+  x_use
 }
 
 #' Standard Coordinate Treatment
@@ -776,13 +1004,13 @@ standard_Addresstreatment <- function(data, header) {
 #'   result <- standard_coordinatetreatment(data_frame, "CoordinateHeader")
 #'   }
 #'
-standard_coordinatetreatment <- function(data, header) {
+standard_coordinatetreatment <- function(data, filename, header) {
   # Check if the header exists in the data
   if(length(grep(header, names(data))) > 0) {
     if(length(grep(header, names(data))) == 1) {
-      tmp <- handle_coordinates(data, header)
+      tmp <- handle_coordinates(data, filename, header)
     } else if(length(grep(header, names(data))) > 1) {
-      tmp1 <- handle_coordinates(data, header) |>
+      tmp1 <- handle_coordinates(data, filename, header) |>
         concat_columns(header)  
       tmp <- tmp1 |> dplyr::mutate(!!header := gsub(",.*", "", tmp1[[header]]))
       
@@ -811,9 +1039,11 @@ standard_Yeartreatment <- function(data, filename, header, updatedCrosswalks, ex
   # Check if the header exists in the data
   if(length(grep(header, names(data))) > 0) {
     if(length(grep(header, names(data))) == 1) {
-      if(is.infinite(max(nchar(readr::parse_number(as.character(data[[header]]))), na.rm = TRUE))) {
+      yr_tmp <- suppressWarnings(readr::parse_number(as.character(data[[header]])))
+      tf_tmp <- suppressWarnings(is.infinite(max(nchar(yr_tmp), na.rm = TRUE)))
+      if(tf_tmp) {
         tmp <- handle_headers(data, filename, header, updatedCrosswalks, existingCrosswalks) %>%
-          mutate(!!header := as.numeric(.[[header]]))
+          dplyr::mutate(!!header := as.numeric(.[[header]]))
       } else {
         tmp <- data |> 
           dplyr::mutate(!!header := as.numeric(readr::parse_number(as.character(data[[header]])))) |>
@@ -846,8 +1076,9 @@ data_NAcodes <- c("", "n/a", "N/A", "NA", "NAN", "na", "nan",
 #'   result <- standard_datatreatment(data_frame, "DataHeader")
 #'   }
 #'
-standard_datatreatment <- function(data, header) {
+standard_datatreatment <- function(data, filename, header) {
   # Check if the header exists in the data
+  # file name is not currently used in this function, but it is passed along because it is helpful in debugging
   if(length(grep(header, names(data))) > 0) {
     if(!is.numeric(data[[header]])) { 
       if(!all(unique(gsub("[[:digit:]]*|.", "", data[[header]])) %in% data_NAcodes)) {
@@ -883,6 +1114,7 @@ standard_datatreatment <- function(data, header) {
 #'   }
 #'
 reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, parallel = FALSE) {
+  # if names of columns have changed in input data on the disk, this function may error, and the HeaderCrosswalk.csv will need to be updated to match the changes made to the data
   list(standard_datacodestreatment, standard_nametreatment, standard_idtreatment, 
        standard_HUCtreatment, standard_Addresstreatment, standard_coordinatetreatment,
        standard_Yeartreatment, standard_datatreatment) # call these to let the targets package know that they are used in this function
@@ -921,14 +1153,17 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, parallel = F
     "', updatedCrosswalks, existingCrosswalks), .progress = TRUE)", collapse = " %>% ")
   ids_code <- paste0(package_call, "map(., ~standard_idtreatment(.x, '", idcolumns, "'), .progress = TRUE)", collapse = " %>% ")
   HUCs_code <- paste0(package_call, "map(., ~standard_HUCtreatment(.x, '", HUCcolumns, "'), .progress = TRUE)", collapse = " %>% ")
-  Addresses_code <- paste0(package_call, "map(., ~standard_Addresstreatment(.x, '", Addresscolumns, "'), .progress = TRUE)", collapse = " %>% ")
-  coordinates_code <- paste0(package_call, "map(., ~standard_coordinatetreatment(.x, '", coordinatecolumns, "'), .progress = TRUE)", collapse = " %>% ")
+  Addresses_code <- paste0(package_call, "imap(., ~standard_Addresstreatment(.x, .y, '", Addresscolumns, "'), .progress = TRUE)", collapse = " %>% ")
+  coordinates_code <- paste0(package_call, "imap(., ~standard_coordinatetreatment(.x, .y, '", coordinatecolumns, "'), .progress = TRUE)", collapse = " %>% ")
   years_code <- paste0(package_call, "imap(., ~standard_Yeartreatment(.x, .y, '", Yearcolumns, "', updatedCrosswalks, existingCrosswalks), .progress = TRUE)", collapse = " %>% ")
-  data_code <- paste0(package_call, "map(., ~standard_datatreatment(.x, '", datacolumns, "'), .progress = TRUE)", collapse = " %>% ")
+  data_code <- paste0(package_call, "imap(., ~standard_datatreatment(.x, .y,'", datacolumns, "'), .progress = TRUE)", collapse = " %>% ")
   # As noted in `manual_updates`, `|>` is the base R pipe function
   # In the next block of code, I've used `|>` where possible, but I had to use `%>%` for the lines that parse the written code
   # The reason, I think, is that the `%>%` operator from dplyr allows you to pass an object (here a list) along using the `.` syntax while the `|>` operator does not.
   # Because the expressions being parsed are a little wonky, and because I used the `.` notation to pass along the object in the code, I had to use `%>%` here and `|>` didn't work.
+  # This line is a good place to use browser() if errors are coming up in this function.
+  # Errors in this function will likely be derived from errors in one of the lines of text below
+  # Suggest running the below lines one-by-one to identify location of the error
   x_munged <- x %>%
     {eval(parse(text = datacodes_u_code))} %>% 
     {eval(parse(text = HUCs_code))} %>% 
@@ -948,27 +1183,63 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, parallel = F
       stringr::str_extract(unlist(purrr::map(x_munged, ~names(.x))), ".*(?=\\.\\.\\.)")))
     stop(paste0("New case(s) for ", paste(issue, collapse = ", ")))
   }
-  if(exists("stopflag", envir = .GlobalEnv)) {stop("Execution halted to edit data crosswalks")}
 
   return(x_munged)
 }
 
-merge_formatteddata <- function(x_munged = list(), updatedCrosswalks, data = c("State", "National")) {
+merge_formatteddata <- function(x_munged = list(), updatedCrosswalks, existingCrosswalks, data = c("State", "National")) {
+  # This function merges the data that was reformatted together. 
+  # State data is merged by state and then combined with row_bind
+  # National data is merged together for each data set
   x_munged_indices_bysize <- unlist(purrr::map(x_munged, ~length(.x))) |> sort(decreasing = TRUE)
   x_merge_ready <- x_munged[names(x_munged_indices_bysize)] |> purrr::keep(~{nrow(.) > 0}) 
+  
   if(data == "State") {
-    x_bystate <- purrr::map(fedmatch::State_FIPS$Abbreviation, ~{st <- .x; purrr::keep_at(x_merge_ready, ~grepl(paste0("/", st, "/"), .))}); names(x_bystate) <- fedmatch::State_FIPS$Abbreviation
+    if(exists("stopflag", envir = .GlobalEnv)) {
+      if(get("stopflag", envir = .GlobalEnv) == TRUE) {
+        messagelog <- get("messagelog", envir = .GlobalEnv)
+        if(exists("datacodes_append", envir = .GlobalEnv)) {
+          datacodes_append <- get("datacodes_append", envir = .GlobalEnv) %>% unique()
+          datacodes_asis <- updatedCrosswalks$DataCodesCrosswalk
+          datacodes_write <- dplyr::bind_rows(datacodes_asis, datacodes_append) %>% unique()
+          write.csv(datacodes_write, 
+                    file = file.path(existingCrosswalks, "DataCodesCrosswalk.csv"), 
+                    row.names = FALSE)
+        }
+        
+        if(exists("manualcodes_append", envir = .GlobalEnv)) {
+          manualcodes_append <- get("manualcodes_append", envir = .GlobalEnv) %>% unique()
+          manualcodes_asis <- updatedCrosswalks$HardcodedManualAttributes
+          manualcodes_write <- dplyr::bind_rows(manualcodes_asis, manualcodes_append) %>% unique()
+          write.csv(manualcodes_write, 
+                    file = file.path(existingCrosswalks, "HardcodedManualAttributes.csv"), 
+                    row.names = FALSE)
+        }
+        
+        m <- list("Execution halted to edit data crosswalks", "       ",
+                  messagelog)
+        walk(unlist(m), ~message(.x))
+
+        rm(list = c("stopflag", "messagelog", "datacodes_append", "manualcodes_append"), envir = .GlobalEnv)
+        stop("Execution halted to edit data crosswalks")
+      }
+    }
+    
+    x_bystate <- purrr::map(fedmatch::State_FIPS$Abbreviation, ~{
+      st <- .x; purrr::keep_at(x_merge_ready, ~grepl(paste0("/", st, "/"), .))
+      }); names(x_bystate) <- fedmatch::State_FIPS$Abbreviation
     x_readystates <- purrr::keep(x_bystate, ~length(.) > 0)
     x_simplestates <- purrr::map(x_readystates, ~{
       purrr::reduce2(.x = .x, .y = names(.x), .f = merge_andreplaceNA, 
-                     .init = mutate(.x[[1]], DataSource = names(.x)[1]))})
-    x_all <- do.call("bind_rows", x_simplestates) %>% 
+                     .init = dplyr::mutate(.x[[1]], DataSource = names(.x)[1]))})
+    dplyr_bind_rows <- dplyr::bind_rows
+    x_all <- do.call("dplyr_bind_rows", x_simplestates) %>% 
       plugFacilityName(drop = FALSE)
   } else if(data == "National") {
     if(length(x_merge_ready) > 1) {
       x_all <- purrr::map(x_merge_ready, ~plugFacilityName(.x, drop = TRUE)) %>%
         purrr::reduce2(.x = ., .y = names(.), .f = merge_andreplaceNA, 
-                       .init = mutate(.[[1]], DataSource = names(.)[1]))
+                       .init = dplyr::mutate(.[[1]], DataSource = names(.)[1]))
     } else {x_all <- pluck(x_merge_ready, 1)}
     
   }
@@ -1004,7 +1275,7 @@ plugFacilityName <- function(x, drop = TRUE) {
       !is.na(FacilityName) ~ FacilityName))
   } else {tmp <- x}
   
-  if (drop == TRUE) {tmp <- filter(tmp, !is.na(FacilityName))}
+  if (drop == TRUE) {tmp <- dplyr::filter(tmp, !is.na(FacilityName))}
   return(tmp)
 }
 
@@ -1032,7 +1303,7 @@ write_allstates <- function(x) {
                }
                stname <- unique(.x$State)
                if(nrow(.x) > 100000) {
-                 purrr::map(group_split(.x, .by = Year, .keep = FALSE),
+                 purrr::map(dplyr::group_split(.x, .by = Year, .keep = FALSE),
                             ~{
                               yr <- unique(.x$Year)
                               write.csv(.x, file.path(statedir, 
