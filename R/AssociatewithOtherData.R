@@ -39,18 +39,25 @@ prep_siteselection <- function(national_Xwalks, datacodes_Xwalks, siteselection 
   # The headers from the national Header Crosswalk are used to read and rename the data
   # Then, the facility names are cleaned, and the address columns are formatted.
   # These adjustments will help with later merging.
-  # browser()
   natHeaders <- list(
     HeaderCrosswalk = get_filledcsv(file.path(national_Xwalks, "HeaderCrosswalk.csv")),
     DataCodesCrosswalk = datacodes_Xwalks
   )
-  siteSelectionDat <- readandrename_columns(siteselection, natHeaders, national_Xwalks, data = "National") |>
+  siteSelectionDat_editted <- readandrename_columns(siteselection, natHeaders, national_Xwalks, data = "National") |>
     pluck(1) |>
-    tidytable::mutate(tidytable::across(c("FacilityName", "FacilityName1", "FacilityName2"), ~clean_names(.))) |>
+    tidytable::mutate(tidytable::across(c("FacilityName", "FacilityName1", "FacilityName2"), ~local_clean_names(.))) |>
     tidytable::mutate(tidytable::across(c("Address1", "Address2"), ~clean_address_words(.))) |>
     tidytable::mutate(tidytable::across(c("City1", "County1", "City2"), ~str_to_title(.))) |>
     tidytable::mutate(State = State1) |>
-    unique() |>
+    unique() 
+  
+  fullsiteSelectionDat <- read_in_datafile(dirname(siteselection[[1]]), 
+                                           basename(siteselection[[1]])) %>%
+    rename_with(.fn = ~paste0("SITESELECTION_", .), .cols = everything())
+  
+  siteSelectionDat <- left_join(siteSelectionDat_editted, 
+                                fullsiteSelectionDat, 
+                                by = "SITESELECTION_FACILITYID") %>%
     as.data.frame()
     
   return(siteSelectionDat)
@@ -74,13 +81,13 @@ prep_nationaldata <- function(national_Xwalks, datacodes_Xwalks, existingCrosswa
   }
   natData <- readandrename_columns(natdata, natHeaders, national_Xwalks, data = "National") %>%
     reformat_data(., natHeaders, national_Xwalks) %>%
-    merge_formatteddata(., natHeaders, existingCrosswalks, data = "National") %>%
+    merge_formatted_National_data(., natHeaders, existingCrosswalks) %>%
     dplyr::filter(!is.na(FacilityName)) %>%  dplyr::mutate(State = State1) %>%
     standard_Addresstreatment(., "natData", "State")
   
   augmentData <- readandrename_columns(extradata, natHeaders, national_Xwalks, data = "National") |>
     reformat_data(natHeaders, national_Xwalks) %>%
-    map(., ~dplyr::mutate(.x, dplyr::across(any_of("State"), ~State1)))
+    purrr::map(., ~dplyr::mutate(.x, dplyr::across(any_of("State"), ~State1)))
   
   return(list(natData_merge = natData, natHeaders = natHeaders, augmentData = augmentData))
 }
@@ -100,32 +107,43 @@ merge_withaugmentation <- function(x, y, yname) {
   merge_andreplaceNA(x = x, y = y, yname = yname, merge_vars = merge_vars, jointype = "LEFT")
 }
 
-iterative_merge_siteselection <- function(WUdata, siteselectiondata, mergevars) {
+iterative_merge_siteselection <- function(WUdata, siteselectiondata, mergevars, verbose = TRUE) {
   # this function does the merging of the site selection data into the WU data. 
   # the merge is a left merge, so ideally no new lines will be added
   # in practice, sometimes duplicates are created. 
   # there is a warning produced that indicates when duplicates are created so that they can be addressed in future updates
-  # browser()
   
-  siteselection_subset <- dplyr::filter(siteselectiondata, !!sym(mergevars[[1]]) %in% 
-                                   unique(WUdata[[mergevars[[1]]]])) %>%
-    dplyr::filter(!dplyr::if_any(dplyr::all_of(mergevars), is.na))
-  merge_dat <- rquery::natural_join(WUdata, siteselection_subset, by = mergevars, jointype = "LEFT") 
-  if(nrow(merge_dat) != nrow(WUdata)) {
-    nadd <- nrow(merge_dat) - nrow(WUdata)
-    m <- paste("Warning:", nadd,"Duplicates added when merging by", paste(mergevars, collapse = ", "))
-    message(m) 
-    # browser()
+  siteselection_subset <- siteselectiondata %>%
+    tidytable::filter(., !tidytable::if_any(dplyr::all_of(mergevars), is.na)) %>%
+    {eval(parse(text = paste(map(1:length(mergevars), 
+                                 ~paste0("tidytable::filter(., !!sym(mergevars[[", .x, "]]) %in% unique(WUdata[[mergevars[[", .x, "]]]])) ")), 
+                             collapse = " %>% ")))} %>%
+    as_tibble()
+  
+  ss_indices <- eval(parse(text = paste0("str_c(", paste0("siteselection_subset$", mergevars, collapse = ", "), ")")))
+  WU_indices <- eval(parse(text = paste0("str_c(", paste0("WUdata$", mergevars, collapse = ", "), ")")))
+    if(any(ss_indices %in% WU_indices)) {
+      merge_dat <- rquery::natural_join(WUdata, siteselection_subset, by = mergevars, jointype = "LEFT") 
+    if(nrow(merge_dat) != nrow(WUdata)) {
+      nadd <- nrow(merge_dat) - nrow(WUdata)
+      m <- paste("Warning:", nadd,"Duplicates added when merging by", paste(mergevars, collapse = ", "))
+      message(m) 
+      # browser()
     } # something went wrong
-  merge_success <- merge_dat %>% dplyr::filter(!is.na(SITESELECTION_FACILITYID)) %>% 
-    dplyr::group_by(dplyr::across(all_of(names(WUdata)))) %>% 
-    dplyr::summarise(dplyr::across(contains("SITESELECTION"), ~paste(unique(.), collapse = " _OR_ ")),
-              .groups = "drop") 
+    merge_success <- merge_dat %>% dplyr::filter(!is.na(SITESELECTION_FACILITYID)) %>% 
+      dplyr::group_by(dplyr::across(all_of(names(WUdata)))) %>% 
+      dplyr::summarise(dplyr::across(contains("SITESELECTION"), ~paste(unique(.), collapse = " _OR_ ")),
+                       .groups = "drop") 
     m <- paste("Merging by", paste(mergevars, collapse = ", "), "produced", nrow(merge_success),  "matches")
-  message(m)
+    if(verbose) {message(m)}
+    
+    merge_fail <- merge_dat %>% dplyr::filter(is.na(SITESELECTION_FACILITYID)) %>% 
+      dplyr::select(all_of(names(WUdata)))
+    } else {
+      merge_success <- NULL
+      merge_fail <- WUdata
+    }
   
-  merge_fail <- merge_dat %>% dplyr::filter(is.na(SITESELECTION_FACILITYID)) %>% 
-    dplyr::select(all_of(names(WUdata)))
   
   return(list(merge_success = merge_success, merge_fail = merge_fail))
 }
@@ -134,7 +152,6 @@ merge_siteselection <- function(data, siteselection, siteselectionfilename) {
   # browser()
 # the site selection data is merged several times by various characteristics
   # this is intented to maximize the number of merged lines
-  
   mergevar_synonyms <- list(
     name = c("FacilityName", "FacilityName1", "FacilityName2"),
     address = c("Address1", "Address2"),
@@ -147,47 +164,47 @@ merge_siteselection <- function(data, siteselection, siteselectionfilename) {
   level2_mergevars <- crossing(mergevar_synonyms$name, mergevar_synonyms$address)
   level3_mergevars <- crossing(mergevar_synonyms$county, mergevar_synonyms$city)
   
-  level2merge <- list_flatten(
+  level2merge <- purrr::list_flatten(
     list(
-      list_flatten(map(unique(unlist(level2_mergevars)), ~{l2 <- .x; map(level1_mergevars, ~c(l2, .x))})),
-      list_flatten(pmap(level2_mergevars, ~{l2 <- c(.x, .y); map(level1_mergevars, ~c(l2, .x))}))
+      purrr::list_flatten(purrr::map(unique(unlist(level2_mergevars)), ~{l2 <- .x; purrr::map(level1_mergevars, ~c(l2, .x))})),
+      purrr::list_flatten(purrr::pmap(level2_mergevars, ~{l2 <- c(.x, .y); purrr::map(level1_mergevars, ~c(l2, .x))}))
     )
   )
   
-  level3amerge <- list_flatten(
-    map(
+  level3amerge <- purrr::list_flatten(
+    purrr::map(
       unique(unlist(level3_mergevars)), 
       ~{
         l3 <- .x
-        list_flatten(map(unique(unlist(level2_mergevars)),  ~{l2 <- .x; map(level1_mergevars,~c(l3, l2, .x))}))
+        purrr::list_flatten(purrr::map(unique(unlist(level2_mergevars)),  ~{l2 <- .x; purrr::map(level1_mergevars,~c(l3, l2, .x))}))
       }
     )
   )
-  level3bmerge <- list_flatten(
-    map(
+  level3bmerge <- purrr::list_flatten(
+    purrr::map(
       unique(unlist(level2_mergevars)), 
       ~{
         l2 <- .x
-        list_flatten(pmap(level3_mergevars, ~{l3 <- c(.x, .y); map(level1_mergevars, ~c(l3, l2, .x))}))
+        purrr::list_flatten(purrr::pmap(level3_mergevars, ~{l3 <- c(.x, .y); purrr::map(level1_mergevars, ~c(l3, l2, .x))}))
       }
     )
   )
-  level3cmerge <- list_flatten(
-    pmap(
+  level3cmerge <- purrr::list_flatten(
+    purrr::pmap(
       level2_mergevars, 
       ~{
         l2a <- .x
         l2b <- .y
-        list_flatten(pmap(
+        purrr::list_flatten(purrr::pmap(
           level3_mergevars,
-          ~{l3 <- c(.x, .y, l2a, l2b); map(level1_mergevars, ~c(l3, .x))}
+          ~{l3 <- c(.x, .y, l2a, l2b); purrr::map(level1_mergevars, ~c(l3, .x))}
         ))
       }
     )
   )
-  level3merge <- list_flatten(list(level3amerge, level3bmerge, level3cmerge))
+  level3merge <- purrr::list_flatten(list(level3amerge, level3bmerge, level3cmerge))
   
-  merge_combos <- list_flatten(list(level2merge = level2merge, level3merge = level3merge))
+  merge_combos <- purrr::list_flatten(list(level2merge = level2merge, level3merge = level3merge))
   
   merge_combos_indices_bysize <- unlist(purrr::map(merge_combos, ~length(.x))) |> sort(decreasing = TRUE)
   merge_combos_ordered <- merge_combos[names(merge_combos_indices_bysize)] 

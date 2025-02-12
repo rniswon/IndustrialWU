@@ -1,23 +1,36 @@
 ﻿file,long_wide,cols,names_tofrom,names_pattern,values_tofrom,values_transform
 /AZ/2000-2018_Industrial Data_Redacted.xlsx$Non-Turf Facilities,long,"contains(c(""-USE/PURPOSE-"", ""--""))","SourceType, Description","sep: ""-USE/PURPOSE-|--""",Annual_reported,
 /AZ/2000-2018_Industrial Data_Redacted.xlsx$industrial_facilities,long,"contains(c(""-USE/PURPOSE-"", ""--""))","SourceType, Description","sep: ""-USE/PURPOSE-|--""",Annual_reported,
-/CT/ConnecticutIndustrial_WU_info.xlsx$Sheet1,wide,Year = lubridate::year(`TSDateTime`),Month = month.abb[lubridate::month(`TSDateTime`)],,TSValue in MGD,
-/MN/MN_IN_WU.xlsx$MPARS_Index_Permits-IN,long,"which(grepl(""use_[[:digit:]]"", names(.)))",Year,,Annual_reported,
+/CT/ConnecticutIndustrial_WU_info.xlsx$Sheet1,wide,"Year = lubridate::year(as.Date(as.numeric(`TSDateTime`), origin = ""1899-12-30""))","Month = month.abb[lubridate::month(as.Date(as.numeric(`TSDateTime`), origin = ""1899-12-30""))]",,TSValue in MGD,
+/MN/MN_IN_WU.xlsx$MPARS_Index_Permits-IN,long,"which(grepl(""use_[[:digit:]]"", names(.)))","Year, Units_annual_reported","sep: ""(?<=[[:digit:]])_""",Annual_reported,
 /OK/Industrial Permit Water Use 2000 to 2019.xlsx$Ind. Water Use (a-f per year),long,"c(""Irrigation"", ""Public Supply"", ""Industrial"", ""Power"", ""Mining"", ""Commercial"", ""Recreation Fish & Wildlife"", ""Agriculture"", ""Other Total"")",Category,,Annual_reported,
-/VT/VermontIndustrial_WU_info.xlsx$VT,wide,"Year = lubridate::year(`gwu_begin_date`), Method_monthly = ifelse(Estimated_Water_Use == Reported_System_Usage, ""Metered"", ""Estimated"")",Month = month.abb[lubridate::month(`gwu_begin_date`)],,Estimated_Water_Use,
+/VT/VermontIndustrial_WU_info.xlsx$VT,wide,"Year = lubridate::year(as.Date(as.numeric(`gwu_begin_date`), origin = ""1899-12-30"")), Method_monthly = ifelse(Estimated_Water_Use == Reported_System_Usage, ""Metered"", ""Estimated"")","Month = month.abb[lubridate::month(as.Date(as.numeric(`gwu_begin_date`), origin = ""1899-12-30""))]",,Estimated_Water_Use,
 /VT/VermontLARGEIndustrial_WU_info.xlsx$Sheet1,long,"contains(c(""Withdrawals""))",Year,,Annual_reported,Annual_reported = as.numeric
 /VT/2008_2019_ Vermont_Yearly_Large_GW_Withdrawal.xlsx$GW Withdrawal Yearly,long,"which(grepl(""[[:digit:]]{4}_"", names(.)))","Year, Units_annual_reported","sep: ""_""",Annual_reported,
 /CO/CO_Manufacture_Demands_Water.xlsx$Western Sugar (Fort Morgan),long,"contains(c(""DivTotal""))","SourceNumber, Units_monthly","sep: "", DivTotal, """,Monthly_reported,
 /CO/CO_Manufacture_Demands_Water.xlsx$Western Sugar (Fort Morgan),wide,"Year = lubridate::year(lubridate::as_date(`DATE`, format = ""%Y-%m"")), SourceNumber, Units_monthly","Month = month.abb[lubridate::month(lubridate::as_date(`DATE`, format = ""%Y-%m""))]",,Monthly_reported,
-/CO/CFIandMolsonCoors_Copy.xlsx$CFI_MC_reformat,wide,Year = lubridate::year(lubridate::as_date(`Date`)),Month = month.abb[lubridate::month(lubridate::as_date(`Date`))],,Diversions,
-/DE/IndustrialWaterUse_modified.xlsx$Water Use,wide,,Month = month.abb[as.numeric(`Current Month`)],,"Monthly Water Use, gal.",
-/DE/IndustrialWaterUse_USGS_Lovelace.xlsx$Water Use,wide,,Month = month.abb[as.numeric(`Current Month`)],,"Monthly Water Use, gal.",
-/DE/WaterUse_2004-2019_all_categories.xlsx$Sheet1,wide,,Month = month.abb[as.numeric(`currentMonth`)],,wateruse,
+/CO/CFIandMolsonCoors_Copy.xlsx$CFI_MC_reformat,wide,"Year = lubridate::year(as.Date(as.numeric(`Date`), origin = ""1899-12-30""))","Month = month.abb[lubridate::month(as.Date(as.numeric(`Date`), origin = ""1899-12-30""))]",,Diversions,
+/DE/IndustrialWaterUse_modified.xlsx$Water Use,wide,"Units_monthly = ""Monthly Water Use, gal.""",Month = month.abb[as.numeric(`Current Month`)],,"Monthly Water Use, gal.",
+/DE/IndustrialWaterUse_USGS_Lovelace.xlsx$Water Use,wide,"Units_monthly = ""Monthly Water Use, gal.""",Month = month.abb[as.numeric(`Current Month`)],,"Monthly Water Use, gal.",
+/DE/WaterUse_2004-2019_all_categories.xlsx$Sheet1,wide,Units_monthly = wateruse,Month = month.abb[as.numeric(`currentMonth`)],,wateruse,
 /FL/SiteSpecific_IndWaterUse_FL_2020_ldm.xlsx$FL_SiteSpecificWithdrawals_Annu,long,"c(""TOT_GW_VA"", ""TOT_SW_VA"")",SourceType,,Annual_reported,Annual_reported = as.numeric
-/HI/HI_IN_WU.xlsx$HI_IN_WU,wide,"Year = lubridate::year(lubridate::as_date(map2_dbl(as.numeric(`Start Date`), as.numeric(`End Date`), ~mean(c(.x, .y))), origin = ""1899-12-30"")), `Pumpage (Gallons)` = as.numeric(`Pumpage (Gallons)`)","Month = month.abb[lubridate::month(lubridate::as_date(map2_dbl(as.numeric(`Start Date`), as.numeric(`End Date`), ~mean(c(.x, .y))), origin = ""1899-12-30""))]",,Pumpage (Gallons),sum
-/KS/K11963_CAC.xlsx$PART B - IND,wide,,Month = month.abb[as.numeric(MONTH)],,KGAL,as.numeric
-/KS/K11963_CAC.xlsx$PART B - MUN,wide,,Month = month.abb[as.numeric(MONTH)],,KGAL,as.numeric
+/HI/HI_IN_WU.xlsx$HI_IN_WU,wide,"Year = lubridate::year(lubridate::as_date(map2_dbl(as.numeric(`Start Date`), as.numeric(`End Date`), ~mean(c(.x, .y))), origin = ""1899-12-30"")), `Pumpage (Gallons)` = as.numeric(`Pumpage (Gallons)`), ValueType = `Pumpage (Gallons)`, Units_monthly = `Pumpage (Gallons)`, Method_monthly = `Pumpage (Gallons)`","Month = month.abb[lubridate::month(lubridate::as_date(map2_dbl(as.numeric(`Start Date`), as.numeric(`End Date`), ~mean(c(.x, .y))), origin = ""1899-12-30""))]",,Pumpage (Gallons),sum
+/KS/K11963_CAC.xlsx$PART B - IND,wide,Units_monthly = KGAL,Month = month.abb[as.numeric(MONTH)],,KGAL,as.numeric
+/KS/K11963_CAC.xlsx$PART B - MUN,wide,Units_monthly = KGAL,Month = month.abb[as.numeric(MONTH)],,KGAL,as.numeric
 /ME/ME_IN_WU_CAC.xlsx$final_snowmaking_CAC,long,"contains(c(""recombined""))",Year,,Annual_reported,
-/ME/ME_IN_WU_CAC.xlsx$wu_discharge,wide,,Month = month.abb[as.numeric(Month)],,discharge,as.numeric
-/ME/ME_IN_WU_CAC.xlsx$wu_monthly_recombined,wide,,Month = month.abb[as.numeric(Month)],,wu,as.numeric
+/ME/ME_IN_WU_CAC.xlsx$wu_discharge,wide,"ValueType = discharge, Category = discharge",Month = month.abb[as.numeric(Month)],,discharge,as.numeric
+/ME/ME_IN_WU_CAC.xlsx$wu_monthly_recombined,wide,"Category = wu, Method_annual_reported = wu",Month = month.abb[as.numeric(Month)],,wu,as.numeric
 /ND/Industrial Use 2010-2019.xlsx$IN_data,long,"which(grepl(""[[:digit:]]{4}"", names(.)))",Year,,Annual_reported,
+/NM/NM_IN_WU_CAC.xlsx$Industrial USGS_frJulie_0918202,long,"which(grepl(""[[:digit:]]{4}"", names(.)))","SourceType, Units_annual_reported","sep: "" \\(""",Annual_reported,
+/NM/Industrial_NM_forJohnL.xlsx$Commercial2010,long,"which(grepl(""AFY"", names(.)))",SourceType,,Annual_reported,
+/NM/NM_IN_WU_CAC.xlsx$Commercial2015,long,"which(grepl(""AFY"", names(.)))",SourceType,,Annual_reported,
+/NM/NM_IN_WU.xlsx$Industrial2010,long,"c(""2010 SW"", ""2010 GW"")","Year, SourceType","sep: "" """,Annual_reported,
+/OR/OR_IN_WU.xlsx$WU Reporting w_POD_IM Component,long,"contains(c(""_value""))",month_desig,,Monthly_reported,
+/OR/OR_IN_WU.xlsx$WU Reporting w_POD_IM Component,wide,"Year = dplyr::case_when(month_desig %in% c(""oct_value"", ""nov_value"") ~ as.numeric(water_year) - 1, TRUE ~ as.numeric(water_year)), Method_monthly = paste(measurement_method, measurement_other, sep = ""; ""), SourceNumber1 = paste0(meridian, township, township_char, range, range_char, sctn, qtr160, qtr40)","Month = str_to_title(gsub(""_value"", """", month_desig))",,Monthly_reported,
+/OR/OR_IN_WU.xlsx$OR_IN_facility_list,long,"contains(c(""_value""))",month_desig,,Monthly_reported,
+/OR/OR_IN_WU.xlsx$OR_IN_facility_list,wide,"Year = dplyr::case_when(month_desig %in% c(""oct_value"", ""nov_value"") ~ as.numeric(water_year) - 1, TRUE ~ as.numeric(water_year)), Method_monthly = paste(measurement_method, measurement_other, sep = ""; ""), SourceNumber1 = paste0(meridian, township, township_char, range, range_char, sctn, qtr160, qtr40)","Month = str_to_title(gsub(""_value"", """", month_desig))",,Monthly_reported,
+/OR/WUR Facilities with IM use component water years 2000-2019 incl pod lat long.xlsx$WUR POD_IM without pod lat_long,long,"contains(c(""_value""))",month_desig,,Monthly_reported,
+/OR/WUR Facilities with IM use component water years 2000-2019 incl pod lat long.xlsx$WUR POD_IM without pod lat_long,wide,"Year = dplyr::case_when(month_desig %in% c(""oct_value"", ""nov_value"") ~ as.numeric(water_year) - 1, TRUE ~ as.numeric(water_year)), Method_monthly = paste(measurement_method, measurement_other, sep = ""; ""), SourceNumber1 = paste0(meridian, township, township_char, range, range_char, sctn, qtr160, qtr40)","Month = str_to_title(gsub(""_value"", """", month_desig))",,Monthly_reported,
+/OR/WUR Facilities with IM use component water years 2000-2019 incl pod lat long.xlsx$WUR IM w_Pod lat long,long,"contains(c(""_value""))",month_desig,,Monthly_reported,
+/OR/WUR Facilities with IM use component water years 2000-2019 incl pod lat long.xlsx$WUR IM w_Pod lat long,wide,"Year = dplyr::case_when(month_desig %in% c(""oct_value"", ""nov_value"") ~ as.numeric(water_year) - 1, TRUE ~ as.numeric(water_year)), Method_monthly = paste(measurement_method, measurement_other, sep = ""; ""), SourceNumber1 = paste0(meridian, township, township_char, range, range_char, sctn, qtr160, qtr40)","Month = str_to_title(gsub(""_value"", """", month_desig))",,Monthly_reported,
+/VA/annual_manu_2000-2019_export.csv,long,"contains(c(""Year_""))",Year,,Annual_reported,
