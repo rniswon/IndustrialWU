@@ -41,10 +41,10 @@ loadSTdata <- function(stDatadir) {
     } else if(
       grepl(".csv|.txt", fp)) {
       sheets <- fp
-      read.csv(fp, fill = TRUE, header = FALSE)
+      read.csv(fp, fill = TRUE, header = FALSE, colClasses = "character")
     } else if(grepl(".xlsx|.xls", fp)) {
       sheets <- readxl::excel_sheets(fp)
-      map(sheets, ~suppressWarnings(suppressMessages(readxl::read_excel(fp, sheet = .x))))
+      map(sheets, ~suppressWarnings(suppressMessages(readxl::read_excel(fp, sheet = .x, col_types = "text"))))
     } else{
       sheets <- fp
       list("Other database type (e.g. Word or Access)")

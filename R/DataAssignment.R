@@ -36,13 +36,16 @@ read_in_datafile <- function(datafp, fp) {
   } else if(
     grepl(".csv|.txt|.rdb", fp)) {
     # Read CSV or text files 
-    data.table::fread(file.path(datafp, fp), fill = TRUE, header = TRUE, data.table = FALSE)
+    data.table::fread(file.path(datafp, fp), fill = TRUE, header = TRUE, 
+                      data.table = FALSE, verbose = FALSE, showProgress = FALSE,
+                      colClasses = "character")
   } else if(grepl(".xlsx|.xls", fp)) {
     # Read Excel files
     workbook_fp <- stringr::str_extract(fp, ".*(?=\\$)")  # Extract workbook filename
     sheetnm <- stringr::str_extract(fp, "(?<=\\$).*")  # Extract sheet name
     suppressWarnings(suppressMessages(
-      readxl::read_excel(file.path(datafp, workbook_fp), sheet = sheetnm)))  # Read worksheet
+      readxl::read_excel(file.path(datafp, workbook_fp), sheet = sheetnm, 
+                         col_types = "text")))  # Read worksheet
   } else if(grepl(".docx", fp)) {
     # Read Word documents
     dat <- officer::read_docx(file.path(datafp, fp))  # Load the Word document
@@ -481,7 +484,6 @@ applyPIVOTrules <- function(dat, headercrosswalk, updatedCrosswalks) {
       # Create select code based on whether the pivot is to a wide or long format
       # This code is based on the inputs from the pivot instructions crosswalk
       # It can be rather finicky. If there are errors popping up in this function, the select code is a good place to check first.
-      # browser()
       selectcode <- ifelse(.x$long_wide == "wide",
                            paste0('dplyr::select(., any_of(c("', paste(
                              ifelse(
@@ -524,7 +526,6 @@ applyPIVOTrules <- function(dat, headercrosswalk, updatedCrosswalks) {
       intr <- list(mutatecode = mutatecode, selectcode = selectcode, pivotcode = pivotcode, filtercode = filtercode)
       intr
     })
-    
     # Evaluate the constructed transformation instructions on the dataset
     dat2 <- suppressWarnings({dat %>% 
         {eval(parse(text = paste(unlist(instructions, use.names = FALSE), 
@@ -688,18 +689,11 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks,
                   pivotapplied$pivotinstructions)$selectcode))} %>%
                 {eval(parse(text = select_code))} |>
                 names()
-              if(old_sub %in% names_check) {
-                nm <- manual_update(data.frame(tmp = NA), 
-                                    unique(headercrosswalk$file), new, 
-                                    updatedCrosswalks, existingCrosswalks, 
-                                    names_check)
-                tmp <- tibble::tibble(!!new := nm[[new]])
-              } else {
-                nm <- manual_update(data.frame(tmp = NA), 
-                                    unique(headercrosswalk$file), old_sub, 
-                                    updatedCrosswalks, existingCrosswalks,
-                                    names_check)
-                tmp <- tibble::tibble(!!new := nm[[old_sub]])}}
+              nm <- manual_update(data.frame(tmp = NA), 
+                                  unique(headercrosswalk$file), new, 
+                                  updatedCrosswalks, existingCrosswalks, 
+                                  names_check)
+              tmp <- tibble::tibble(!!new := nm[[new]])}
                 }
             tmp
           }) |> purrr::list_cbind(name_repair = "unique")
@@ -709,7 +703,11 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks,
   })
   names(dat) <- headers_classified$file
   
-  return(dat)
+  if(data == "State") {
+    dat_branchready <- purrr::map(fedmatch::State_FIPS$Abbreviation, ~{
+      dat[which(grepl(paste0("/", .x, "/"), names(dat)))]}) %>% purrr::compact()
+  } else {dat_branchready <- dat}
+  return(dat_branchready)
 }
 
 

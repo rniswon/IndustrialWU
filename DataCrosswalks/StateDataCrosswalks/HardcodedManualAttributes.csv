@@ -591,3 +591,28 @@ file,Header,Value,Notes
 /ME/site_specific_data_20240619/site_specific_data_20240619/master_coeffs.csv,Datum,WGS84,According to metadata txt file
 /ME/ME_IN_WU_CAC.xlsx$final_snowmaking_CAC,Category,CO,Snowmaking is commercial
 /MO/Industrial_2000-2019.xlsx$Sheet1,Category,IN,Only includes industrial
+/NM/NM_IN_WU_CAC.xlsx$Industrial USGS_frJulie_0918202,Units_annual_reported,AF,From column header
+/NM/Industrial_NM_forJohnL.xlsx$Commercial2010,Year,2010,From sheet name
+/NM/Industrial_NM_forJohnL.xlsx$Commercial2015,Year,2015,From sheet name
+/MS/USGS Data Request_Industrial Use 2000-2019.xlsx$MS_IN_WU,ValueType,WD,Seem to be mostly wells
+/NM/Industrial_NM_forJohnL.xlsx$Commercial2010,ValueType,WD,Permit numbers
+/NM/Industrial_NM_forJohnL.xlsx$Commercial2015,ValueType,WD,Permit numbers
+/NM/NM_IN_WU.xlsx$Industrial2010,ValueType,WD,Permit numbers
+/NM/Industrial_NM_forJohnL.xlsx$Commercial2010,Category,Commercial,From sheet name
+/MS/USGS Data Request_Industrial Use 2000-2019.xlsx$MS_IN_WU,Units_annual_reported,MGD,From column header
+/NM/Industrial_NM_forJohnL.xlsx$Commercial2010,Units_annual_reported,AFY,From column header
+/NM/Industrial_NM_forJohnL.xlsx$Commercial2015,Units_annual_reported,AFY,From column header
+/NM/NM_IN_WU.xlsx$Industrial2010,Units_annual_reported,AFY,From note above data table
+/PA/PA_IN_PF_2005-2019.xlsx$IN_PF_2015-2019_Water_Use_by_Fa,ValueType,RL,
+/OR/read_me_072320.docx,Units_monthly,acre-feet,
+/PA/PA_IN_PF_2005-2019.xlsx$IN_PF_2015-2019_Water_Use_by_Fa,Units_annual_reported,gallons,
+/OR/read_me_072320.docx,Units_annual_reported,acre-feet,
+/TN/Email-2024-06-06_TN Water-Use Data Crosswalk.pdf,DataProtected,TRUE,Cannot share location data
+/SC/Mail_Painter_INwu_SC.pdf,DataProtected,FALSE,Confirmation from SC DHEC that we can use the data without restriction
+/SD/read_me.docx,ValueType,WD,data are based on water rights and permit holders
+/SC/Mail_Painter_INwu_SC.pdf,ValueType,WD,"""we have locations and volume of withdrawals from 2000-2020"""
+/SC/qry_DHEC_surfacewater_POR.xlsx$Documentation,Units_monthly,million gallons,"From ""Units: million gallons per month"""
+/UT/UT_all_WU.xlsx$source_data,Datum,NAD83,
+/UT/UT_IN_WU.xlsx$source_data,Datum,NAD83,
+/VA/read_me.docx,Datum,WGS84,
+/VA/read_me.docx,Units_annual_reported,Mgal per year,
