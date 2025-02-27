@@ -1,4 +1,49 @@
 "file","SiteDescriptions","LocationInfo","MonthlyData","AnnualData","Metadata","Duplicate","NotRelevant"
+"/KY/Copy of MONTHLY WWD 1967-2023 WITH HUC 8 - Copy.xlsx$Historical Monitoring Data",NA,NA,NA,NA,NA,NA,NA
+"/KY/Copy of MONTHLY WWD 1967-2023 WITH HUC 8 - Copy.xlsx$Metadata",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$DataDictionary",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$StateStatus",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$NJ_MI",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$AL_MI",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$AK",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$AR",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$AZ",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$CA",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$CO-AQ",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$CO-LI-Others",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$CO-LI-5Rivers",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$CO-MI",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$FL_SFWMD",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$FL_SWFWMD",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$FL_SJRWMD-MI",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$FL_SJRWMD-AQLI",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$IN_1985-2020",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$IN_2020-2022",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$ID",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$IA",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$KS_WUDR_LI_MonthlywCounts",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$KS_KGS_LI_Annual",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$KY-ALL 1967-2023",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$KY-MI",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$MI",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$MN",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$MO",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$MS",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$NH_AQ",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$OK_LIAQ",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$OK_MI",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$UT-MI",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$PA",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$SC",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$TN",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$TX-LIAQ",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$VA",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$VT",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$WI",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$WV",NA,NA,NA,NA,NA,NA,NA
+"/KY/HeadersForAllStates_Crosswalk - Copy.xlsx$WUDS",NA,NA,NA,NA,NA,NA,NA
+"/KY/Mail_KY_updated_files_02262025.pdf",NA,NA,NA,NA,NA,NA,NA
+"/DE/WaterUse_2004-2019_all_categories_CACedit.xlsx$Notes","0","0","0","0","0","0","1"
 "/TN/Individual permits and SIC codes_TDEC.xlsx$SIC Codes for individual permit","1","1","0","0","0","0","0"
 "/SD/SD_IN_WU_2010_2019_LDM.xlsx$Readme","0","0","0","0","0","0","1"
 "/SD/SD_IN_WU_2010_2019_LDM.xlsx$Culled_IND_FacilityList","0","1","0","0","0","0","0"
@@ -68,11 +113,12 @@
 "/DE/IndustrialWaterUse_modified.xlsx$Water Use","1","1","1","1","1","0","0"
 "/DE/IndustrialWaterUse_modified.xlsx$Addresses","1","1","0","0","1","0","0"
 "/DE/IndustrialWaterUse_modified.xlsx$DE_IN_facility_list","1","1","1","1","1","0","0"
-"/DE/IndustrialWaterUse_modified.xlsx$notes","1","0","0","0","1","0","0"
+"/DE/IndustrialWaterUse_modified.xlsx$notes","0","0","0","0","0","0","1"
 "/DE/IndustrialWaterUse_USGS_Lovelace.xlsx$Water Use","1","1","0","1","1","0","0"
 "/DE/IndustrialWaterUse_USGS_Lovelace.xlsx$Addresses","1","1","0","0","1","0","0"
 "/DE/read_me_072220.docx","1","1","0","0","1","0","0"
-"/DE/WaterUse_2004-2019_all_categories.xlsx$Sheet1","1","1","1","1","1","0","0"
+"/DE/WaterUse_2004-2019_all_categories.xlsx$Sheet1","0","0","0","0","0","1","0"
+"/DE/WaterUse_2004-2019_all_categories_CACedit.xlsx$Sheet1","1","1","1","1","1","0","0"
 "/FL/Mail_Dixon_INwu_FL.pdf","0","0","0","0","0","0","1"
 "/FL/WU_Request_IndustrialWU.zip","0","0","0","0","0","1","0"
 "/FL/WU_Request_IndustrialWU/WU_Request_IndustrialWU/NWFWMD_2020 Water Use_original.xlsx$Public Supply","0","0","0","0","0","1","0"

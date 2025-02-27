@@ -10,8 +10,8 @@
 # Note that tidytable and dplyr have many functions named the same. 
 # Suggest specifying in the script dplyr:: or tidytable::
 # dplyr is loaded last so that it is the default
-debugMode <- TRUE
-runParallel <- TRUE
+debugMode <- FALSE
+runParallel <- FALSE
 
 packages <- c("tibble", "stringr", "purrr", "readxl", "svDialogs", "tidytable", 
               "dplyr", "archive", "tidyr", "readr", "lubridate", "magrittr", 
@@ -36,6 +36,7 @@ library(tarchetypes)
 if(debugMode) {runParallel <- FALSE}
 
 if(runParallel) {
+  message("Running Workflow in Parallel")
   controller <- crew::crew_controller_local(
     name = "custom_controller",
     workers = 4, # can run in parallel
@@ -47,11 +48,10 @@ if(runParallel) {
                  controller = controller 
   )       
 } else {
-  print("Controller theoretically switched")
+  message("Running Workflow in Series")
   tar_option_reset()
   tar_option_set(packages = packages,  # Define required packages
-                 format = "rds",
-                 controller = NULL
+                 format = "rds"
   )       
 }
 
