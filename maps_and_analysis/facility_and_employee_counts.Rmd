@@ -34,6 +34,7 @@ library(readr)
 options(scipen=999)
 
 source("../utility_functions/export_figure.R")
+source("../utility_functions/populate_facility_coords_cty_centroid.R")
 ```
 
 ## Now we need some inputs from the user
@@ -82,7 +83,7 @@ Once loaded and formatted summaries are made of the nationwide dataset by 2 digi
 
 ```{r}
 inwu_facility_csv <- paste0(inwu_model_folder,
-                            "/INWU_task_folders/Site_selection/Industrial_site_list/USEPA_HIFLD_EIA_PPP_facility_v7.csv")
+                            "/INWU_task_folders/Site_selection/Industrial_site_list/USEPA_HIFLD_EIA_PPP_facility_v7.1.csv")
 
 inwu_facility_df <- read_csv(inwu_facility_csv,
                              col_types = cols(
@@ -97,53 +98,8 @@ inwu_facility_df <- read_csv(inwu_facility_csv,
 
 ```{r}
 
-populate_coords_cty_centroid <- function(input_df, lat_field, long_field, GNIS_layer) {
-  
-  # Preparing Counties Layer
-  
-  GNIS_df <- read_csv(GNIS_layer)
-  
-  GNIS_df <- GNIS_df %>%
-    mutate(PP_NAME = str_to_upper(PP_NAME)) %>%
-    select(PP_NAME, STATE_ABBV, LAT, LONG)
-  
-  # Preparing Facilities Layer
-  
-  facility_fields <- names(input_df)
-  
-  facilities_with_coords <- input_df %>%
-    filter(!is.na(LATITUDE))
-  
-  facilities_missing_coords <- input_df %>%
-    filter(is.na(LATITUDE))
-  
-  # Resolving coordinates
-  
-  unresolved_coords_count <- nrow(facilities_missing_coords)
-  raw_facilities_count <- nrow(input_df)
-  
-  print(paste0(unresolved_coords_count,' of ', raw_facilities_count, ' missing cordinates'))
 
-  facilities_resolved_coords_df <- facilities_missing_coords %>%
-    inner_join(GNIS_df, by = c("CITY" = "PP_NAME", "STATE" = "STATE_ABBV")) %>%
-    mutate(LATITUDE = coalesce(LATITUDE, LAT),
-           LONGITUDE = coalesce(LONGITUDE, LONG),
-           LL_Src = 'City Centroid') %>%
-    select(facility_fields) %>%
-    distinct(FACILITYID, .keep_all = TRUE)
-  
-  resolved_coordinates <- nrow(facilities_resolved_coords_df)
-  
-  print(paste0(resolved_coordinates, ' facility coordinates have been resolved'))
-  
-  input_df <- rbind(facilities_with_coords,
-                    facilities_resolved_coords_df)
-  
-  return(input_df)
-}
-
-
-inwu_facility_df <- populate_coords_cty_centroid(inwu_facility_df, 'LATITUDE', 'LONGITUDE', GNIS_path)
+inwu_facility_df <- populate_facility_coords_cty_centroid(inwu_facility_df, 'LATITUDE', 'LONGITUDE', GNIS_path)
 
 #counties_sf <- st_read(counties_shapefile_path)
 
@@ -348,7 +304,7 @@ nationwide_emp_summary_plot
 
 if (export_figures) {
   
-  export_figure(nationwide_emp_summary_plot, output_dir, 'nationwide_emp_summary_plot', 10, 5, svg_output=FALSE)
+  export_figure(nationwide_emp_summary_plot, output_folder, 'nationwide_emp_summary_plot', 10, 5, svg_output=FALSE)
   
 }
 
@@ -378,7 +334,7 @@ nationwide_estab_summary_plot
 
 if (export_figures) {
   
-  export_figure(nationwide_estab_summary_plot, output_dir, 'nationwide_estab_summary_plot', 10, 5, svg_output=FALSE)
+  export_figure(nationwide_estab_summary_plot, output_folder, 'nationwide_estab_summary_plot', 10, 5, svg_output=FALSE)
   
 }
 
@@ -519,7 +475,7 @@ summary_emp_county_boxplot
 
 if (export_figures) {
   
-  export_figure(summary_emp_county_boxplot, output_dir, 'summary_emp_county_boxplot', 10, 5, svg_output=FALSE)
+  export_figure(summary_emp_county_boxplot, output_folder, 'summary_emp_county_boxplot', 10, 5, svg_output=FALSE)
   
 }
 
@@ -546,7 +502,7 @@ summary_estab_county_boxplot
 
 if (export_figures) {
   
-  export_figure(summary_estab_county_boxplot, output_dir, 'summary_estab_county_boxplot', 10, 5, svg_output=FALSE)
+  export_figure(summary_estab_county_boxplot, output_folder, 'summary_estab_county_boxplot', 10, 5, svg_output=FALSE)
   
 }
 
@@ -694,7 +650,20 @@ for (naics in naics_list){
                   10, 
                   5, 
                   svg_output=FALSE)
-    }
+  }
+  
+  sorted_emp_diff <- sort(naics_map_df$pct_diff_emp_CBP_compilation)
+  
+  high_5 <- sorted_emp_diff[5]
+  low_5 <- sorted_emp_diff[length(sorted_emp_diff) - 5]
+  
+  extremes_df <- st_drop_geometry(naics_map_df)
+  
+  extremes_df <- extremes_df %>%
+    filter(pct_diff_emp_CBP_compilation <= high_5 | pct_diff_emp_CBP_compilation >= low_5) %>% #
+    select(GEOID, sum_estab_CBP, sum_estab_compilation, pct_diff_estab_CBP_compilation, STATEFP, COUNTYFP, COUNTYNS, GEOID.y, NAME)
+  
+  write.csv(extremes_df, paste0(output_dir, '/', naics, '_employment_extremes.csv'), row.names = FALSE)
   
   # 
   # map_files <- purrr::map(estab_columns, function(estab_col) {
