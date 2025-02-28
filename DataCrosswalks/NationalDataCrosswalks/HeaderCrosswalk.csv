@@ -6,3 +6,4 @@ CountyFIPS.csv,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,County1,STATE,,,,,,,,,,,,,,,,,,,,,,,
 facility_v3_NAICS_SIC.csv,,,,,,NAME,,,,,,,,,,,,,,,,,,,,,,ADDRESS_Fix,CITY,COUNTY,STATE,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 USEPA_HIFLD_EIA_PPP_facility_v6.csv,,,,,,NAME,NAME,NAME,,,,,,,,,,,,,,,,,,,,ADDRESS_Fix,CITY,COUNTY,STATE,,ADDRESS_Fix,CITY,COUNTY,STATE,,,,,,,,,,,,,,,,,,,,,,,,,,FACILITYID
 USEPA_HIFLD_EIA_PPP_facility_v7.csv,,,,,,NAME,NAME,NAME,,,,,,,,,,,,,,,,,,,,ADDRESS_Fix,CITY,COUNTY,STATE,,ADDRESS_Fix,CITY,COUNTY,STATE,,,,,,,,,,,,,,,,,,,,,,,,,,FACILITYID
+USEPA_HIFLD_EIA_PPP_facility_v7.1.csv,,,,,,NAME_FIX,NAME_FIX,NAME_FIX,,,,,,,,,,,,,,,,,,,,ADDRESS_Fix,CITY,COUNTY,STATE,,ADDRESS_Fix,CITY,COUNTY,STATE,,,,,,,,,,,,,,,,,,,,,,,,,,FACILITYID

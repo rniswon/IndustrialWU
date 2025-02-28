@@ -101,6 +101,7 @@ generate_statusupdate <- function(siteselectionmerged,
                                   SiteSelection,
                                   status,
                                   QAQCupdate) {
+
   data_points <- siteselectionmerged %>%
     dplyr::mutate(SWUDS = str_detect(DataSource, basename(SWUDS)),
            SS_merged = str_detect(DataSource, basename(SiteSelection))) %>% 
@@ -198,12 +199,15 @@ generate_statusupdate <- function(siteselectionmerged,
     filter(!is.na(`Person Currently Working On`) & `Person Currently Working On` != "") %>%
     pull(`Person Currently Working On`) %>% unique()
 
-  available_people <- str_subset(previoustasks_people,
-                                 paste0(remainingtasks_people, collapse = "|"), 
-                                 negate = TRUE)
-  if(length(available_people) > 0) {
-    message(paste(paste(available_people, collapse = ", "), "possibly available for another state"))
+  if(length(previoustasks_people) > 0) {
+    available_people <- str_subset(previoustasks_people,
+                                   paste0(remainingtasks_people, collapse = "|"), 
+                                   negate = TRUE)
+    if(length(available_people) > 0) {
+      message(paste(paste(available_people, collapse = ", "), "possibly available for another state"))
+    }
   }
+
 
   return(statuslinesupdate)
   

@@ -597,6 +597,10 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks,
   } else if(data == "National") {
     headers_classified <- filledheader |> na.omit() |> 
       dplyr::filter(gsub("\\$.*", "", file) %in% basename(unlist(datafp)))
+    if(nrow(headers_classified) == 0) {
+      m <- paste(basename(unlist(datafp)), "needs to be added to the national HeaderCrosswalk.csv file")
+      stop(m)
+    }
   }
   
   dat <- purrr::imap(headers_classified$file, ~{
