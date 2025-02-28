@@ -1,0 +1,48 @@
+---
+title: "populate_city_centroid"
+output: html_document
+---
+
+This RMarkdown document is used to populate the Latitude and Longitude fields in the INWU group's facility list with the city centroid for locations where the coordinates are null. 
+
+This script uses the facilities list "/INWU_task_folders/Site_selection/Industrial_site_list/USEPA_HIFLD_EIA_PPP_facility_v7_NM_NAICS.csv"
+
+and the GNIS layer '\\INWU_task_folders\\Site_selection\\GIS\\Ref_layers\\GNIS\\US_GNIS_for_GIS.csv'
+
+THe output of this script is going to be v7.1 of the facilities list
+
+```{r}
+library(tidyverse)
+library(sf)
+
+source("../utility_functions/populate_facility_coords_cty_centroid.R")
+
+# Getting User Inputs 
+
+# Path to INWU model folder on local machine
+inwu_model_folder <- "D:/DOI/GS-W-WaterUse - Industrial model"
+
+GNIS_path <- paste0(inwu_model_folder, '\\INWU_task_folders\\Site_selection\\GIS\\Ref_layers\\GNIS\\US_GNIS_for_GIS.csv')
+
+
+```
+
+```{r}
+
+inwu_facility_csv <- paste0(inwu_model_folder,
+                            "/INWU_task_folders/Site_selection/Industrial_site_list/USEPA_HIFLD_EIA_PPP_facility_v7_NM_NAICS.csv")
+
+inwu_facility_df <- read_csv(inwu_facility_csv,
+                             col_types = cols(
+                               LATITUDE = col_double(),
+                               LONGITUDE = col_double(),
+                               NAICS = col_character(),
+                               EMP = col_integer(),
+                               TotPerson = col_integer(),
+                               JobsReported = col_integer(),
+                                                 ))
+
+inwu_facility_df <- populate_facility_coords_cty_centroid(inwu_facility_df, 'LATITUDE', 'LONGITUDE', GNIS_path)
+
+write.csv(inwu_facility_df, '../outputs/USEPA_HIFLD_EIA_PPP_facility_v7.1.csv')
+```
