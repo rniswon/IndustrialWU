@@ -83,7 +83,15 @@ pull_stateshapes <- function() {
   if(exists("stateshapes", envir = .GlobalEnv)) {
     tmp <- get("stateshapes", envir = .GlobalEnv)
   } else {
-    tmp <- tigris::states()
+    tmp <- tryCatch(tigris::states(), error = function(e) NULL)
+    if(!is.null(tmp)) {message("Using 2021 tigris state file")}
+    if(is.null(tmp)) {tmp <- tryCatch(tigris::states(year = 2020), error = function(e) NULL)
+    if(!is.null(tmp)) {message("Using 2020 tigris state file")}}
+    if(is.null(tmp)) {
+      tmp <- rnaturalearth::ne_states(country = "united states of america") %>%
+        dplyr::rename(STUSPS = postal)
+      if(!is.null(tmp)) {message("Using R natural earth state file")}
+    }
     assign("stateshapes", tmp, envir = .GlobalEnv)
   }
   return(tmp)
@@ -182,7 +190,6 @@ standard_mergeandreplace <- function(x, y, yname, merge_vars, jointype, datavars
 }
 
 merge_andreplaceNA <- function(x, y, yname = NULL, merge_vars = NULL, jointype = "FULL") {
-  
   x <- dplyr::mutate(
     x, 
     dplyr::across(
@@ -1246,6 +1253,8 @@ reformat_data <- function(x, updatedCrosswalks, existingCrosswalks, parallel = F
   # This line is a good place to use browser() if errors are coming up in this function.
   # Errors in this function will likely be derived from errors in one of the lines of text below
   # Suggest running the below lines one-by-one to identify location of the error
+  # if(any(grepl("DE", names(x)))) {browser()}
+  
   x_munged <- x %>%
     {eval(parse(text = datacodes_u_code))} %>% 
     {eval(parse(text = HUCs_code))} %>% 
@@ -1323,12 +1332,11 @@ merge_formatted_indState_data <- function(x_munged = list(), updatedCrosswalks, 
         stop("Execution halted to edit data crosswalks")
       }
     }
-
     x_bystate <- purrr::map(fedmatch::State_FIPS$Abbreviation, ~{
       st <- .x; purrr::keep_at(x_merge_ready, ~grepl(paste0("/", st, "/"), .))
       }); names(x_bystate) <- fedmatch::State_FIPS$Abbreviation
     x_readystates <- purrr::keep(x_bystate, ~length(.) > 0)
-    if(any(grepl("KY", names(x_readystates)))) {browser()}
+
     x_simplestates <- purrr::map(x_readystates, ~{
       purrr::reduce2(.x = .x, .y = names(.x), .f = merge_andreplaceNA, 
                      .init = dplyr::mutate(.x[[1]], DataSource = names(.x)[1]))})

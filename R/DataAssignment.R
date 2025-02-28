@@ -474,7 +474,7 @@ applyPIVOTrules <- function(dat, headercrosswalk, updatedCrosswalks) {
   pivot_instr <- updatedCrosswalks$DataPivots |> dplyr::filter(file %in% headercrosswalk$file)
   # pivot_instr$file gives the name of the file that may have caused a failure
   if(nrow(pivot_instr) > 0) {
-    
+  
     instructions <- map(purrr::transpose(pivot_instr), ~{
 
       # Create mutate code for the specified transformations
@@ -530,7 +530,7 @@ applyPIVOTrules <- function(dat, headercrosswalk, updatedCrosswalks) {
     dat2 <- suppressWarnings({dat %>% 
         {eval(parse(text = paste(unlist(instructions, use.names = FALSE), 
                                  collapse = " %>% unique(.) %>% ")))}})
-    
+    # if(any(pivot_instr$file == "/DE/WaterUse_2004-2019_all_categories_CACedit.xlsx$Sheet1")) {browser()}
     # Update the header crosswalk to remove "~PIVOT~"
     headercrosswalk2 <- headercrosswalk |> dplyr::mutate(OldName = dplyr::case_when(OldName == "~PIVOT~" ~ NewName,
                                                TRUE ~ OldName))
@@ -597,6 +597,10 @@ readandrename_columns <- function(datafp, updatedCrosswalks, existingCrosswalks,
   } else if(data == "National") {
     headers_classified <- filledheader |> na.omit() |> 
       dplyr::filter(gsub("\\$.*", "", file) %in% basename(unlist(datafp)))
+    if(nrow(headers_classified) == 0) {
+      m <- paste(basename(unlist(datafp)), "needs to be added to the national HeaderCrosswalk.csv file")
+      stop(m)
+    }
   }
   
   dat <- purrr::imap(headers_classified$file, ~{
